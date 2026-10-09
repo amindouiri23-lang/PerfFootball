@@ -55,7 +55,7 @@ class SyncEngine {
     await _pull();
   }
 
-  TableInfo _info(String name) => _db.allTables.firstWhere((t) => t.actualTableName == name);
+  TableInfo<Table, dynamic> _info(String name) => _db.allTables.firstWhere((t) => t.actualTableName == name);
 
   Future<void> _push() async {
     for (final t in _tables.where((t) => t.push)) {

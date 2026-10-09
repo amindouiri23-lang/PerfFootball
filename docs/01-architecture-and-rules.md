@@ -375,6 +375,7 @@ Computed in DAX, never stored:
 | Date | Decision |
 |---|---|
 | 2026-10-07 | Initial decisions D1–D9 (brainstorm). |
+| 2026-10-09 | Photos (players, team logo, profile) are uploaded directly to Supabase Storage (512 px, network required, initials shown when offline); they do not go through the local database. Device settings (theme, default durations) are kept at logout. Every create button ignores a second tap for 600 ms (a double tap created two teams in testing). Analyzer runs with strict-inference / strict-raw-types (an untyped list made an extension call fail at runtime). |
 | 2026-10-09 | Matches: E23 « Match en cours » and E26 « Détail » are one screen adapting to the status. Default playing time at the end of the match: starter = match duration, sub = 0, sent off = red-card minute, injured starter = injury minute; exact minutes can be typed by tapping the value. |
 | 2026-10-09 | Sessions: E14 « Séance en cours » and E19 « Détail » are one screen adapting to the status. Validating the closing gives the planned duration to present players without a duration, so their load is never unknown in Power BI. Closing values (duration, RPE) are shown immediately and saved per tap. |
 | 2026-10-09 | Web build (used for testing only): Drift runs SQLite WebAssembly on the main thread with IndexedDB (`lib/data/connection_web.dart`) instead of drift_flutter's SharedWorker, which some embedded browsers cannot use. `web/sqlite3.wasm` must match the `sqlite3` package version. Android/iOS keep native SQLite. |

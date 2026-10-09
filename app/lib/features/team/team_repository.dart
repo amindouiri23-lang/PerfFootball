@@ -96,6 +96,18 @@ class TeamRepository {
 
   Future<void> setActiveTeam(String id) => _db.setSetting(_activeTeamKey, id);
 
+  Future<void> setTeamLogo(String id, String path) async {
+    await (_db.update(_db.teams)..where((t) => t.id.equals(id)))
+        .write(TeamsCompanion(logoPath: Value(path), updatedAt: Value(nowIso()), isDirty: const Value(true)));
+    _sync();
+  }
+
+  Future<void> setPlayerPhoto(String id, String path) async {
+    await (_db.update(_db.players)..where((p) => p.id.equals(id)))
+        .write(PlayersCompanion(photoPath: Value(path), updatedAt: Value(nowIso()), isDirty: const Value(true)));
+    _sync();
+  }
+
   /// Crée (id null) ou modifie un joueur ; renvoie son id.
   Future<String> savePlayer({
     String? id,

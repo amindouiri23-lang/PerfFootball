@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/widgets/sync_indicator.dart';
+import '../../data/database.dart';
 import '../../data/sync.dart';
 import '../matches/match_repository.dart';
 import '../profile/profile_repository.dart';
@@ -53,7 +54,7 @@ class HomeScreen extends ConsumerWidget {
 
   List<Widget> _today(BuildContext context, WidgetRef ref, String teamId) {
     final today = isoDate(DateTime.now());
-    final sessions = (ref.watch(sessionsProvider(teamId)).value ?? const []).where((s) => s.date == today).toList()
+    final sessions = (ref.watch(sessionsProvider(teamId)).value ?? const <TrainingSession>[]).where((s) => s.date == today).toList()
       ..sort((a, b) => a.startTime.compareTo(b.startTime));
     final theme = Theme.of(context);
     return [
@@ -84,6 +85,7 @@ class HomeScreen extends ConsumerWidget {
           ),
         ),
       ..._nextMatch(context, ref, teamId),
+      ..._infirmary(context, ref, teamId),
       const SizedBox(height: 8),
       Row(children: [
         Expanded(
@@ -105,10 +107,38 @@ class HomeScreen extends ConsumerWidget {
     ];
   }
 
+  /// Joueurs blessés (blessure sans date de retour) → infirmerie.
+  List<Widget> _infirmary(BuildContext context, WidgetRef ref, String teamId) {
+    final players = {for (final p in ref.watch(playersProvider(teamId)).value ?? const <Player>[]) p.id: p};
+    final injured = (ref.watch(openInjuriesProvider(teamId)).value ?? const <Injury>[])
+        .where((i) => players.containsKey(i.playerId))
+        .map((i) => players[i.playerId]!.fullName)
+        .toSet()
+        .toList();
+    final theme = Theme.of(context);
+    return [
+      const SizedBox(height: 16),
+      Text('INFIRMERIE', style: theme.textTheme.labelLarge?.copyWith(color: theme.colorScheme.primary)),
+      const SizedBox(height: 8),
+      Card(
+        color: injured.isEmpty ? null : theme.colorScheme.errorContainer,
+        child: ListTile(
+          leading: Icon(Icons.healing, color: injured.isEmpty ? null : theme.colorScheme.onErrorContainer),
+          title: Text(injured.isEmpty
+              ? 'Aucun joueur blessé'
+              : '${injured.length} joueur${injured.length > 1 ? 's' : ''} blessé${injured.length > 1 ? 's' : ''}'),
+          subtitle: injured.isEmpty ? null : Text(injured.join(' · ')),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => context.go('/team/injuries'),
+        ),
+      ),
+    ];
+  }
+
   /// Match du jour ou prochain match non terminé, avec le compte à rebours en jours.
   List<Widget> _nextMatch(BuildContext context, WidgetRef ref, String teamId) {
     final today = isoDate(DateTime.now());
-    final next = (ref.watch(matchesProvider(teamId)).value ?? const [])
+    final next = (ref.watch(matchesProvider(teamId)).value ?? const <FootballMatch>[])
         .where((m) => m.date.compareTo(today) >= 0 && m.status != 'completed')
         .toList()
       ..sort((a, b) => '${a.date} ${a.kickOffTime}'.compareTo('${b.date} ${b.kickOffTime}'));

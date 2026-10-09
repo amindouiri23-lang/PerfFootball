@@ -7,6 +7,7 @@ import '../features/auth/auth_repository.dart';
 import '../features/auth/auth_screens.dart';
 import '../features/home/home_screen.dart';
 import '../features/profile/profile_screens.dart';
+import '../features/injuries/injuries_screen.dart';
 import '../features/matches/end_match_screen.dart';
 import '../features/matches/match_form_screen.dart';
 import '../features/matches/match_screen.dart';
@@ -119,6 +120,11 @@ final routerProvider = Provider<GoRouter>((ref) {
                 GoRoute(path: 'new', builder: (_, _) => const TeamFormScreen()),
                 GoRoute(path: 'edit', builder: (_, _) => const TeamFormScreen(editActive: true)),
                 GoRoute(path: 'players/new', builder: (_, _) => const PlayerFormScreen()),
+                GoRoute(
+                  path: 'injuries',
+                  builder: (_, _) => const InjuriesScreen(),
+                  routes: [GoRoute(path: 'new', builder: (_, _) => const InjuryFormScreen())],
+                ),
                 GoRoute(
                   path: 'players/:id',
                   builder: (_, s) => PlayerScreen(id: s.pathParameters['id']!),

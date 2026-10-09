@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/router.dart';
+import '../../core/settings.dart';
 import '../../core/widgets/form_page.dart';
 import '../../core/widgets/steppers.dart';
 import '../../data/database.dart';
@@ -21,6 +22,8 @@ class SessionFormScreen extends ConsumerStatefulWidget {
 }
 
 class _SessionFormScreenState extends ConsumerState<SessionFormScreen> {
+  /// Un double appui ne doit pas créer deux fois la même fiche (voir le verrou dans _save).
+  bool _saving = false;
   final _objective = TextEditingController();
   late DateTime _date = DateTime.now();
   late TimeOfDay _time = _nextQuarter();
@@ -47,6 +50,18 @@ class _SessionFormScreenState extends ConsumerState<SessionFormScreen> {
   String get _timeValue => '${_time.hour.toString().padLeft(2, '0')}:${_time.minute.toString().padLeft(2, '0')}:00';
 
   Future<void> _save({required bool startCall}) async {
+    if (_saving) return;
+    _saving = true;
+    try {
+      await _saveUnguarded(startCall: startCall);
+    } finally {
+      // Verrou gardé un instant : l'enregistrement local prend quelques millisecondes, la seconde
+      // frappe d'un double appui arrive souvent après — elle doit aussi être ignorée.
+      Future<void>.delayed(const Duration(milliseconds: 600), () => _saving = false);
+    }
+  }
+
+  Future<void> _saveUnguarded({required bool startCall}) async {
     if (_type == null) {
       setState(() => _typeMissing = true);
       return;
@@ -94,6 +109,13 @@ class _SessionFormScreenState extends ConsumerState<SessionFormScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.id == null && !_loaded) {
+      final d = ref.watch(defaultDurationProvider(sessionDurationKey));
+      if (d.hasValue) {
+        _duration = d.value!;
+        _loaded = true;
+      }
+    }
     if (widget.id != null) {
       final s = ref.watch(sessionProvider(widget.id!));
       if (s.isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));

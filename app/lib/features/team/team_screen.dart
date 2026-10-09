@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/router.dart';
+import '../../core/photos.dart';
 import '../../core/widgets/injured_badge.dart';
 import '../../core/widgets/sync_indicator.dart';
 import '../../data/database.dart';
@@ -37,7 +38,7 @@ class _TeamScreenState extends ConsumerState<TeamScreen> {
   }
 
   Widget _roster(BuildContext context, Team team) {
-    final players = ref.watch(playersProvider(team.id)).value ?? const [];
+    final players = ref.watch(playersProvider(team.id)).value ?? const <Player>[];
     final injured = {for (final i in ref.watch(openInjuriesProvider(team.id)).value ?? const <Injury>[]) i.playerId};
     final q = _query.toLowerCase();
     final shown = players
@@ -46,9 +47,13 @@ class _TeamScreenState extends ConsumerState<TeamScreen> {
         .toList();
     return Scaffold(
       appBar: AppBar(
-        title: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        title: Row(children: [
+          PhotoAvatar(path: team.logoPath, initials: team.name.substring(0, 1).toUpperCase(), radius: 16),
+          const SizedBox(width: 10),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(team.name),
           Text('${categories[team.category]} · ${team.season}', style: Theme.of(context).textTheme.bodySmall),
+        ])),
         ]),
         actions: [
           const SyncIndicator(),
@@ -56,12 +61,14 @@ class _TeamScreenState extends ConsumerState<TeamScreen> {
             onSelected: (v) => switch (v) {
               'edit' => context.go('/team/edit'),
               'switch' => _switchTeam(context),
+              'injuries' => context.go('/team/injuries'),
               _ => context.go('/team/new'),
             },
             itemBuilder: (_) => const [
               PopupMenuItem(value: 'edit', child: Text('Modifier l\'équipe')),
               PopupMenuItem(value: 'switch', child: Text('Changer d\'équipe')),
               PopupMenuItem(value: 'new', child: Text('Créer une autre équipe')),
+              PopupMenuItem(value: 'injuries', child: Text('Infirmerie')),
             ],
           ),
         ],
@@ -106,7 +113,7 @@ class _TeamScreenState extends ConsumerState<TeamScreen> {
   }
 
   Future<void> _switchTeam(BuildContext context) async {
-    final teams = ref.read(teamsProvider).value ?? const [];
+    final teams = ref.read(teamsProvider).value ?? const <Team>[];
     final active = ref.read(activeTeamProvider).value;
     final id = await showModalBottomSheet<String>(
       context: context,
@@ -136,7 +143,7 @@ class _PlayerTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return ListTile(
-      leading: CircleAvatar(child: Text(p.initials)),
+      leading: PhotoAvatar(path: p.photoPath, initials: p.initials),
       title: Text('${p.shirtNumber != null ? '${p.shirtNumber}  ' : ''}${p.fullName}'),
       subtitle: Text(positions[p.position]!),
       onTap: () => context.go('/team/players/${p.id}'),

@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/photos.dart';
 import '../../core/router.dart';
+import '../../core/settings.dart';
 import '../../core/widgets/form_page.dart';
 import '../../core/widgets/sync_indicator.dart';
 import '../../data/sync.dart';
@@ -29,7 +31,19 @@ class ProfileScreen extends ConsumerWidget {
           loading: () => const Padding(padding: EdgeInsets.all(32), child: Center(child: CircularProgressIndicator())),
           error: (_, _) => const ListTile(leading: Icon(Icons.cloud_off), title: Text(networkErrorMessage)),
           data: (p) => Column(children: [
-            CircleAvatar(radius: 40, child: Text(p?.initials ?? '?', style: theme.textTheme.headlineSmall)),
+            InkWell(
+              customBorder: const CircleBorder(),
+              onTap: user == null
+                  ? null
+                  : () async {
+                      final path = await pickAndUploadPhoto(context, ref, 'profiles/${user.id}.jpg');
+                      if (path != null) await saveMyPhotoPath(ref, path);
+                    },
+              child: Stack(children: [
+                PhotoAvatar(path: p?.photoPath, initials: p?.initials ?? '?', radius: 40),
+                const Positioned(right: 0, bottom: 0, child: CircleAvatar(radius: 12, child: Icon(Icons.photo_camera, size: 14))),
+              ]),
+            ),
             const SizedBox(height: 12),
             Text(p?.fullName ?? 'Profil à compléter', style: theme.textTheme.titleLarge),
             Text(jobTitles[p?.jobTitle] ?? '', style: theme.textTheme.bodyMedium),
@@ -44,6 +58,12 @@ class ProfileScreen extends ConsumerWidget {
           title: const Text('Changer le mot de passe'),
           trailing: const Icon(Icons.chevron_right),
           onTap: () => context.go('/profile/password'),
+        ),
+        ListTile(
+          leading: const Icon(Icons.settings_outlined),
+          title: const Text('Synchronisation et paramètres'),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => context.push('/sync'),
         ),
         if (user?.isAdmin ?? false)
           ListTile(
@@ -88,7 +108,7 @@ Future<void> _logout(BuildContext context, WidgetRef ref) async {
   }
   final db = ref.read(databaseProvider);
   await ref.read(authRepositoryProvider).signOut();
-  await db.wipe();
+  await db.wipe(keepSettings: deviceSettingKeys);
 }
 
 /// E04 — modification du profil.

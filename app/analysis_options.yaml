@@ -6,3 +6,8 @@ analyzer:
     - android/**
     - ios/**
     - web/**
+  # Types inférés en « dynamic » refusés : une extension (ex. Player.fullName) appelée sur un
+  # dynamic échoue seulement à l'exécution.
+  language:
+    strict-inference: true
+    strict-raw-types: true

@@ -304,6 +304,7 @@ Future<void> showEventSheet(BuildContext context, WidgetRef ref, FootballMatch m
   String? scorer = event?.playerId;
   String? assist = event?.assistPlayerId;
   var submitted = false;
+  var saving = false; // un double appui ne doit pas créer deux événements
   String label(String id) => '${players[id]?.shirtNumber ?? ''} ${players[id]?.lastName ?? ''}';
 
   final saved = await showModalBottomSheet<bool>(
@@ -381,7 +382,8 @@ Future<void> showEventSheet(BuildContext context, WidgetRef ref, FootballMatch m
                 child: FilledButton(
                   onPressed: () async {
                     setState(() => submitted = true);
-                    if (!minuteOk || scorer == null) return;
+                    if (!minuteOk || scorer == null || saving) return;
+                    saving = true;
                     final text = remark.text.trim();
                     await repo.saveEvent(
                       id: event?.id, m: m, type: kind, minute: min, playerId: scorer!,

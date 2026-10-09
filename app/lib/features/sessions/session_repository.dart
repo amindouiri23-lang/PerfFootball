@@ -41,6 +41,9 @@ const injuryTypes = {
 const mechanisms = {'contact': 'Contact', 'non_contact': 'Sans contact', 'overuse': 'Surmenage'};
 const severities = {'minor': 'Légère (≤ 3 j)', 'moderate': 'Modérée (4 à 28 j)', 'severe': 'Grave (> 28 j)'};
 
+/// « Cuisse arrière droit » : zone du corps et côté d'une blessure.
+String injuryLabel(Injury i) => '${bodyAreas[i.bodyArea]}${i.side != null ? ' ${injurySides[i.side]!.toLowerCase()}' : ''}';
+
 /// Couleur de l'échelle RPE CR-10 : vert (facile) → rouge (maximal).
 Color rpeColor(int rpe) => switch (rpe) {
       <= 2 => const Color(0xFF2E7D32),
@@ -99,6 +102,15 @@ final sessionWellnessProvider = StreamProvider.family<List<WellnessEntry>, Strin
 final sessionInjuriesProvider = StreamProvider.family<List<Injury>, String>((ref, sessionId) {
   final db = ref.watch(databaseProvider);
   return (db.select(db.injuries)..where((i) => i.sessionId.equals(sessionId) & i.deleted.equals(false))).watch();
+});
+
+/// Toutes les blessures d'une équipe (infirmerie E27 : en cours et historique).
+final teamInjuriesProvider = StreamProvider.family<List<Injury>, String>((ref, teamId) {
+  final db = ref.watch(databaseProvider);
+  return (db.select(db.injuries)
+        ..where((i) => i.teamId.equals(teamId) & i.deleted.equals(false))
+        ..orderBy([(i) => OrderingTerm(expression: i.date, mode: OrderingMode.desc)]))
+      .watch();
 });
 
 /// Blessures en cours (sans date de retour) d'une équipe : pastille « Blessé ».
@@ -257,6 +269,13 @@ class SessionRepository {
           stress: stress, mood: mood, remark: Value(remark),
           createdAt: now, updatedAt: now, isDirty: const Value(true),
         ));
+    _sync();
+  }
+
+  /// E27 — retour du joueur : la blessure passe dans l'historique.
+  Future<void> setReturnDate(String injuryId, String date) async {
+    await (_db.update(_db.injuries)..where((i) => i.id.equals(injuryId)))
+        .write(InjuriesCompanion(returnDate: Value(date), updatedAt: Value(nowIso()), isDirty: const Value(true)));
     _sync();
   }
 

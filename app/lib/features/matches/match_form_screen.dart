@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/router.dart';
+import '../../core/settings.dart';
 import '../../core/widgets/form_page.dart';
 import '../../core/widgets/steppers.dart';
 import '../../data/database.dart';
@@ -22,6 +23,8 @@ class MatchFormScreen extends ConsumerStatefulWidget {
 }
 
 class _MatchFormScreenState extends ConsumerState<MatchFormScreen> {
+  /// Un double appui ne doit pas créer deux fois la même fiche (voir le verrou dans _save).
+  bool _saving = false;
   final _opponent = TextEditingController();
   DateTime _date = DateTime.now();
   TimeOfDay _time = const TimeOfDay(hour: 15, minute: 0);
@@ -43,6 +46,18 @@ class _MatchFormScreenState extends ConsumerState<MatchFormScreen> {
   }
 
   Future<void> _save({required bool squad}) async {
+    if (_saving) return;
+    _saving = true;
+    try {
+      await _saveUnguarded(squad: squad);
+    } finally {
+      // Verrou gardé un instant : l'enregistrement local prend quelques millisecondes, la seconde
+      // frappe d'un double appui arrive souvent après — elle doit aussi être ignorée.
+      Future<void>.delayed(const Duration(milliseconds: 600), () => _saving = false);
+    }
+  }
+
+  Future<void> _saveUnguarded({required bool squad}) async {
     setState(() => _submitted = true);
     if (_opponent.text.trim().isEmpty || _homeAway == null || _competition == null) return;
     final team = ref.read(activeTeamProvider).value!;
@@ -89,6 +104,13 @@ class _MatchFormScreenState extends ConsumerState<MatchFormScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.id == null && !_loaded) {
+      final d = ref.watch(defaultDurationProvider(matchDurationKey));
+      if (d.hasValue) {
+        _duration = d.value!;
+        _loaded = true;
+      }
+    }
     if (widget.id != null) {
       final m = ref.watch(matchProvider(widget.id!));
       if (m.isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
