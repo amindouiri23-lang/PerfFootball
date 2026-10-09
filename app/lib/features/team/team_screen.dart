@@ -3,9 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/router.dart';
+import '../../core/widgets/injured_badge.dart';
 import '../../core/widgets/sync_indicator.dart';
 import '../../data/database.dart';
 import '../../data/sync.dart';
+import '../sessions/session_repository.dart';
 import 'team_repository.dart';
 
 /// E07 — Mon équipe (effectif).
@@ -36,6 +38,7 @@ class _TeamScreenState extends ConsumerState<TeamScreen> {
 
   Widget _roster(BuildContext context, Team team) {
     final players = ref.watch(playersProvider(team.id)).value ?? const [];
+    final injured = {for (final i in ref.watch(openInjuriesProvider(team.id)).value ?? const <Injury>[]) i.playerId};
     final q = _query.toLowerCase();
     final shown = players
         .where((p) => _position == null || p.position == _position)
@@ -97,7 +100,7 @@ class _TeamScreenState extends ConsumerState<TeamScreen> {
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
                 child: Text('${shown.length} joueur${shown.length > 1 ? 's' : ''}'),
               ),
-              for (final p in shown) _PlayerTile(p),
+              for (final p in shown) _PlayerTile(p, injured: injured.contains(p.id)),
             ]),
     );
   }
@@ -125,9 +128,10 @@ class _TeamScreenState extends ConsumerState<TeamScreen> {
 }
 
 class _PlayerTile extends ConsumerWidget {
-  const _PlayerTile(this.p);
+  const _PlayerTile(this.p, {required this.injured});
 
   final Player p;
+  final bool injured;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -136,16 +140,19 @@ class _PlayerTile extends ConsumerWidget {
       title: Text('${p.shirtNumber != null ? '${p.shirtNumber}  ' : ''}${p.fullName}'),
       subtitle: Text(positions[p.position]!),
       onTap: () => context.go('/team/players/${p.id}'),
-      trailing: PopupMenuButton<String>(
-        tooltip: 'Actions',
-        onSelected: (v) => v == 'edit'
-            ? context.go('/team/players/${p.id}/edit')
-            : confirmDeletePlayer(context, ref, p),
-        itemBuilder: (_) => const [
-          PopupMenuItem(value: 'edit', child: Text('Modifier')),
-          PopupMenuItem(value: 'delete', child: Text('Supprimer')),
-        ],
-      ),
+      trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+        if (injured) const InjuredBadge(),
+        PopupMenuButton<String>(
+          tooltip: 'Actions',
+          onSelected: (v) => v == 'edit'
+              ? context.go('/team/players/${p.id}/edit')
+              : confirmDeletePlayer(context, ref, p),
+          itemBuilder: (_) => const [
+            PopupMenuItem(value: 'edit', child: Text('Modifier')),
+            PopupMenuItem(value: 'delete', child: Text('Supprimer')),
+          ],
+        ),
+      ]),
     );
   }
 }

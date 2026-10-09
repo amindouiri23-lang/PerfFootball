@@ -6,9 +6,11 @@ import 'package:intl/intl.dart';
 import '../../core/widgets/sync_indicator.dart';
 import '../../data/sync.dart';
 import '../profile/profile_repository.dart';
+import '../sessions/session_repository.dart';
+import '../sessions/sessions_list_screen.dart';
 import '../team/team_repository.dart';
 
-/// E10 — Accueil. Pour l'instant : salutation, date et équipe active ; séances, matchs et infirmerie
+/// E10 — Accueil : séances du jour avec l'action adaptée à leur état. Matchs et infirmerie
 /// arrivent avec leurs modules.
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -43,7 +45,49 @@ class HomeScreen extends ConsumerWidget {
               ]),
             ),
           ),
+        if (team.value != null) ..._today(context, ref, team.value!.id),
       ]),
     );
+  }
+
+  List<Widget> _today(BuildContext context, WidgetRef ref, String teamId) {
+    final today = isoDate(DateTime.now());
+    final sessions = (ref.watch(sessionsProvider(teamId)).value ?? const []).where((s) => s.date == today).toList()
+      ..sort((a, b) => a.startTime.compareTo(b.startTime));
+    final theme = Theme.of(context);
+    return [
+      Text("AUJOURD'HUI", style: theme.textTheme.labelLarge?.copyWith(color: theme.colorScheme.primary)),
+      const SizedBox(height: 8),
+      if (sessions.isEmpty) const Text("Aucune séance prévue aujourd'hui."),
+      for (final s in sessions)
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              Row(children: [
+                Expanded(child: Text('${s.time} · ${sessionTypes[s.type]}', style: theme.textTheme.titleMedium)),
+                StatusChip(s.status),
+              ]),
+              Text([
+                '${s.plannedDurationMin} min',
+                if (s.objective != null) s.objective!,
+              ].join(' · ')),
+              const SizedBox(height: 8),
+              switch (s.status) {
+                'planned' => FilledButton(
+                    onPressed: () => context.go('/sessions/${s.id}/attendance'), child: const Text("Démarrer l'appel")),
+                'in_progress' => FilledButton(onPressed: () => context.go('/sessions/${s.id}'), child: const Text('Reprendre')),
+                _ => OutlinedButton(onPressed: () => context.go('/sessions/${s.id}'), child: const Text('Voir')),
+              },
+            ]),
+          ),
+        ),
+      const SizedBox(height: 8),
+      OutlinedButton.icon(
+        onPressed: () => context.go('/sessions/new'),
+        icon: const Icon(Icons.add),
+        label: const Text('Nouvelle séance'),
+      ),
+    ];
   }
 }

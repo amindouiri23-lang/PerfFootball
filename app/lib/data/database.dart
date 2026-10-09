@@ -49,6 +49,63 @@ class Players extends Table with SyncColumns {
   TextColumn get photoPath => text().nullable()();
 }
 
+/// Séance d'entraînement. Nom de classe distinct de `Session` (Supabase Auth).
+@DataClassName('TrainingSession')
+class Sessions extends Table with SyncColumns {
+  TextColumn get teamId => text()();
+  TextColumn get date => text()();
+  TextColumn get startTime => text()();
+  TextColumn get type => text()();
+  IntColumn get plannedDurationMin => integer().withDefault(const Constant(90))();
+  TextColumn get objective => text().nullable()();
+  TextColumn get remarks => text().nullable()();
+  TextColumn get status => text().withDefault(const Constant('planned'))();
+}
+
+/// Présence et charge d'un joueur pour une séance (id déterministe : séance + joueur).
+class SessionPlayers extends Table with SyncColumns {
+  TextColumn get teamId => text()();
+  TextColumn get sessionId => text()();
+  TextColumn get playerId => text()();
+  BoolColumn get present => boolean().withDefault(const Constant(true))();
+  TextColumn get absenceReason => text().nullable()();
+  IntColumn get durationMin => integer().nullable()();
+  IntColumn get rpe => integer().nullable()();
+  TextColumn get remark => text().nullable()();
+}
+
+/// Questionnaire de bien-être après une séance (id déterministe : séance + joueur).
+@DataClassName('WellnessEntry')
+class Wellness extends Table with SyncColumns {
+  TextColumn get teamId => text()();
+  TextColumn get sessionId => text()();
+  TextColumn get playerId => text()();
+  RealColumn get sleepHours => real()();
+  IntColumn get sleepQuality => integer()();
+  IntColumn get fatigue => integer()();
+  IntColumn get soreness => integer()();
+  IntColumn get stress => integer()();
+  IntColumn get mood => integer()();
+  TextColumn get remark => text().nullable()();
+}
+
+class Injuries extends Table with SyncColumns {
+  TextColumn get teamId => text()();
+  TextColumn get playerId => text()();
+  TextColumn get sessionId => text().nullable()();
+  TextColumn get matchId => text().nullable()();
+  IntColumn get minute => integer().nullable()();
+  TextColumn get date => text()();
+  TextColumn get bodyArea => text()();
+  TextColumn get side => text().nullable()();
+  TextColumn get type => text()();
+  TextColumn get mechanism => text()();
+  TextColumn get severity => text()();
+  TextColumn get description => text().nullable()();
+  TextColumn get expectedReturnDate => text().nullable()();
+  TextColumn get returnDate => text().nullable()();
+}
+
 /// Curseur de synchronisation par table : plus grand server_updated_at reçu.
 class SyncState extends Table {
   TextColumn get tableName_ => text().named('table_name')();
@@ -67,12 +124,24 @@ class LocalSettings extends Table {
   Set<Column> get primaryKey => {key};
 }
 
-@DriftDatabase(tables: [Teams, TeamMembers, Players, SyncState, LocalSettings])
+@DriftDatabase(tables: [Teams, TeamMembers, Players, Sessions, SessionPlayers, Wellness, Injuries, SyncState, LocalSettings])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+        onUpgrade: (m, from, to) async {
+          if (from < 2) {
+            // v2 : séances, présence, bien-être, blessures.
+            for (final TableInfo t in [sessions, sessionPlayers, wellness, injuries]) {
+              await m.createTable(t);
+            }
+          }
+        },
+      );
 
   /// Vide toutes les données (déconnexion : l'appareil peut servir à un autre membre du staff).
   Future<void> wipe() => transaction(() async {

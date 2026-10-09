@@ -16,16 +16,22 @@ final databaseProvider = Provider<AppDatabase>((ref) {
 
 /// Description d'une table synchronisée. L'ordre de la liste est l'ordre des dépendances.
 class _SyncTable {
-  const _SyncTable(this.name, {this.push = true});
+  const _SyncTable(this.name, {this.push = true, this.booleans = const {}});
   final String name;
   /// false : table en lecture seule pour l'application (écrite par le serveur).
   final bool push;
+  /// Colonnes booléennes autres que deleted (SQLite stocke 0/1, Supabase true/false).
+  final Set<String> booleans;
 }
 
 const _tables = [
   _SyncTable('teams'),
   _SyncTable('team_members', push: false),
   _SyncTable('players'),
+  _SyncTable('sessions'),
+  _SyncTable('session_players', booleans: {'present'}),
+  _SyncTable('wellness'),
+  _SyncTable('injuries'),
 ];
 
 /// Synchronisation hors ligne d'abord (docs/01 §6) :
@@ -52,7 +58,7 @@ class SyncEngine {
     for (final t in _tables.where((t) => t.push)) {
       final rows = await _db.customSelect('SELECT * FROM ${t.name} WHERE is_dirty = 1').get();
       if (rows.isEmpty) continue;
-      final payload = [for (final r in rows) _toRemote(r.data)];
+      final payload = [for (final r in rows) _toRemote(t, r.data)];
       await _client.from(t.name).upsert(payload);
       // Ne marquer « propre » que si la ligne n'a pas été modifiée pendant l'envoi.
       await _db.transaction(() async {
@@ -95,11 +101,13 @@ class SyncEngine {
     }
   }
 
-  Map<String, Object?> _toRemote(Map<String, Object?> local) {
+  Map<String, Object?> _toRemote(_SyncTable t, Map<String, Object?> local) {
     final row = Map<String, Object?>.of(local)
       ..remove('is_dirty')
       ..remove('server_updated_at'); // posé par le serveur
-    row['deleted'] = row['deleted'] == 1; // SQLite stocke 0/1, Supabase true/false
+    for (final c in {'deleted', ...t.booleans}) {
+      row[c] = row[c] == 1; // SQLite stocke 0/1, Supabase true/false
+    }
     return row;
   }
 

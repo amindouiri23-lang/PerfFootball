@@ -7,6 +7,13 @@ import '../features/auth/auth_repository.dart';
 import '../features/auth/auth_screens.dart';
 import '../features/home/home_screen.dart';
 import '../features/profile/profile_screens.dart';
+import '../features/sessions/attendance_screen.dart';
+import '../features/sessions/closing_screen.dart';
+import '../features/sessions/injury_form_screen.dart';
+import '../features/sessions/session_form_screen.dart';
+import '../features/sessions/session_screen.dart';
+import '../features/sessions/sessions_list_screen.dart';
+import '../features/sessions/wellness_screens.dart';
 import '../features/team/player_screens.dart';
 import '../features/team/team_form_screen.dart';
 import '../features/team/team_screen.dart';
@@ -40,7 +47,42 @@ final routerProvider = Provider<GoRouter>((ref) {
         branches: [
           StatefulShellBranch(routes: [GoRoute(path: '/home', builder: (_, _) => const HomeScreen())]),
           StatefulShellBranch(routes: [
-            GoRoute(path: '/sessions', builder: (_, _) => const ComingSoon(title: 'Séances')),
+            GoRoute(
+              path: '/sessions',
+              builder: (_, _) => const SessionsListScreen(),
+              routes: [
+                GoRoute(path: 'new', builder: (_, _) => const SessionFormScreen()),
+                GoRoute(
+                  path: ':id',
+                  builder: (_, s) => SessionScreen(id: s.pathParameters['id']!),
+                  routes: [
+                    GoRoute(path: 'edit', builder: (_, s) => SessionFormScreen(id: s.pathParameters['id'])),
+                    GoRoute(path: 'attendance', builder: (_, s) => AttendanceScreen(sessionId: s.pathParameters['id']!)),
+                    GoRoute(path: 'close', builder: (_, s) => ClosingScreen(sessionId: s.pathParameters['id']!)),
+                    GoRoute(
+                      path: 'injury/:playerId',
+                      builder: (_, s) =>
+                          InjuryFormScreen(sessionId: s.pathParameters['id']!, playerId: s.pathParameters['playerId']!),
+                    ),
+                    GoRoute(
+                      path: 'wellness',
+                      builder: (_, s) => WellnessListScreen(sessionId: s.pathParameters['id']!),
+                      routes: [
+                        GoRoute(
+                          path: ':playerId',
+                          // Clé par joueur : « joueur suivant » doit repartir d'un questionnaire vierge.
+                          builder: (_, s) => WellnessFormScreen(
+                            key: ValueKey(s.pathParameters['playerId']),
+                            sessionId: s.pathParameters['id']!,
+                            playerId: s.pathParameters['playerId']!,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ]),
           StatefulShellBranch(routes: [
             GoRoute(path: '/matches', builder: (_, _) => const ComingSoon(title: 'Matchs')),

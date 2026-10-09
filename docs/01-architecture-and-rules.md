@@ -375,6 +375,7 @@ Computed in DAX, never stored:
 | Date | Decision |
 |---|---|
 | 2026-10-07 | Initial decisions D1–D9 (brainstorm). |
+| 2026-10-09 | Sessions: E14 « Séance en cours » and E19 « Détail » are one screen adapting to the status. Validating the closing gives the planned duration to present players without a duration, so their load is never unknown in Power BI. Closing values (duration, RPE) are shown immediately and saved per tap. |
 | 2026-10-09 | Web build (used for testing only): Drift runs SQLite WebAssembly on the main thread with IndexedDB (`lib/data/connection_web.dart`) instead of drift_flutter's SharedWorker, which some embedded browsers cannot use. `web/sqlite3.wasm` must match the `sqlite3` package version. Android/iOS keep native SQLite. |
 | 2026-10-08 | D10: no SMTP. Password reset and account creation by an in-app admin via the `admin-users` Edge Function; email recovery flow removed. |
 | 2026-10-07 | v1 scope redefined by the coach's workflow: teams, attendance, session/player remarks, injuries, post-session wellness, match events. Physical tests and body measurements moved to v2. **App UI in French.** |
