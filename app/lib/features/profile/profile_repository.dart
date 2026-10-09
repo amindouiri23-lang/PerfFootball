@@ -15,7 +15,7 @@ const jobTitles = {
 
 class StaffProfile {
   const StaffProfile({required this.id, required this.firstName, required this.lastName,
-      required this.jobTitle, this.phone});
+      required this.jobTitle, this.phone, this.photoPath});
 
   factory StaffProfile.fromJson(Map<String, dynamic> j) => StaffProfile(
         id: j['id'] as String,
@@ -23,6 +23,7 @@ class StaffProfile {
         lastName: j['last_name'] as String,
         jobTitle: j['job_title'] as String,
         phone: j['phone'] as String?,
+        photoPath: j['photo_path'] as String?,
       );
 
   final String id;
@@ -30,6 +31,7 @@ class StaffProfile {
   final String lastName;
   final String jobTitle;
   final String? phone;
+  final String? photoPath;
 
   String get fullName => '$firstName $lastName';
   String get initials => '${firstName.substring(0, 1)}${lastName.substring(0, 1)}'.toUpperCase();
@@ -62,5 +64,15 @@ Future<void> saveMyProfile(WidgetRef ref, {required String firstName, required S
   } catch (_) {
     throw const AppException(networkErrorMessage);
   }
+  ref.invalidate(myProfileProvider);
+}
+
+/// Photo de profil : chemin `profiles/<user_id>.jpg`, imposé par la règle d'accès au stockage.
+Future<void> saveMyPhotoPath(WidgetRef ref, String path) async {
+  final client = ref.read(supabaseProvider);
+  await client.from('staff_profiles').update({
+    'photo_path': path,
+    'updated_at': DateTime.now().toUtc().toIso8601String(),
+  }).eq('id', client.auth.currentUser!.id);
   ref.invalidate(myProfileProvider);
 }

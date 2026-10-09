@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../data/sync.dart';
+import '../settings.dart';
 import '../../features/auth/auth_repository.dart';
 
 const _destinations = [
@@ -38,7 +39,7 @@ class _AppShellState extends ConsumerState<AppShell> {
     final db = ref.read(databaseProvider);
     final userId = ref.read(supabaseProvider).auth.currentUser!.id;
     if (await db.setting('owner_user_id') != userId) {
-      await db.wipe();
+      await db.wipe(keepSettings: deviceSettingKeys);
       await db.setSetting('owner_user_id', userId);
     }
     await ref.read(syncControllerProvider.notifier).sync();

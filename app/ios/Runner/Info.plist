@@ -2,6 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSCameraUsageDescription</key>
+	<string>PerfFoot utilise l'appareil photo pour les photos des joueurs, du logo et du profil.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>PerfFoot accède à vos photos pour choisir la photo d'un joueur, du logo ou du profil.</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>

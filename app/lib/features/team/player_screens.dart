@@ -8,10 +8,16 @@ import '../../core/router.dart';
 import '../../core/widgets/form_page.dart';
 import '../../data/database.dart';
 import 'team_repository.dart';
+import '../../core/photos.dart';
+import '../../core/widgets/injured_badge.dart';
+import '../matches/match_repository.dart';
+import '../matches/matches_list_screen.dart' show ScoreChip;
+import '../sessions/session_repository.dart';
+import '../sessions/wellness_screens.dart' show wellnessTotal;
+import 'player_history.dart';
 import 'team_screen.dart';
 
-/// E08 — Fiche joueur. Les onglets d'historique (séances, matchs, blessures, bien-être)
-/// arrivent avec leurs modules.
+/// E08 — Fiche joueur : identité (photo modifiable), statistiques de la saison et historique.
 class PlayerScreen extends ConsumerWidget {
   const PlayerScreen({super.key, required this.id});
 
@@ -25,22 +31,34 @@ class PlayerScreen extends ConsumerWidget {
       error: (e, _) => Scaffold(body: Center(child: Text('$e'))),
       data: (p) {
         if (p == null || p.deleted) {
-          return Scaffold(
-            appBar: AppBar(),
-            body: const Center(child: Text('Joueur introuvable.')),
-          );
+          return Scaffold(appBar: AppBar(), body: const Center(child: Text('Joueur introuvable.')));
         }
         final theme = Theme.of(context);
+        final sessions = ref.watch(playerSessionsProvider(id)).value ?? const <SessionLine>[];
+        final matches = ref.watch(playerMatchesProvider(id)).value ?? const <MatchLine>[];
+        final events = ref.watch(playerEventsProvider(id)).value ?? const <MatchEvent>[];
+        final injuries = ref.watch(playerInjuriesProvider(id)).value ?? const <Injury>[];
+        final wellness = ref.watch(playerWellnessProvider(id)).value ?? const <WellnessLine>[];
+        final stats = PlayerStats(sessions, matches, events, id);
+        final openInjury = injuries.where((i) => i.returnDate == null).firstOrNull;
         final details = [
           positions[p.position],
           if (p.age != null) '${p.age} ans',
           if (p.dominantFoot != null) 'Pied ${feet[p.dominantFoot]!.toLowerCase()}',
           if (p.heightCm != null) '${p.heightCm} cm',
         ].join(' · ');
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text('Fiche joueur'),
-            actions: [
+
+        Widget stat(String value, String label) => Expanded(
+              child: Column(children: [
+                Text(value, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                Text(label, style: theme.textTheme.bodySmall, textAlign: TextAlign.center),
+              ]),
+            );
+
+        return DefaultTabController(
+          length: 4,
+          child: Scaffold(
+            appBar: AppBar(title: const Text('Fiche joueur'), actions: [
               IconButton(
                 tooltip: 'Modifier',
                 icon: const Icon(Icons.edit_outlined),
@@ -52,51 +70,152 @@ class PlayerScreen extends ConsumerWidget {
                 },
                 itemBuilder: (_) => const [PopupMenuItem(value: 'delete', child: Text('Supprimer le joueur'))],
               ),
-            ],
-          ),
-          body: ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              Row(
-                children: [
-                  CircleAvatar(radius: 36, child: Text(p.initials, style: theme.textTheme.headlineSmall)),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '${p.shirtNumber != null ? '#${p.shirtNumber} ' : ''}${p.fullName}',
-                          style: theme.textTheme.titleLarge,
+            ]),
+            body: NestedScrollView(
+              headerSliverBuilder: (context, _) => [
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Row(children: [
+                        InkWell(
+                          customBorder: const CircleBorder(),
+                          onTap: () async {
+                            final path = await pickAndUploadPhoto(context, ref, 'teams/${p.teamId}/players/${p.id}.jpg');
+                            if (path != null) await ref.read(teamRepositoryProvider).setPlayerPhoto(p.id, path);
+                          },
+                          child: Stack(children: [
+                            PhotoAvatar(path: p.photoPath, initials: p.initials, radius: 36),
+                            const Positioned(
+                              right: 0,
+                              bottom: 0,
+                              child: CircleAvatar(radius: 11, child: Icon(Icons.photo_camera, size: 13)),
+                            ),
+                          ]),
                         ),
-                        Text(details),
-                        if (p.birthDate != null)
-                          Text(
-                            'Né le ${DateFormat('d MMMM y', 'fr_FR').format(DateTime.parse(p.birthDate!))}',
-                            style: theme.textTheme.bodySmall,
-                          ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 32),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Text(
-                    'L\'historique du joueur (séances, matchs, blessures, bien-être) '
-                    'apparaîtra ici avec les modules Séances et Matchs.',
-                    style: theme.textTheme.bodyMedium,
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                            Text('${p.shirtNumber != null ? '#${p.shirtNumber} ' : ''}${p.fullName}',
+                                style: theme.textTheme.titleLarge),
+                            Text(details),
+                            if (openInjury != null)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 4),
+                                child: Wrap(spacing: 6, crossAxisAlignment: WrapCrossAlignment.center, children: [
+                                  const InjuredBadge(),
+                                  Text(injuryLabel(openInjury), style: theme.textTheme.bodySmall),
+                                ]),
+                              ),
+                          ]),
+                        ),
+                      ]),
+                      const SizedBox(height: 16),
+                      Card(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          child: Row(children: [
+                            stat(stats.attendance == null ? '—' : '${stats.attendance} %',
+                                'Présence\n${stats.sessionsPresent}/${stats.sessionsHeld}'),
+                            stat('${stats.matchesPlayed}', 'Matchs\njoués'),
+                            stat('${stats.minutes}', 'Minutes'),
+                            stat('${stats.goals} / ${stats.assists}', 'Buts /\npasses'),
+                            stat('${stats.yellows} / ${stats.reds}', 'Cartons\nJ / R'),
+                          ]),
+                        ),
+                      ),
+                    ]),
                   ),
                 ),
-              ),
-            ],
+                const SliverToBoxAdapter(
+                  child: TabBar(tabs: [
+                    Tab(text: 'Séances'),
+                    Tab(text: 'Matchs'),
+                    Tab(text: 'Blessures'),
+                    Tab(text: 'Bien-être'),
+                  ]),
+                ),
+              ],
+              body: TabBarView(children: [
+                _list(sessions.isEmpty ? 'Aucune séance.' : null, [
+                  for (final l in sessions)
+                    ListTile(
+                      title: Text('${l.session.dayLabel} · ${sessionTypes[l.session.type]}'),
+                      subtitle: Text(l.row.present
+                          ? [
+                              'Présent',
+                              if (l.row.durationMin != null) '${l.row.durationMin} min',
+                              if (l.row.rpe != null) 'RPE ${l.row.rpe}',
+                              if (l.row.remark != null) 'Remarque : ${l.row.remark}',
+                            ].join(' · ')
+                          : 'Absent — ${absenceReasons[l.row.absenceReason] ?? 'sans motif'}'),
+                      onTap: () => context.go('/sessions/${l.session.id}'),
+                    ),
+                ]),
+                _list(matches.isEmpty ? 'Aucun match.' : null, [
+                  for (final l in matches)
+                    ListTile(
+                      title: Text('${l.match.dayLabel} · ${l.match.opponent}'),
+                      subtitle: Text(l.row.present
+                          ? [
+                              matchRoles[l.row.role] ?? '',
+                              if (l.row.minutesPlayed != null) "${l.row.minutesPlayed}'",
+                              ..._matchEvents(events, l.match.id, id),
+                              if (l.row.rpe != null) 'RPE ${l.row.rpe}',
+                            ].join(' · ')
+                          : 'Absent — ${matchAbsenceReasons[l.row.absenceReason] ?? 'sans motif'}'),
+                      trailing: l.match.result == null ? null : ScoreChip(l.match),
+                      onTap: () => context.go('/matches/${l.match.id}'),
+                    ),
+                ]),
+                _list(injuries.isEmpty ? 'Aucune blessure.' : null, [
+                  for (final i in injuries)
+                    ListTile(
+                      title: Text('${injuryLabel(i)} · ${injuryTypes[i.type]}'),
+                      subtitle: Text([
+                        DateFormat('d MMM y', 'fr_FR').format(DateTime.parse(i.date)),
+                        severities[i.severity]!.split(' ').first,
+                        i.returnDate == null
+                            ? 'en cours'
+                            : 'retour le ${DateFormat('d MMM', 'fr_FR').format(DateTime.parse(i.returnDate!))}',
+                      ].join(' · ')),
+                      trailing: i.returnDate == null ? const InjuredBadge() : null,
+                    ),
+                ]),
+                _list(wellness.isEmpty ? 'Aucun questionnaire.' : null, [
+                  for (final w in wellness)
+                    ListTile(
+                      title: Text('${w.session.dayLabel} · ${sessionTypes[w.session.type]}'),
+                      subtitle: Text('Sommeil ${w.entry.sleepHours.toStringAsFixed(1).replaceAll('.', ',')} h'
+                          '${w.entry.remark != null ? ' · ${w.entry.remark}' : ''}'),
+                      trailing: Text('${wellnessTotal(w.entry)}/25', style: theme.textTheme.titleMedium),
+                    ),
+                ]),
+              ]),
+            ),
           ),
         );
       },
     );
   }
+
+  static List<String> _matchEvents(List<MatchEvent> events, String matchId, String playerId) {
+    final mine = events.where((e) => e.matchId == matchId);
+    final goals = mine.where((e) => e.type == 'goal' && e.playerId == playerId).length;
+    final assists = mine.where((e) => e.type == 'goal' && e.assistPlayerId == playerId).length;
+    final yellows = mine.where((e) => e.type == 'yellow_card' && e.playerId == playerId).length;
+    final red = mine.any((e) => e.type == 'red_card' && e.playerId == playerId);
+    return [
+      if (goals > 0) '$goals but${goals > 1 ? 's' : ''}',
+      if (assists > 0) '$assists passe${assists > 1 ? 's' : ''} déc.',
+      if (yellows > 0) '$yellows jaune${yellows > 1 ? 's' : ''}',
+      if (red) 'rouge',
+    ];
+  }
+
+  Widget _list(String? empty, List<Widget> children) => empty != null
+      ? Center(child: Padding(padding: const EdgeInsets.all(24), child: Text(empty)))
+      : ListView(padding: EdgeInsets.zero, children: children);
 }
 
 /// E09 — Ajouter / modifier un joueur.
@@ -111,6 +230,8 @@ class PlayerFormScreen extends ConsumerStatefulWidget {
 }
 
 class _PlayerFormScreenState extends ConsumerState<PlayerFormScreen> {
+  /// Un double appui ne doit pas créer deux fois la même fiche (voir le verrou dans _save).
+  bool _saving = false;
   final _form = GlobalKey<FormState>();
   final _first = TextEditingController();
   final _last = TextEditingController();
@@ -154,6 +275,18 @@ class _PlayerFormScreenState extends ConsumerState<PlayerFormScreen> {
   }
 
   Future<void> _save({required bool another}) async {
+    if (_saving) return;
+    _saving = true;
+    try {
+      await _saveUnguarded(another: another);
+    } finally {
+      // Verrou gardé un instant : l'enregistrement local prend quelques millisecondes, la seconde
+      // frappe d'un double appui arrive souvent après — elle doit aussi être ignorée.
+      Future<void>.delayed(const Duration(milliseconds: 600), () => _saving = false);
+    }
+  }
+
+  Future<void> _saveUnguarded({required bool another}) async {
     setState(() => _submitted = true);
     if (!_form.currentState!.validate()) return;
     final team = ref.read(activeTeamProvider).value!;
@@ -235,7 +368,7 @@ class _PlayerFormScreenState extends ConsumerState<PlayerFormScreen> {
       _load(player.value);
     }
     final team = ref.watch(activeTeamProvider).value;
-    final players = team == null ? const <Player>[] : ref.watch(playersProvider(team.id)).value ?? const [];
+    final players = team == null ? const <Player>[] : ref.watch(playersProvider(team.id)).value ?? const <Player>[];
     final number = int.tryParse(_number.text);
     final sameNumber = players.where((p) => p.shirtNumber == number && p.id != widget.id).firstOrNull;
     final create = widget.id == null;

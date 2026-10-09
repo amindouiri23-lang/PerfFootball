@@ -43,7 +43,7 @@ class WellnessListScreen extends ConsumerWidget {
     final s = ref.watch(sessionProvider(sessionId)).value;
     if (s == null) return const Scaffold(body: Center(child: CircularProgressIndicator()));
     final players = {for (final p in ref.watch(playersProvider(s.teamId)).value ?? const <Player>[]) p.id: p};
-    final present = _presentRows(ref.watch(sessionPlayersProvider(sessionId)).value ?? const [], players);
+    final present = _presentRows(ref.watch(sessionPlayersProvider(sessionId)).value ?? const <SessionPlayer>[], players);
     final done = {for (final w in ref.watch(sessionWellnessProvider(sessionId)).value ?? const <WellnessEntry>[]) w.playerId: w};
     final todo = present.where((r) => !done.containsKey(r.playerId)).toList();
     final filled = present.where((r) => done.containsKey(r.playerId)).toList();
@@ -137,7 +137,7 @@ class _WellnessFormScreenState extends ConsumerState<WellnessFormScreen> {
     if (next) {
       final players = {for (final p in ref.read(playersProvider(s.teamId)).value ?? const <Player>[]) p.id: p};
       final done = {for (final w in ref.read(sessionWellnessProvider(s.id)).value ?? const <WellnessEntry>[]) w.playerId};
-      final following = _presentRows(ref.read(sessionPlayersProvider(s.id)).value ?? const [], players)
+      final following = _presentRows(ref.read(sessionPlayersProvider(s.id)).value ?? const <SessionPlayer>[], players)
           .where((r) => r.playerId != widget.playerId && !done.contains(r.playerId))
           .firstOrNull;
       if (following != null) {

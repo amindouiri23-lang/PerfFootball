@@ -178,13 +178,13 @@ class AppDatabase extends _$AppDatabase {
         onUpgrade: (m, from, to) async {
           if (from < 2) {
             // v2 : séances, présence, bien-être, blessures.
-            for (final TableInfo t in [sessions, sessionPlayers, wellness, injuries]) {
+            for (final TableInfo<Table, dynamic> t in [sessions, sessionPlayers, wellness, injuries]) {
               await m.createTable(t);
             }
           }
           if (from < 3) {
             // v3 : matchs, feuilles de match, événements.
-            for (final TableInfo t in [matches, matchPlayers, matchEvents]) {
+            for (final TableInfo<Table, dynamic> t in [matches, matchPlayers, matchEvents]) {
               await m.createTable(t);
             }
           }
@@ -192,10 +192,12 @@ class AppDatabase extends _$AppDatabase {
       );
 
   /// Vide toutes les données (déconnexion : l'appareil peut servir à un autre membre du staff).
-  Future<void> wipe() => transaction(() async {
-        for (final table in allTables) {
+  /// Les réglages de l'appareil (thème, durées par défaut) sont conservés.
+  Future<void> wipe({Set<String> keepSettings = const {}}) => transaction(() async {
+        for (final table in allTables.where((t) => t != localSettings)) {
           await delete(table).go();
         }
+        await (delete(localSettings)..where((s) => s.key.isNotIn(keepSettings))).go();
       });
 
   Future<String?> setting(String key) async =>

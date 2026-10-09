@@ -5,25 +5,30 @@ import 'package:intl/intl.dart';
 
 import '../../core/router.dart';
 import '../../core/widgets/form_page.dart';
+import '../../data/database.dart';
 import '../matches/match_repository.dart';
 import '../team/team_repository.dart';
 import 'session_repository.dart';
 
-/// E15 — Déclarer une blessure pendant une séance ou un match ([sessionId] ou [matchId]).
-/// Le joueur et le contexte sont pré-remplis ; pour un match, la minute est demandée.
+/// E15 — Déclarer une blessure pendant une séance ([sessionId]), un match ([matchId]) ou hors club
+/// (aucun des deux, depuis l'infirmerie : le joueur et la date sont alors demandés).
+/// Pour un match, la minute est demandée.
 class InjuryFormScreen extends ConsumerStatefulWidget {
-  const InjuryFormScreen({super.key, this.sessionId, this.matchId, required this.playerId})
-      : assert((sessionId == null) != (matchId == null));
+  const InjuryFormScreen({super.key, this.sessionId, this.matchId, this.playerId})
+      : assert(sessionId == null || matchId == null),
+        assert(playerId != null || (sessionId == null && matchId == null));
 
   final String? sessionId;
   final String? matchId;
-  final String playerId;
+  final String? playerId;
 
   @override
   ConsumerState<InjuryFormScreen> createState() => _InjuryFormScreenState();
 }
 
 class _InjuryFormScreenState extends ConsumerState<InjuryFormScreen> {
+  /// Un double appui ne doit pas créer deux fois la même fiche (voir le verrou dans _save).
+  bool _saving = false;
   final _description = TextEditingController();
   final _minute = TextEditingController();
   String? _area;
@@ -33,18 +38,35 @@ class _InjuryFormScreenState extends ConsumerState<InjuryFormScreen> {
   String? _severity;
   DateTime? _expectedReturn;
   bool _submitted = false;
+  /// Blessure hors club : joueur et date choisis dans le formulaire.
+  late String? _playerId = widget.playerId;
+  DateTime _date = DateTime.now();
+
+  bool get _outside => widget.sessionId == null && widget.matchId == null;
 
   int? get _minuteValue => int.tryParse(_minute.text);
   bool get _minuteValid => widget.matchId == null || _minute.text.isEmpty || (_minuteValue! >= 1 && _minuteValue! <= 130);
 
   Future<void> _save() async {
+    if (_saving) return;
+    _saving = true;
+    try {
+      await _saveUnguarded();
+    } finally {
+      // Verrou gardé un instant : l'enregistrement local prend quelques millisecondes, la seconde
+      // frappe d'un double appui arrive souvent après — elle doit aussi être ignorée.
+      Future<void>.delayed(const Duration(milliseconds: 600), () => _saving = false);
+    }
+  }
+
+  Future<void> _saveUnguarded() async {
     setState(() => _submitted = true);
-    if ([_area, _type, _mechanism, _severity].contains(null) || !_minuteValid) return;
+    if ([_playerId, _area, _type, _mechanism, _severity].contains(null) || !_minuteValid) return;
     final ctx = _context(listen: false)!;
-    final player = ref.read(playerProvider(widget.playerId)).value;
+    final player = ref.read(playerProvider(_playerId!)).value;
     final text = _description.text.trim();
     await ref.read(sessionRepositoryProvider).saveInjury(
-          teamId: ctx.teamId, playerId: widget.playerId, sessionId: widget.sessionId, matchId: widget.matchId,
+          teamId: ctx.teamId, playerId: _playerId!, sessionId: widget.sessionId, matchId: widget.matchId,
           minute: widget.matchId == null ? null : _minuteValue, date: ctx.date,
           bodyArea: _area!, side: _side, type: _type!, mechanism: _mechanism!, severity: _severity!,
           description: text.isEmpty ? null : text,
@@ -58,6 +80,12 @@ class _InjuryFormScreenState extends ConsumerState<InjuryFormScreen> {
   /// Séance ou match d'origine : équipe, date, libellé et écran de retour.
   /// [listen] : vrai pendant build (ref.watch), faux dans un rappel (ref.read).
   ({String teamId, String date, DateTime day, String label, String back})? _context({bool listen = true}) {
+    if (_outside) {
+      final team = (listen ? ref.watch(activeTeamProvider) : ref.read(activeTeamProvider)).value;
+      return team == null
+          ? null
+          : (teamId: team.id, date: isoDate(_date), day: _date, label: 'Hors séance et match', back: '/team/injuries');
+    }
     if (widget.sessionId != null) {
       final p = sessionProvider(widget.sessionId!);
       final s = (listen ? ref.watch(p) : ref.read(p)).value;
@@ -109,15 +137,43 @@ class _InjuryFormScreenState extends ConsumerState<InjuryFormScreen> {
   @override
   Widget build(BuildContext context) {
     final ctx = _context();
-    final player = ref.watch(playerProvider(widget.playerId)).value;
     if (ctx == null) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    final player = _playerId == null ? null : ref.watch(playerProvider(_playerId!)).value;
+    final theme = Theme.of(context);
     return FormPage(title: 'Déclarer une blessure', children: [
-      ListTile(
-        contentPadding: EdgeInsets.zero,
-        leading: CircleAvatar(child: Text(player?.initials ?? '?')),
-        title: Text(player?.fullName ?? ''),
-        subtitle: Text(ctx.label),
-      ),
+      if (_outside) ...[
+        DropdownButtonFormField<String>(
+          initialValue: _playerId,
+          decoration: InputDecoration(
+            labelText: 'Joueur *',
+            errorText: _submitted && _playerId == null ? 'Obligatoire' : null,
+          ),
+          items: [
+            for (final p in ref.watch(playersProvider(ctx.teamId)).value ?? const <Player>[])
+              DropdownMenuItem(value: p.id, child: Text('${p.shirtNumber ?? ''} ${p.fullName}')),
+          ],
+          onChanged: (v) => setState(() => _playerId = v),
+        ),
+        const SizedBox(height: 16),
+        InkWell(
+          onTap: () async {
+            final d = await showDatePicker(context: context, initialDate: _date,
+                firstDate: DateTime(2020), lastDate: DateTime.now());
+            if (d != null) setState(() => _date = d);
+          },
+          child: InputDecorator(
+            decoration: const InputDecoration(labelText: 'Date de la blessure *', suffixIcon: Icon(Icons.event)),
+            child: Text(DateFormat('d MMMM y', 'fr_FR').format(_date)),
+          ),
+        ),
+        const SizedBox(height: 16),
+      ] else
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: CircleAvatar(child: Text(player?.initials ?? '?')),
+          title: Text(player?.fullName ?? ''),
+          subtitle: Text(ctx.label, style: theme.textTheme.bodyMedium),
+        ),
       const SizedBox(height: 8),
       if (widget.matchId != null) ...[
         TextField(
