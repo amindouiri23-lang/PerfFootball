@@ -1,0 +1,61 @@
+# Football Performance App
+
+Flutter app for phones and tablets (Android first, iOS later) for a football team's **fitness coach**:
+record the team, players, training sessions (attendance, injuries, remarks, RPE, wellness) and
+matches (attendance, playing time, goals, assists, cards, injuries), then analyse the data in
+**Power BI**. **The app UI is in French.**
+
+No custom backend: the app talks to **Supabase** (free plan) directly.
+
+## Documentation
+
+| File | Content |
+|---|---|
+| [docs/01-architecture-and-rules.md](docs/01-architecture-and-rules.md) | Technical decisions, data model, sync, security, rules every developer must follow |
+| [docs/02-specifications-fonctionnelles.md](docs/02-specifications-fonctionnelles.md) | Functional specs v1 (French): every screen with content, rules and scenario |
+| [docs/Specifications-fonctionnelles-v1.pdf](docs/Specifications-fonctionnelles-v1.pdf) | Same specs as a PDF, with a mockup of every screen |
+
+Read both documents before writing code. If a decision changes, update `01-architecture-and-rules.md`
+(section "Decision log") in the same change.
+
+## Database (Supabase)
+
+Project: `adxmbdzmxfplubtrqcwt`. Schema, security rules, photo storage and Power BI views are in
+`supabase/migrations/`; the account administration function is `supabase/functions/admin-users/`.
+
+**Deploy** (the Supabase CLI runs through `npx`, nothing to install):
+
+```bash
+npx supabase login
+npx supabase link --project-ref adxmbdzmxfplubtrqcwt
+npx supabase db push
+npx supabase functions deploy admin-users
+```
+
+**One-time settings in the Supabase dashboard:**
+1. Authentication → Sign In / Providers → Email: **disable "Allow new users to sign up"**, keep
+   **"Secure password change" off**, minimum password length **8**.
+2. Authentication → Users → Add user: create your own account (email + password, "Auto confirm").
+3. SQL editor — make yourself the first admin, create your profile, and enable the Power BI user:
+
+```sql
+update auth.users set raw_app_meta_data = raw_app_meta_data || '{"role":"admin"}' where email = 'you@club.tn';
+insert into public.staff_profiles (id, first_name, last_name, job_title)
+select id, 'Prénom', 'Nom', 'fitness_coach' from auth.users where email = 'you@club.tn';
+alter role powerbi_reader with login password '<POWERBI_DB_PASSWORD>';
+```
+
+**Power BI Desktop:** Get data → PostgreSQL database. Server = the **Session pooler** host shown
+under *Connect* in the dashboard (the direct `db.<ref>.supabase.co` host is IPv6-only), database
+`postgres`, user `powerbi_reader.adxmbdzmxfplubtrqcwt`, then pick the tables of schema `reporting`.
+
+## Regenerating the PDF
+
+The PDF is built from the specs Markdown plus the mockups in `tools/pdf/maquettes.html`
+(placed where the Markdown has `<!-- maquette:E01 -->` markers). Requires Python with the
+`markdown` package and Google Chrome or Microsoft Edge.
+
+```bash
+pip install markdown
+python tools/pdf/build_pdf.py
+```

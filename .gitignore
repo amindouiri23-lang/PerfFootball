@@ -1,0 +1,4 @@
+tools/pdf/build/
+.env
+supabase/.temp/
+supabase/.branches/

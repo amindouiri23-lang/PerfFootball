@@ -1,0 +1,592 @@
+<!--
+  Maquettes des écrans, insérées dans le PDF à l'emplacement des marqueurs
+  <!- - maquette:EXX - -> du fichier de spécifications.
+  Chaque bloc commence par une ligne « @@ EXX ».
+  Raccourcis remplacés par build_pdf.py :
+    {{status}}            barre d'état du téléphone
+    {{nav:Onglet}}        barre de navigation du bas, onglet actif
+    {{rail:Onglet}}       navigation latérale (tablette), onglet actif
+-->
+
+@@ E01
+<div class="mock"><div class="phone">{{status}}
+<div class="body">
+  <div class="logo"><div class="ball">⚽</div><b>PerfFoot</b><span>Suivi de la performance</span></div>
+  <div class="field"><label>Adresse e-mail</label><div class="input">coach@club.tn</div></div>
+  <div class="field"><label>Mot de passe</label><div class="input">••••••••• <span style="float:right">👁</span></div></div>
+  <div class="btn" style="margin-top:12px">Se connecter</div>
+  <div class="link">Mot de passe oublié ?</div>
+</div></div><div class="cap">Téléphone</div></div>
+<div class="mock"><div class="phone">{{status}}
+<div class="body">
+  <div class="logo"><div class="ball">⚽</div><b>PerfFoot</b><span>Suivi de la performance</span></div>
+  <div class="field"><label>Adresse e-mail</label><div class="input err">coach@club.tn</div></div>
+  <div class="field"><label>Mot de passe</label><div class="input err">•••••••</div><div class="msg">E-mail ou mot de passe incorrect.</div></div>
+  <div class="btn" style="margin-top:12px">Se connecter</div>
+  <div class="link">Mot de passe oublié ?</div>
+</div></div><div class="cap">Cas d'erreur</div></div>
+
+@@ E02
+<div class="mock"><div class="phone">{{status}}
+<div class="appbar"><span class="ic">‹</span><b>Mot de passe oublié</b></div>
+<div class="body">
+  <div style="text-align:center;font-size:30px;margin:26px 0 8px">🔑</div>
+  <p style="text-align:center;margin:0 6px 8px">Votre mot de passe est réinitialisé par l'<b>administrateur</b> de l'application.</p>
+  <p style="text-align:center;margin:0 6px 14px" class="small">Contactez-le : il vous communiquera un mot de passe temporaire, que vous remplacerez à la connexion.</p>
+  <div class="btn sec">Retour à la connexion</div>
+</div></div><div class="cap">Téléphone</div></div>
+
+@@ E03
+<div class="mock"><div class="phone">{{status}}
+<div class="appbar"><b>Nouveau mot de passe</b></div>
+<div class="body">
+  <div class="warn" style="margin-top:6px">Vous vous êtes connecté avec un mot de passe temporaire. Pour votre sécurité, choisissez votre propre mot de passe.</div>
+  <div class="field" style="margin-top:8px"><label>Nouveau mot de passe</label><div class="input">••••••••••</div></div>
+  <div class="field"><label>Confirmer le mot de passe</label><div class="input">••••••••••</div></div>
+  <div class="small">8 caractères minimum, dont 1 chiffre</div>
+  <div class="btn" style="margin-top:10px">Valider</div>
+  <div class="link">Se déconnecter</div>
+</div></div><div class="cap">Après connexion avec un mot de passe temporaire</div></div>
+
+@@ E04
+<div class="mock"><div class="phone">{{status}}
+<div class="appbar"><b>Mon profil</b><span class="sync ok">☁ À jour</span><span class="ic">✎</span></div>
+<div class="body">
+  <div style="text-align:center;margin:4px 0 8px"><div class="av lg" style="margin:0 auto">NB</div>
+    <div style="font-weight:700;font-size:11px;margin-top:4px">Nizar Belhadj</div><div class="small">Préparateur physique</div></div>
+  <div class="field"><label>Téléphone</label><div class="input">+216 22 345 678</div></div>
+  <div class="field"><label>E-mail</label><div class="input ph">coach@club.tn</div></div>
+  <div class="menu">
+    <div><span>Équipe active</span><span class="small">Seniors A ›</span></div>
+    <div><span>Changer le mot de passe</span><span>›</span></div>
+    <div><span>Synchronisation et paramètres</span><span>›</span></div>
+    <div><span>🛡 Administration</span><span>›</span></div>
+  </div>
+  <div class="btn danger" style="margin-top:8px">Se déconnecter</div>
+</div>{{nav:Profil}}</div><div class="cap">Consultation</div></div>
+<div class="mock"><div class="phone">{{status}}
+<div class="appbar"><b>Mon profil</b></div>
+<div class="body">
+  <div class="dim"></div>
+  <div class="sheet" style="top:auto">
+    <div class="grab"></div>
+    <div style="font-weight:700;font-size:11px;margin-bottom:4px">Données non synchronisées</div>
+    <p>12 données ne sont pas encore envoyées. Synchronisez avant de vous déconnecter, sinon elles seront perdues.</p>
+    <div class="btn">Synchroniser</div><div class="btn sec">Annuler</div>
+  </div>
+</div>{{nav:Profil}}</div><div class="cap">Déconnexion bloquée</div></div>
+
+@@ E05
+<div class="mock"><div class="phone">{{status}}
+<div class="appbar"><span class="ic">‹</span><b>Changer le mot de passe</b></div>
+<div class="body">
+  <div class="field" style="margin-top:6px"><label>Mot de passe actuel</label><div class="input">••••••••</div></div>
+  <div class="field"><label>Nouveau mot de passe</label><div class="input">••••••••••</div></div>
+  <div class="field"><label>Confirmer le mot de passe</label><div class="input">••••••••••</div></div>
+  <div class="small">8 caractères minimum, dont 1 chiffre</div>
+  <div class="btn" style="margin-top:10px">Enregistrer</div>
+</div></div><div class="cap">Téléphone</div></div>
+
+@@ E06
+<div class="mock"><div class="phone">{{status}}
+<div class="appbar"><b>Créer mon équipe</b></div>
+<div class="body">
+  <p class="small" style="margin:4px 0 8px">Bienvenue ! Commencez par créer l'équipe que vous suivez.</p>
+  <div style="text-align:center;margin-bottom:6px"><div class="av lg" style="margin:0 auto;background:#eceeed;color:#999">＋</div><div class="small">Logo</div></div>
+  <div class="field"><label>Nom de l'équipe *</label><div class="input">Seniors A</div></div>
+  <div class="field"><label>Club</label><div class="input">Club Sportif de Tunis</div></div>
+  <label class="small">Catégorie *</label>
+  <div class="chips"><span class="chip on">Seniors</span><span class="chip">U21</span><span class="chip">U19</span><span class="chip">U17</span><span class="chip">U15</span><span class="chip">Autre</span></div>
+  <div class="field"><label>Saison *</label><div class="input">2026-2027 ▾</div></div>
+  <div class="btn">Créer l'équipe</div>
+</div></div><div class="cap">Première connexion</div></div>
+
+@@ E07
+<div class="mock"><div class="phone">{{status}}
+<div class="appbar"><div class="av" style="width:18px;height:18px">SA</div><b>Seniors A <span class="small">· 2026-27</span></b><span class="sync ok">☁</span><span class="ic">⋮</span></div>
+<div class="body">
+  <div class="input ph" style="margin-bottom:5px">🔍 Rechercher un joueur</div>
+  <div class="chips"><span class="chip on">Tous</span><span class="chip">Gardiens</span><span class="chip">Défenseurs</span><span class="chip">Milieux</span><span class="chip">Attaquants</span></div>
+  <div class="small">24 joueurs</div>
+  <div class="row"><span class="num">1</span><div class="av">AH</div><div class="grow"><div class="t">Anis Hamdi</div><div class="s">Gardien</div></div></div>
+  <div class="row"><span class="num">3</span><div class="av">HA</div><div class="grow"><div class="t">Hamza Ayari</div><div class="s">Défenseur</div></div></div>
+  <div class="row"><span class="num">4</span><div class="av">KB</div><div class="grow"><div class="t">Karim Ben Ali</div><div class="s">Défenseur</div></div><span class="badge red">Blessé</span></div>
+  <div class="row"><span class="num">5</span><div class="av">YT</div><div class="grow"><div class="t">Youssef Trabelsi</div><div class="s">Défenseur</div></div></div>
+  <div class="row"><span class="num">8</span><div class="av">FM</div><div class="grow"><div class="t">Farès Mejri</div><div class="s">Milieu</div></div></div>
+  <div class="row"><span class="num">10</span><div class="av">AM</div><div class="grow"><div class="t">Ali Mansour</div><div class="s">Milieu</div></div></div>
+  <div class="fab">＋ Ajouter un joueur</div>
+</div>{{nav:Équipe}}</div><div class="cap">Effectif</div></div>
+<div class="mock"><div class="phone">{{status}}
+<div class="appbar"><b>Seniors A</b><span class="ic">⋮</span></div>
+<div class="body">
+  <div class="card" style="position:absolute;right:8px;top:2px;width:150px;box-shadow:0 3px 10px rgba(0,0,0,.2);background:#fff;padding:0">
+    <div class="menu" style="margin:0"><div>Modifier l'équipe</div><div>Changer d'équipe</div><div>Créer une autre équipe</div><div>Infirmerie</div></div>
+  </div>
+  <div style="margin-top:150px;text-align:center" class="small">— Glisser une ligne vers la gauche —</div>
+  <div class="row" style="margin-top:6px"><span class="num">5</span><div class="av">YT</div><div class="grow"><div class="t">Youssef Trabelsi</div><div class="s">Défenseur</div></div>
+    <span class="badge grey" style="padding:4px">✎ Modifier</span><span class="badge red" style="padding:4px">🗑 Supprimer</span></div>
+</div>{{nav:Équipe}}</div><div class="cap">Menu ⋮ et actions de ligne</div></div>
+
+@@ E08
+<div class="mock"><div class="phone">{{status}}
+<div class="appbar"><span class="ic">‹</span><b>Fiche joueur</b><span class="ic">✎</span><span class="ic">⋮</span></div>
+<div class="body">
+  <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px"><div class="av lg">KB</div>
+    <div><div style="font-weight:700;font-size:11.5px">#4 Karim Ben Ali</div><div class="small">Défenseur · 24 ans · Droit · 183 cm</div><span class="badge red">Blessé — cuisse arrière D</span></div></div>
+  <div class="stats"><div><b>92 %</b>Présence</div><div><b>8</b>Matchs</div><div><b>654</b>Minutes</div><div><b>1 / 2</b>Buts / Passes</div></div>
+  <div class="tabs"><span class="on">Séances</span><span>Matchs</span><span>Blessures</span><span>Bien-être</span></div>
+  <div class="row"><div class="grow"><div class="t">Mar. 7 oct. · Physique</div><div class="s">Présent · 35 min · RPE 6</div></div><span class="r">🩹</span></div>
+  <div class="row"><div class="grow"><div class="t">Lun. 6 oct. · Récupération</div><div class="s">Présent · 60 min · RPE 3</div></div></div>
+  <div class="row"><div class="grow"><div class="t">Ven. 3 oct. · Tactique</div><div class="s">Présent · 90 min · RPE 5 · ✎</div></div></div>
+  <div class="row off"><div class="grow"><div class="t">Jeu. 2 oct. · Mixte</div><div class="s">Absent — Malade</div></div></div>
+</div>{{nav:Équipe}}</div><div class="cap">Téléphone</div></div>
+
+@@ E09
+<div class="mock"><div class="phone">{{status}}
+<div class="appbar"><span class="ic">✕</span><b>Ajouter un joueur</b></div>
+<div class="body">
+  <div style="text-align:center;margin-bottom:4px"><div class="av lg" style="margin:0 auto;background:#eceeed;color:#999">📷</div></div>
+  <div class="grid2"><div class="field"><label>Prénom *</label><div class="input">Karim</div></div><div class="field"><label>Nom *</label><div class="input">Ben Ali</div></div></div>
+  <div class="grid2"><div class="field"><label>N° de maillot</label><div class="input">4</div></div><div class="field"><label>Date de naissance</label><div class="input">12/03/2002</div></div></div>
+  <div class="warn">Le numéro 4 est déjà porté par Youssef Trabelsi.</div>
+  <label class="small">Poste *</label>
+  <div class="chips"><span class="chip">Gardien</span><span class="chip on">Défenseur</span><span class="chip">Milieu</span><span class="chip">Attaquant</span></div>
+  <label class="small">Pied fort</label>
+  <div class="chips"><span class="chip on">Droit</span><span class="chip">Gauche</span><span class="chip">Les deux</span></div>
+  <div class="field"><label>Taille (cm)</label><div class="input">183</div></div>
+  <div class="btn">Enregistrer</div>
+  <div class="btn sec" style="margin-top:0">Enregistrer et ajouter un autre</div>
+</div></div><div class="cap">Création</div></div>
+
+@@ E10
+<div class="mock"><div class="phone">{{status}}
+<div class="appbar"><b>Bonjour Nizar</b><span class="sync ok">☁ À jour</span></div>
+<div class="body">
+  <div class="small" style="margin-bottom:6px">Mardi 7 octobre · Seniors A</div>
+  <div class="h">Aujourd'hui</div>
+  <div class="card"><div style="display:flex;justify-content:space-between"><span class="t">10:00 · Physique</span><span class="badge grey">Planifiée</span></div>
+    <div class="s">90 min · Travail de pressing haut</div><div class="btn" style="margin:5px 0 0">Démarrer l'appel</div></div>
+  <div class="h">Prochain match</div>
+  <div class="card"><div class="t">Sam. 11 oct. · 15:00 — dans 4 jours</div><div class="s">CA Bizertin · Extérieur · Championnat</div></div>
+  <div class="h">Infirmerie</div>
+  <div class="card" style="border-color:#f3c5c0;background:var(--red-l)"><div class="t" style="color:var(--red)">🩹 2 joueurs blessés</div><div class="s">Karim Ben Ali · Omar Saïdi ›</div></div>
+  <div class="grid2"><div class="btn sec" style="margin:0">＋ Séance</div><div class="btn sec" style="margin:0">＋ Match</div></div>
+</div>{{nav:Accueil}}</div><div class="cap">Téléphone</div></div>
+
+@@ E11
+<div class="mock"><div class="phone">{{status}}
+<div class="appbar"><b>Séances</b><span class="sync">☁ 3</span><span class="ic">⚙︎</span></div>
+<div class="body">
+  <div class="chips"><span class="chip on">Tous types</span><span class="chip">Octobre ▾</span></div>
+  <div class="h">À venir</div>
+  <div class="row"><span class="dot" style="background:#1565c0"></span><div class="grow"><div class="t">Mer. 8 oct. · 10:00</div><div class="s">Tactique · 90 min</div></div><span class="badge grey">Planifiée</span></div>
+  <div class="row"><span class="dot" style="background:#6a1b9a"></span><div class="grow"><div class="t">Jeu. 9 oct. · 17:30</div><div class="s">Mixte · 75 min</div></div><span class="badge grey">Planifiée</span></div>
+  <div class="h">Passées</div>
+  <div class="week">Semaine du 6 octobre</div>
+  <div class="row"><span class="dot" style="background:#ef6c00"></span><div class="grow"><div class="t">Mar. 7 oct. · 10:00</div><div class="s">Physique · 90 min · 22/24</div></div><span class="badge amb">En cours</span></div>
+  <div class="row"><span class="dot" style="background:#2e7d32"></span><div class="grow"><div class="t">Lun. 6 oct. · 10:00</div><div class="s">Récupération · 60 min · 20/24</div></div><span class="badge green">Terminée</span></div>
+  <div class="week">Semaine du 29 septembre</div>
+  <div class="row"><span class="dot" style="background:#1565c0"></span><div class="grow"><div class="t">Ven. 3 oct. · 10:00</div><div class="s">Tactique · 90 min · 23/24</div></div><span class="badge green">Terminée</span></div>
+  <div class="fab">＋ Nouvelle séance</div>
+</div>{{nav:Séances}}</div><div class="cap">Téléphone</div></div>
+<div class="mock"><div class="tablet">{{status}}{{rail:Séances}}
+<div class="tmain"><div class="appbar"><b>Séances</b><span class="sync">☁ 3</span></div>
+<div class="body" style="display:flex;gap:8px;padding:6px 8px">
+  <div style="width:46%">
+    <div class="h" style="margin-top:0">Passées</div>
+    <div class="row" style="background:var(--pri-l)"><div class="grow"><div class="t">Mar. 7 oct. · 10:00</div><div class="s">Physique · 22/24</div></div><span class="badge amb">En cours</span></div>
+    <div class="row"><div class="grow"><div class="t">Lun. 6 oct. · 10:00</div><div class="s">Récupération · 20/24</div></div><span class="badge green">Terminée</span></div>
+    <div class="row"><div class="grow"><div class="t">Ven. 3 oct. · 10:00</div><div class="s">Tactique · 23/24</div></div><span class="badge green">Terminée</span></div>
+  </div>
+  <div style="flex:1;border-left:1px solid var(--line);padding-left:8px">
+    <div class="t" style="font-weight:700">Physique — Mar. 7 oct. 10:00</div><div class="small">90 min · 22 présents · 2 absents</div>
+    <div class="row"><div class="av">KB</div><div class="grow"><div class="t">Karim Ben Ali</div><div class="s">🩹 Blessure déclarée</div></div></div>
+    <div class="row"><div class="av">MJ</div><div class="grow"><div class="t">Mehdi Jaziri</div><div class="s">✎ Remarque</div></div></div>
+    <div class="btn" style="margin-top:6px">Terminer la séance</div>
+  </div>
+</div></div></div><div class="cap">Tablette : liste et détail côte à côte</div></div>
+
+@@ E12
+<div class="mock"><div class="phone">{{status}}
+<div class="appbar"><span class="ic">✕</span><b>Nouvelle séance</b><span class="small">1/3</span></div>
+<div class="body">
+  <div class="grid2"><div class="field"><label>Date *</label><div class="input">📅 Mar. 7 oct.</div></div><div class="field"><label>Heure *</label><div class="input">🕙 10:00</div></div></div>
+  <label class="small">Type de séance *</label>
+  <div class="chips"><span class="chip">Technique</span><span class="chip">Tactique</span><span class="chip on">Physique</span><span class="chip">Mixte</span><span class="chip">Récupération</span><span class="chip">Musculation</span><span class="chip">Autre</span></div>
+  <label class="small">Durée prévue *</label>
+  <div style="margin:2px 0 7px"><span class="stepper"><b>−</b><span>90 min</span><b>+</b></span></div>
+  <div class="field"><label>Objectif</label><div class="input">Travail de pressing haut</div></div>
+  <div class="btn" style="margin-top:16px">Démarrer l'appel</div>
+  <div class="btn sec" style="margin-top:0">Enregistrer pour plus tard</div>
+</div></div><div class="cap">Étape 1 : informations</div></div>
+
+@@ E13
+<div class="mock"><div class="phone">{{status}}
+<div class="appbar"><span class="ic">‹</span><b>Appel</b><span class="small">2/3</span></div>
+<div class="body">
+  <div class="small">Mar. 7 oct. · 10:00 · Physique</div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin:4px 0"><span style="font-weight:700;color:var(--pri)">22 présents <span class="small">· 2 absents</span></span><span class="link" style="margin:0">Tout décocher</span></div>
+  <div class="row"><span class="chk on">✓</span><span class="num">1</span><div class="grow"><div class="t">Anis Hamdi</div></div><span class="small">GB</span></div>
+  <div class="row"><span class="chk on">✓</span><span class="num">3</span><div class="grow"><div class="t">Hamza Ayari</div></div><span class="small">DEF</span></div>
+  <div class="row"><span class="chk on">✓</span><span class="num">4</span><div class="grow"><div class="t">Karim Ben Ali</div></div><span class="badge red">Blessé</span></div>
+  <div class="row off" style="opacity:1;flex-wrap:wrap"><span class="chk"></span><span class="num">5</span><div class="grow"><div class="t" style="color:#888">Youssef Trabelsi</div></div><span class="small">DEF</span>
+    <div class="chips" style="width:100%;padding-left:20px;margin:3px 0 0"><span class="chip">Blessé</span><span class="chip on">Malade</span><span class="chip">Sélection</span><span class="chip">Personnel</span><span class="chip">Autre</span></div></div>
+  <div class="row"><span class="chk on">✓</span><span class="num">8</span><div class="grow"><div class="t">Farès Mejri</div></div><span class="small">MIL</span></div>
+  <div class="row"><span class="chk on">✓</span><span class="num">9</span><div class="grow"><div class="t">Mehdi Jaziri</div></div><span class="small">ATT</span></div>
+  <div class="row"><span class="chk"></span><span class="num">10</span><div class="grow"><div class="t" style="color:#888">Ali Mansour</div><div class="s">Sélection</div></div></div>
+  <div class="btn" style="position:absolute;left:10px;right:10px;bottom:4px">Confirmer les présents (22)</div>
+</div></div><div class="cap">Téléphone</div></div>
+<div class="mock"><div class="tablet">{{status}}{{rail:Séances}}
+<div class="tmain"><div class="appbar"><b>Appel — Physique, mar. 7 oct. 10:00</b><span style="font-weight:700;color:var(--pri)">22 présents · 2 absents</span></div>
+<div class="body">
+  <div class="grid3">
+    <div class="pcard on"><span class="chk on">✓</span><div><b>1 Anis Hamdi</b><div class="small">GB</div></div></div>
+    <div class="pcard on"><span class="chk on">✓</span><div><b>3 Hamza Ayari</b><div class="small">DEF</div></div></div>
+    <div class="pcard on"><span class="chk on">✓</span><div><b>4 Karim Ben Ali</b><div><span class="badge red">Blessé</span></div></div></div>
+    <div class="pcard off"><span class="chk"></span><div><b>5 Youssef Trabelsi</b><div class="small">Malade</div></div></div>
+    <div class="pcard on"><span class="chk on">✓</span><div><b>8 Farès Mejri</b><div class="small">MIL</div></div></div>
+    <div class="pcard on"><span class="chk on">✓</span><div><b>9 Mehdi Jaziri</b><div class="small">ATT</div></div></div>
+    <div class="pcard off"><span class="chk"></span><div><b>10 Ali Mansour</b><div class="small">Sélection</div></div></div>
+    <div class="pcard on"><span class="chk on">✓</span><div><b>14 Sami Gharbi</b><div class="small">MIL</div></div></div>
+    <div class="pcard on"><span class="chk on">✓</span><div><b>7 Omar Saïdi</b><div class="small">ATT</div></div></div>
+  </div>
+  <div class="btn" style="position:absolute;right:10px;bottom:6px;width:170px">Confirmer les présents (22)</div>
+</div></div></div><div class="cap">Tablette : grille de cartes</div></div>
+
+@@ E14
+<div class="mock"><div class="phone">{{status}}
+<div class="appbar"><span class="ic">‹</span><b>Séance en cours</b><span class="sync">☁ 5</span><span class="ic">⋮</span></div>
+<div class="body">
+  <div class="card" style="background:var(--bg);border:0"><div style="display:flex;justify-content:space-between"><span class="t">Physique · 10:00 · 90 min</span><span class="badge amb">En cours</span></div>
+    <div class="s" style="margin-top:3px">✎ Terrain lourd, séance raccourcie de 10 minutes.</div></div>
+  <div class="h">Présents (22)</div>
+  <div class="row"><span class="num">1</span><div class="grow"><div class="t">Anis Hamdi</div></div><span class="badge grey">🩹</span><span class="badge grey">✎</span></div>
+  <div class="row"><span class="num">4</span><div class="grow"><div class="t">Karim Ben Ali</div><div class="s" style="color:var(--red)">🩹 Cuisse arrière D · Modérée</div></div><span class="badge grey">🩹</span><span class="badge grey">✎</span></div>
+  <div class="row"><span class="num">8</span><div class="grow"><div class="t">Farès Mejri</div></div><span class="badge grey">🩹</span><span class="badge grey">✎</span></div>
+  <div class="row"><span class="num">9</span><div class="grow"><div class="t">Mehdi Jaziri</div><div class="s">✎ Très bonne intensité sur les sprints.</div></div><span class="badge grey">🩹</span><span class="badge grey">✎</span></div>
+  <div class="row"><span class="num">14</span><div class="grow"><div class="t">Sami Gharbi</div></div><span class="badge grey">🩹</span><span class="badge grey">✎</span></div>
+  <div class="h">Absents (2) ▸</div>
+  <div class="btn" style="position:absolute;left:10px;right:10px;bottom:4px">Terminer la séance</div>
+</div></div><div class="cap">Téléphone</div></div>
+
+@@ E15
+<div class="mock"><div class="phone">{{status}}
+<div class="appbar"><span class="ic">✕</span><b>Déclarer une blessure</b></div>
+<div class="body">
+  <div class="row" style="padding-top:0"><div class="av">KB</div><div class="grow"><div class="t">Karim Ben Ali</div><div class="s">Séance du 7/10 · Physique</div></div></div>
+  <label class="small">Zone du corps *</label>
+  <div class="chips"><span class="chip">Tête</span><span class="chip">Dos</span><span class="chip">Hanche/aine</span><span class="chip">Cuisse avant</span><span class="chip red on">Cuisse arrière</span><span class="chip">Genou</span><span class="chip">Mollet</span><span class="chip">Cheville</span><span class="chip">Pied</span><span class="chip">…</span></div>
+  <label class="small">Côté</label>
+  <div class="chips"><span class="chip">Gauche</span><span class="chip on">Droit</span><span class="chip">Les deux</span></div>
+  <label class="small">Type *</label>
+  <div class="chips"><span class="chip on">Musculaire</span><span class="chip">Ligamentaire</span><span class="chip">Osseuse</span><span class="chip">Contusion</span><span class="chip">Tendineuse</span></div>
+  <label class="small">Circonstance *</label>
+  <div class="chips"><span class="chip">Contact</span><span class="chip on">Sans contact</span><span class="chip">Surmenage</span></div>
+  <label class="small">Gravité estimée *</label>
+  <div class="chips"><span class="chip">Légère ≤3 j</span><span class="chip on">Modérée 4-28 j</span><span class="chip">Grave &gt;28 j</span></div>
+  <div class="field"><label>Description</label><div class="input">Douleur en fin de sprint, arrêt immédiat.</div></div>
+  <div class="btn">Enregistrer</div>
+</div></div><div class="cap">Téléphone</div></div>
+
+@@ E16
+<div class="mock"><div class="phone">{{status}}
+<div class="appbar"><span class="ic">‹</span><b>Séance en cours</b></div>
+<div class="body">
+  <div class="dim"></div>
+  <div class="sheet">
+    <div class="grab"></div>
+    <div style="font-weight:700;font-size:11px;margin-bottom:5px">Remarque — Mehdi Jaziri</div>
+    <div class="input area" style="min-height:70px">Très bonne intensité sur les sprints.</div>
+    <div class="small" style="text-align:right;margin:2px 0 6px">37 / 1000 · 🎤 dictée</div>
+    <div class="grid2"><div class="btn sec" style="margin:0">Annuler</div><div class="btn" style="margin:0">Enregistrer</div></div>
+  </div>
+</div></div><div class="cap">Panneau par-dessus la séance</div></div>
+
+@@ E17
+<div class="mock"><div class="phone">{{status}}
+<div class="appbar"><span class="ic">‹</span><b>Clôture de la séance</b></div>
+<div class="body">
+  <div style="display:flex;justify-content:space-between;align-items:center"><span class="small">RPE saisis : <b>18/22</b></span><span class="btn sm sec">Durée prévue à tous</span></div>
+  <div class="h">Sans RPE (4)</div>
+  <div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><span class="t">4 Karim Ben Ali 🩹</span><span class="stepper"><b>−</b><span>35</span><b>+</b></span></div>
+    <div class="rpe"><span class="c0">0</span><span class="c1">1</span><span class="c2">2</span><span class="c3">3</span><span class="c4">4</span><span class="c5">5</span><span class="c6">6</span><span class="c7">7</span><span class="c8">8</span><span class="c9">9</span><span class="c10">10</span></div></div>
+  <div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><span class="t">8 Farès Mejri</span><span class="stepper"><b>−</b><span>90</span><b>+</b></span></div>
+    <div class="rpe"><span class="c0">0</span><span class="c1">1</span><span class="c2">2</span><span class="c3">3</span><span class="c4">4</span><span class="c5">5</span><span class="c6">6</span><span class="c7">7</span><span class="c8">8</span><span class="c9">9</span><span class="c10">10</span></div></div>
+  <div class="h">Saisis (18)</div>
+  <div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><span class="t">9 Mehdi Jaziri</span><span class="stepper"><b>−</b><span>90</span><b>+</b></span></div>
+    <div class="rpe"><span class="c0">0</span><span class="c1">1</span><span class="c2">2</span><span class="c3">3</span><span class="c4">4</span><span class="c5">5</span><span class="c6">6</span><span class="c7 on">7</span><span class="c8">8</span><span class="c9">9</span><span class="c10">10</span></div></div>
+  <div class="btn" style="position:absolute;left:10px;right:10px;bottom:4px">Valider la clôture</div>
+</div></div><div class="cap">Durée et RPE</div></div>
+<div class="mock"><div class="phone">{{status}}
+<div class="appbar"><b>Clôture de la séance</b></div>
+<div class="body">
+  <div class="dim"></div>
+  <div class="card" style="position:absolute;left:14px;right:14px;top:130px;background:#fff;padding:10px">
+    <div class="t" style="font-size:11px">Séance terminée ✓</div>
+    <p style="margin:5px 0 8px">Remplir le questionnaire de bien-être maintenant ?</p>
+    <div class="grid2"><div class="btn sec" style="margin:0">Plus tard</div><div class="btn" style="margin:0">Oui</div></div>
+  </div>
+</div></div><div class="cap">Après validation</div></div>
+
+@@ E18
+<div class="mock"><div class="phone">{{status}}
+<div class="appbar"><span class="ic">‹</span><b>Bien-être</b><span class="small">15/22</span></div>
+<div class="body">
+  <div class="small" style="margin-bottom:4px">Séance du mar. 7 oct. · Physique</div>
+  <div class="h">À remplir (7)</div>
+  <div class="row"><div class="av">FM</div><div class="grow"><div class="t">Farès Mejri</div></div><span class="r">›</span></div>
+  <div class="row"><div class="av">SG</div><div class="grow"><div class="t">Sami Gharbi</div></div><span class="r">›</span></div>
+  <div class="row"><div class="av">OS</div><div class="grow"><div class="t">Omar Saïdi</div></div><span class="r">›</span></div>
+  <div class="h">Remplis (15)</div>
+  <div class="row"><div class="av">MJ</div><div class="grow"><div class="t">Mehdi Jaziri</div></div><span class="badge green">✓ 21/25</span></div>
+  <div class="row"><div class="av">AH</div><div class="grow"><div class="t">Anis Hamdi</div></div><span class="badge green">✓ 18/25</span></div>
+  <div class="row"><div class="av">KB</div><div class="grow"><div class="t">Karim Ben Ali</div></div><span class="badge amb">✓ 12/25</span></div>
+</div></div><div class="cap">Liste des joueurs</div></div>
+<div class="mock"><div class="phone">{{status}}
+<div class="appbar"><span class="ic">✕</span><b>Mehdi Jaziri</b><span class="small">16/22</span></div>
+<div class="body">
+  <div class="small">Heures de sommeil : <b style="color:var(--ink)">7,5 h</b></div>
+  <div class="slider"><i></i><b></b></div>
+  <div class="small">Qualité du sommeil</div><div class="faces"><span class="f1">😫</span><span class="f2">🙁</span><span class="f3">😐</span><span class="f4 on">🙂</span><span class="f5">😄</span></div>
+  <div class="small">Fatigue</div><div class="faces"><span class="f1">😫</span><span class="f2">🙁</span><span class="f3 on">😐</span><span class="f4">🙂</span><span class="f5">😄</span></div>
+  <div class="small">Courbatures</div><div class="faces"><span class="f1">😫</span><span class="f2">🙁</span><span class="f3">😐</span><span class="f4 on">🙂</span><span class="f5">😄</span></div>
+  <div class="small">Stress</div><div class="faces"><span class="f1">😫</span><span class="f2">🙁</span><span class="f3">😐</span><span class="f4">🙂</span><span class="f5 on">😄</span></div>
+  <div class="small">Humeur</div><div class="faces"><span class="f1">😫</span><span class="f2">🙁</span><span class="f3">😐</span><span class="f4">🙂</span><span class="f5 on">😄</span></div>
+  <div class="btn" style="margin-top:4px">Valider et joueur suivant</div>
+</div></div><div class="cap">Questionnaire (1 = rouge, 5 = vert)</div></div>
+
+@@ E19
+<div class="mock"><div class="phone">{{status}}
+<div class="appbar"><span class="ic">‹</span><b>Détail de la séance</b><span class="ic">⋮</span></div>
+<div class="body">
+  <div class="card" style="background:var(--bg);border:0"><div style="display:flex;justify-content:space-between"><span class="t">Lun. 6 oct. · 10:00 · Récupération</span><span class="badge green">Terminée</span></div>
+    <div class="s">60 min · 20 présents · 4 absents · Bien-être 20/20</div><div class="s">✎ Séance légère après le match.</div></div>
+  <div class="tabs"><span class="on">Joueurs</span><span>Absents</span><span>Blessures</span><span>Bien-être</span></div>
+  <div class="row"><span class="num">1</span><div class="grow"><div class="t">Anis Hamdi</div><div class="s">60 min</div></div><span class="badge green">RPE 2</span></div>
+  <div class="row"><span class="num">4</span><div class="grow"><div class="t">Karim Ben Ali</div><div class="s">60 min</div></div><span class="badge green">RPE 3</span></div>
+  <div class="row"><span class="num">8</span><div class="grow"><div class="t">Farès Mejri</div><div class="s">60 min · ✎ Gêne au mollet</div></div><span class="badge green">RPE 3</span></div>
+  <div class="row"><span class="num">9</span><div class="grow"><div class="t">Mehdi Jaziri</div><div class="s">60 min</div></div><span class="badge red">RPE —</span></div>
+  <div class="card" style="position:absolute;right:8px;top:2px;width:160px;box-shadow:0 3px 10px rgba(0,0,0,.2);background:#fff;padding:0">
+    <div class="menu" style="margin:0"><div>Modifier les informations</div><div>Modifier l'appel</div><div>Modifier les durées et RPE</div><div style="color:var(--red)">Supprimer la séance</div></div></div>
+</div>{{nav:Séances}}</div><div class="cap">Avec le menu ⋮ ouvert</div></div>
+
+@@ E20
+<div class="mock"><div class="phone">{{status}}
+<div class="appbar"><b>Matchs</b><span class="sync ok">☁</span></div>
+<div class="body">
+  <div class="stats"><div><b>8</b>Joués</div><div><b style="color:var(--pri)">5</b>Victoires</div><div><b>2</b>Nuls</div><div><b style="color:var(--red)">1</b>Défaites</div></div>
+  <div class="chips"><span class="chip on">Toutes</span><span class="chip">Championnat</span><span class="chip">Coupe</span><span class="chip">Amical</span></div>
+  <div class="h">À venir</div>
+  <div class="row"><div class="grow"><div class="t">Sam. 11 oct. · 15:00</div><div class="s">CA Bizertin · Ext. · Championnat</div></div><span class="badge grey">Planifié</span></div>
+  <div class="h">Passés</div>
+  <div class="row"><div class="grow"><div class="t">Sam. 4 oct. · 16:00</div><div class="s">US Monastir · Dom. · Championnat</div></div><span class="badge green" style="font-size:9px">2 - 0</span></div>
+  <div class="row"><div class="grow"><div class="t">Mer. 1 oct. · 18:00</div><div class="s">AS Marsa · Dom. · Coupe</div></div><span class="badge grey" style="font-size:9px">1 - 1</span></div>
+  <div class="row"><div class="grow"><div class="t">Sam. 27 sept. · 15:30</div><div class="s">ES Sahel · Ext. · Championnat</div></div><span class="badge red" style="font-size:9px">0 - 1</span></div>
+  <div class="fab">＋ Nouveau match</div>
+</div>{{nav:Matchs}}</div><div class="cap">Téléphone</div></div>
+
+@@ E21
+<div class="mock"><div class="phone">{{status}}
+<div class="appbar"><span class="ic">✕</span><b>Nouveau match</b></div>
+<div class="body">
+  <div class="grid2"><div class="field"><label>Date *</label><div class="input">📅 Sam. 11 oct.</div></div><div class="field"><label>Coup d'envoi *</label><div class="input">🕒 15:00</div></div></div>
+  <div class="field"><label>Adversaire *</label><div class="input">CA Biz<span class="ph">ertin</span></div>
+    <div class="card" style="padding:3px 6px;margin-top:2px"><div class="s">CA Bizertin</div></div></div>
+  <label class="small">Lieu *</label>
+  <div class="chips"><span class="chip">Domicile</span><span class="chip on">Extérieur</span><span class="chip">Neutre</span></div>
+  <label class="small">Compétition *</label>
+  <div class="chips"><span class="chip on">Championnat</span><span class="chip">Coupe</span><span class="chip">Amical</span><span class="chip">Tournoi</span></div>
+  <label class="small">Durée du match</label>
+  <div style="margin:2px 0 7px"><span class="stepper"><b>−</b><span>90 min</span><b>+</b></span></div>
+  <div class="btn">Choisir les joueurs présents</div>
+  <div class="btn sec" style="margin-top:0">Enregistrer pour plus tard</div>
+</div></div><div class="cap">Téléphone</div></div>
+
+@@ E22
+<div class="mock"><div class="phone">{{status}}
+<div class="appbar"><span class="ic">‹</span><b>Feuille de match</b></div>
+<div class="body">
+  <div class="small">CA Bizertin · Sam. 11 oct. 15:00</div>
+  <div style="margin:4px 0;font-weight:700;color:var(--pri)">18 présents · 11 titulaires · 7 remplaçants</div>
+  <div class="row"><span class="chk on">✓</span><span class="num">1</span><div class="grow"><div class="t">Anis Hamdi</div></div><span class="chip on">Titulaire</span><span class="chip">Remp.</span></div>
+  <div class="row"><span class="chk on">✓</span><span class="num">3</span><div class="grow"><div class="t">Hamza Ayari</div></div><span class="chip on">Titulaire</span><span class="chip">Remp.</span></div>
+  <div class="row"><span class="chk"></span><span class="num">4</span><div class="grow"><div class="t" style="color:#888">Karim Ben Ali</div><div class="s">Blessé</div></div></div>
+  <div class="row"><span class="chk on">✓</span><span class="num">5</span><div class="grow"><div class="t">Youssef Trabelsi</div></div><span class="chip on">Titulaire</span><span class="chip">Remp.</span></div>
+  <div class="row"><span class="chk on">✓</span><span class="num">9</span><div class="grow"><div class="t">Mehdi Jaziri</div></div><span class="chip on">Titulaire</span><span class="chip">Remp.</span></div>
+  <div class="row"><span class="chk on">✓</span><span class="num">14</span><div class="grow"><div class="t">Sami Gharbi</div></div><span class="chip">Titulaire</span><span class="chip on">Remp.</span></div>
+  <div class="row"><span class="chk"></span><span class="num">17</span><div class="grow"><div class="t" style="color:#888">Bilel Kefi</div><div class="s">Non retenu</div></div></div>
+  <div class="btn" style="position:absolute;left:10px;right:10px;bottom:4px">Confirmer la feuille de match</div>
+</div></div><div class="cap">Présents et titulaires</div></div>
+
+@@ E23
+<div class="mock"><div class="phone">{{status}}
+<div class="appbar"><span class="ic">‹</span><b>Match en cours</b><span class="sync">☁ 4</span><span class="ic">⋮</span></div>
+<div class="body">
+  <div class="score"><div class="tm">Seniors A</div><div class="sc">1 - 1</div><div class="tm">CA Bizertin<div style="font-size:9px">[ − ] [ + ]</div></div></div>
+  <div class="qa"><span>⚽ But</span><span>🟨 Jaune</span><span>🟥 Rouge</span><span>🩹 Blessure</span></div>
+  <div class="h">Chronologie</div>
+  <div class="ev"><span class="m">23'</span>⚽<span><b>Mehdi Jaziri</b> <span class="small">passe d'Ali Mansour</span></span></div>
+  <div class="ev"><span class="m">41'</span>🟨<span><b>Hamza Ayari</b></span></div>
+  <div class="ev"><span class="m">67'</span>🩹<span><b>Youssef Trabelsi</b> <span class="small">cheville G · contact</span></span></div>
+  <div class="h">Joueurs</div>
+  <div class="row"><span class="num">9</span><div class="grow"><div class="t">Mehdi Jaziri</div><div class="s">⚽ 23'</div></div><span class="badge grey">✎</span></div>
+  <div class="row"><span class="num">10</span><div class="grow"><div class="t">Ali Mansour</div><div class="s">🅰 23'</div></div><span class="badge grey">✎</span></div>
+  <div class="btn" style="position:absolute;left:10px;right:10px;bottom:4px">Fin du match</div>
+</div></div><div class="cap">Téléphone</div></div>
+<div class="mock"><div class="tablet">{{status}}{{rail:Matchs}}
+<div class="tmain"><div class="appbar"><b>Match en cours — CA Bizertin</b><span class="sync">☁ 4</span></div>
+<div class="body" style="display:flex;gap:8px;padding:6px 8px">
+  <div style="width:52%">
+    <div class="score"><div class="tm">Seniors A</div><div class="sc">1 - 1</div><div class="tm">CA Bizertin</div></div>
+    <div class="qa"><span>⚽ But</span><span>🟨 Jaune</span><span>🟥 Rouge</span><span>🩹 Blessure</span></div>
+    <div class="ev"><span class="m">23'</span>⚽<span><b>Mehdi Jaziri</b> <span class="small">passe d'Ali Mansour</span></span></div>
+    <div class="ev"><span class="m">41'</span>🟨<span><b>Hamza Ayari</b></span></div>
+    <div class="ev"><span class="m">67'</span>🩹<span><b>Youssef Trabelsi</b></span></div>
+  </div>
+  <div style="flex:1;border-left:1px solid var(--line);padding-left:8px">
+    <div class="h" style="margin-top:0">Titulaires</div>
+    <div class="row"><span class="num">1</span><div class="grow t">Anis Hamdi</div></div>
+    <div class="row"><span class="num">3</span><div class="grow t">Hamza Ayari 🟨</div></div>
+    <div class="row"><span class="num">9</span><div class="grow t">Mehdi Jaziri ⚽</div></div>
+    <div class="h">Remplaçants</div>
+    <div class="row"><span class="num">14</span><div class="grow t">Sami Gharbi</div></div>
+    <div class="btn" style="margin-top:6px">Fin du match</div>
+  </div>
+</div></div></div><div class="cap">Tablette</div></div>
+
+@@ E24
+<div class="mock"><div class="phone">{{status}}
+<div class="appbar"><span class="ic">‹</span><b>Match en cours</b></div>
+<div class="body">
+  <div class="dim"></div>
+  <div class="sheet">
+    <div class="grab"></div>
+    <div style="font-weight:700;font-size:11px;margin-bottom:4px">Ajouter un événement</div>
+    <div class="chips"><span class="chip on">⚽ But</span><span class="chip">🟨 Carton jaune</span><span class="chip">🟥 Carton rouge</span></div>
+    <div class="field"><label>Minute *</label><div class="input" style="width:60px">23'</div></div>
+    <label class="small">Buteur *</label>
+    <div class="grid3" style="margin-bottom:5px"><div class="pcard">1 Hamdi</div><div class="pcard">5 Trabelsi</div><div class="pcard">8 Mejri</div><div class="pcard on"><b>9 Jaziri</b></div><div class="pcard">10 Mansour</div><div class="pcard">7 Saïdi</div></div>
+    <label class="small">Passeur décisif</label>
+    <div class="grid3" style="margin-bottom:5px"><div class="pcard">Aucun</div><div class="pcard">8 Mejri</div><div class="pcard on"><b>10 Mansour</b></div><div class="pcard">7 Saïdi</div><div class="pcard">5 Trabelsi</div><div class="pcard">…</div></div>
+    <div class="field"><label>Remarque</label><div class="input ph">Ex. Penalty, coup franc</div></div>
+    <div class="btn" style="margin-bottom:0">Enregistrer</div>
+  </div>
+</div></div><div class="cap">Panneau « But »</div></div>
+
+@@ E25
+<div class="mock"><div class="phone">{{status}}
+<div class="appbar"><span class="ic">‹</span><b>Fin de match</b></div>
+<div class="body">
+  <div class="h" style="margin-top:0">Score final</div>
+  <div style="display:flex;justify-content:center;gap:10px;align-items:center;margin-bottom:4px">
+    <span class="small">Seniors A</span><span class="stepper"><b>−</b><span>1</span><b>+</b></span><b>-</b><span class="stepper"><b>−</b><span>1</span><b>+</b></span><span class="small">CA Bizertin</span></div>
+  <div class="h">Temps de jeu et RPE</div>
+  <div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><span class="t">9 Mehdi Jaziri <span class="badge green">Tit.</span></span><span class="stepper"><b>−</b><span>90'</span><b>+</b></span></div>
+    <div class="rpe"><span class="c0">0</span><span class="c1">1</span><span class="c2">2</span><span class="c3">3</span><span class="c4">4</span><span class="c5">5</span><span class="c6">6</span><span class="c7">7</span><span class="c8 on">8</span><span class="c9">9</span><span class="c10">10</span></div></div>
+  <div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><span class="t">5 Youssef Trabelsi 🩹</span><span class="stepper"><b>−</b><span>67'</span><b>+</b></span></div>
+    <div class="rpe"><span class="c0">0</span><span class="c1">1</span><span class="c2">2</span><span class="c3">3</span><span class="c4">4</span><span class="c5">5</span><span class="c6">6</span><span class="c7 on">7</span><span class="c8">8</span><span class="c9">9</span><span class="c10">10</span></div></div>
+  <div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><span class="t">14 Sami Gharbi <span class="badge grey">Remp.</span></span><span class="stepper"><b>−</b><span>25'</span><b>+</b></span></div>
+    <div class="rpe"><span class="c0">0</span><span class="c1">1</span><span class="c2">2</span><span class="c3">3</span><span class="c4">4</span><span class="c5">5</span><span class="c6 on">6</span><span class="c7">7</span><span class="c8">8</span><span class="c9">9</span><span class="c10">10</span></div></div>
+  <div class="btn" style="position:absolute;left:10px;right:10px;bottom:4px">Valider le match</div>
+</div></div><div class="cap">Téléphone</div></div>
+
+@@ E26
+<div class="mock"><div class="phone">{{status}}
+<div class="appbar"><span class="ic">‹</span><b>Détail du match</b><span class="ic">⋮</span></div>
+<div class="body">
+  <div class="score"><div class="tm">Seniors A</div><div class="sc">1 - 1</div><div class="tm">CA Bizertin</div></div>
+  <div class="small" style="text-align:center;margin-bottom:4px">Sam. 11 oct. 15:00 · Extérieur · Championnat · <span class="badge green">Terminé</span></div>
+  <div class="tabs"><span class="on">Joueurs</span><span>Événements</span><span>Blessures</span><span>Remarques</span></div>
+  <table style="font-size:8px;margin:0"><tr><th>Joueur</th><th>Min</th><th>⚽</th><th>🅰</th><th>🟨</th><th>RPE</th></tr>
+    <tr><td>1 Hamdi</td><td>90</td><td></td><td></td><td></td><td>5</td></tr>
+    <tr><td>3 Ayari</td><td>90</td><td></td><td></td><td>1</td><td>7</td></tr>
+    <tr><td>5 Trabelsi 🩹</td><td>67</td><td></td><td></td><td></td><td>7</td></tr>
+    <tr><td>9 Jaziri</td><td>90</td><td>1</td><td></td><td></td><td>8</td></tr>
+    <tr><td>10 Mansour</td><td>90</td><td></td><td>1</td><td></td><td>8</td></tr>
+    <tr><td>14 Gharbi</td><td>25</td><td></td><td></td><td></td><td>6</td></tr></table>
+</div>{{nav:Matchs}}</div><div class="cap">Téléphone</div></div>
+
+@@ E27
+<div class="mock"><div class="phone">{{status}}
+<div class="appbar"><span class="ic">‹</span><b>Infirmerie</b></div>
+<div class="body">
+  <div class="h" style="margin-top:0">Blessures en cours (2)</div>
+  <div class="card"><div style="display:flex;justify-content:space-between"><span class="t">4 Karim Ben Ali</span><span class="badge amb">Modérée</span></div>
+    <div class="s">Cuisse arrière droite · Musculaire · Sans contact</div><div class="s">Depuis le 7 oct. (4 j) · Retour prévu le 21 oct.</div>
+    <div class="btn sm" style="margin-top:4px">Retour du joueur</div></div>
+  <div class="card"><div style="display:flex;justify-content:space-between"><span class="t">5 Youssef Trabelsi</span><span class="badge red">Grave</span></div>
+    <div class="s">Cheville gauche · Ligamentaire · Contact</div><div class="s">Match CA Bizertin, 67' · depuis le 11 oct.</div>
+    <div class="btn sm" style="margin-top:4px">Retour du joueur</div></div>
+  <div class="h">Historique ▸</div>
+  <div class="row"><div class="grow"><div class="t">7 Omar Saïdi</div><div class="s">Mollet D · 12 → 19 sept. (7 j)</div></div></div>
+  <div class="fab">＋ Blessure</div>
+</div>{{nav:Accueil}}</div><div class="cap">Téléphone</div></div>
+
+@@ E28
+<div class="mock"><div class="phone">{{status}}
+<div class="appbar"><span class="ic">‹</span><b>Synchronisation et paramètres</b></div>
+<div class="body">
+  <div class="h" style="margin-top:0">Synchronisation</div>
+  <div class="card" style="background:var(--amb-l);border:0"><div class="t">☁ En attente — 46 données</div><div class="s">Dernière synchronisation : aujourd'hui à 08:12</div><div class="s">Hors ligne : la synchronisation partira au retour du réseau.</div></div>
+  <div class="btn">Synchroniser maintenant</div>
+  <div class="h">Paramètres</div>
+  <label class="small">Thème</label>
+  <div class="chips"><span class="chip">Clair</span><span class="chip">Sombre</span><span class="chip on">Système</span></div>
+  <div class="menu"><div><span>Durée de séance par défaut</span><span class="small">90 min ›</span></div><div><span>Durée de match par défaut</span><span class="small">90 min ›</span></div></div>
+  <div class="h">À propos</div>
+  <div class="small">PerfFoot — version 1.0.0 (1)</div>
+</div>{{nav:Profil}}</div><div class="cap">Téléphone</div></div>
+
+@@ E29
+<div class="mock"><div class="phone">{{status}}
+<div class="appbar"><span class="ic">‹</span><b>Administration</b></div>
+<div class="body">
+  <div class="input ph" style="margin-bottom:5px">🔍 Rechercher un compte</div>
+  <div class="small">5 comptes</div>
+  <div class="row"><div class="av">NB</div><div class="grow"><div class="t">Nizar Belhadj</div><div class="s">coach@club.tn · Préparateur physique</div></div><span class="badge green">Admin</span></div>
+  <div class="row"><div class="av">WG</div><div class="grow"><div class="t">Walid Gharsalli</div><div class="s">walid@club.tn · Entraîneur adjoint</div></div><span class="badge amb">Temporaire</span><span class="ic">⋮</span></div>
+  <div class="row"><div class="av">RS</div><div class="grow"><div class="t">Rim Sassi</div><div class="s">rim@club.tn · Kinésithérapeute</div></div><span class="badge grey">Actif</span><span class="ic">⋮</span></div>
+  <div class="row off"><div class="av">KM</div><div class="grow"><div class="t">Khaled Mabrouk</div><div class="s">khaled@club.tn · Entraîneur</div></div><span class="badge red">Désactivé</span><span class="ic">⋮</span></div>
+  <div class="card" style="position:absolute;right:10px;top:118px;width:160px;box-shadow:0 3px 10px rgba(0,0,0,.2);background:#fff;padding:0">
+    <div class="menu" style="margin:0"><div>Réinitialiser le mot de passe</div><div style="color:var(--red)">Désactiver le compte</div></div></div>
+  <div class="fab">＋ Créer un compte</div>
+</div>{{nav:Profil}}</div><div class="cap">Liste des comptes, menu ⋮ ouvert</div></div>
+
+@@ E30
+<div class="mock"><div class="phone">{{status}}
+<div class="appbar"><span class="ic">✕</span><b>Créer un compte</b></div>
+<div class="body">
+  <div class="grid2" style="margin-top:4px"><div class="field"><label>Prénom *</label><div class="input">Walid</div></div><div class="field"><label>Nom *</label><div class="input">Gharsalli</div></div></div>
+  <div class="field"><label>Adresse e-mail *</label><div class="input">walid@club.tn</div></div>
+  <div class="field"><label>Fonction *</label><div class="input">Entraîneur adjoint ▾</div></div>
+  <div class="row" style="border:0"><div class="grow"><div class="t">Administrateur</div><div class="s">Peut gérer les comptes du staff</div></div>
+    <span style="width:28px;height:15px;border-radius:8px;background:#cfd6d3;position:relative;display:inline-block"><span style="position:absolute;left:2px;top:2px;width:11px;height:11px;border-radius:50%;background:#fff"></span></span></div>
+  <p class="small" style="margin-top:6px">Un mot de passe temporaire sera généré. Aucun e-mail n'est envoyé : vous le transmettrez vous-même.</p>
+  <div class="btn" style="margin-top:10px">Créer le compte</div>
+</div></div><div class="cap">Téléphone</div></div>
+
+@@ E31
+<div class="mock"><div class="phone">{{status}}
+<div class="appbar"><b>Administration</b></div>
+<div class="body">
+  <div class="dim"></div>
+  <div class="card" style="position:absolute;left:14px;right:14px;top:110px;background:#fff;padding:10px">
+    <div class="t" style="font-size:11px">Réinitialiser le mot de passe ?</div>
+    <p style="margin:5px 0 8px">Le mot de passe actuel de <b>Walid Gharsalli</b> ne fonctionnera plus.</p>
+    <div class="grid2"><div class="btn sec" style="margin:0">Annuler</div><div class="btn" style="margin:0">Réinitialiser</div></div>
+  </div>
+</div></div><div class="cap">Confirmation</div></div>
+<div class="mock"><div class="phone">{{status}}
+<div class="appbar"><b>Administration</b></div>
+<div class="body">
+  <div class="dim"></div>
+  <div class="card" style="position:absolute;left:14px;right:14px;top:80px;background:#fff;padding:10px">
+    <div class="t" style="font-size:11px">Mot de passe temporaire</div>
+    <div class="small" style="margin:6px 0 2px">Identifiant</div><div style="font-weight:600">walid@club.tn</div>
+    <div class="small" style="margin:6px 0 2px">Mot de passe temporaire</div>
+    <div style="font:700 15px Consolas,monospace;letter-spacing:1px;background:var(--bg);border-radius:6px;padding:6px;text-align:center">k7Rm-2xQp-9Tv</div>
+    <div class="warn">Affiché une seule fois. Walid devra le changer à sa connexion.</div>
+    <div class="grid2"><div class="btn sec" style="margin:0">Copier</div><div class="btn sec" style="margin:0">Partager</div></div>
+    <div class="btn" style="margin-bottom:0">Terminé</div>
+  </div>
+</div></div><div class="cap">Résultat</div></div>
