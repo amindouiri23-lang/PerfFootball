@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/router.dart';
 import '../../core/widgets/form_page.dart';
+import '../../core/widgets/sync_indicator.dart';
+import '../../data/sync.dart';
 import '../auth/auth_repository.dart';
 import 'profile_repository.dart';
 
@@ -18,6 +20,7 @@ class ProfileScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(title: const Text('Mon profil'), actions: [
+        const SyncIndicator(),
         IconButton(tooltip: 'Modifier', icon: const Icon(Icons.edit_outlined),
             onPressed: () => context.go('/profile/edit')),
       ]),
@@ -56,14 +59,36 @@ class ProfileScreen extends ConsumerWidget {
             style: OutlinedButton.styleFrom(foregroundColor: theme.colorScheme.error),
             icon: const Icon(Icons.logout),
             label: const Text('Se déconnecter'),
-            // Pas encore de données locales : la vérification « données non synchronisées »
-            // arrivera avec la synchronisation.
-            onPressed: () => ref.read(authRepositoryProvider).signOut(),
+            onPressed: () => _logout(context, ref),
           ),
         ),
       ]),
     );
   }
+}
+
+/// Déconnexion (E04) : refusée tant que des données ne sont pas envoyées, puis la base locale est vidée.
+Future<void> _logout(BuildContext context, WidgetRef ref) async {
+  final pending = ref.read(pendingCountProvider).value ?? 0;
+  if (pending > 0) {
+    final sync = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Données non synchronisées'),
+        content: Text('$pending donnée(s) pas encore envoyée(s). '
+            'Synchronisez avant de vous déconnecter, sinon elles seront perdues.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Annuler')),
+          FilledButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Synchroniser')),
+        ],
+      ),
+    );
+    if (sync == true) await ref.read(syncControllerProvider.notifier).sync();
+    return;
+  }
+  final db = ref.read(databaseProvider);
+  await ref.read(authRepositoryProvider).signOut();
+  await db.wipe();
 }
 
 /// E04 — modification du profil.

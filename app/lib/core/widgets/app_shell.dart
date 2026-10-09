@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
+import '../../data/sync.dart';
+import '../../features/auth/auth_repository.dart';
 
 const _destinations = [
   (icon: Icons.home_outlined, selected: Icons.home, label: 'Accueil'),
@@ -10,10 +14,35 @@ const _destinations = [
 ];
 
 /// Navigation principale : barre en bas sur téléphone (< 600 dp), colonne à gauche au-delà (specs §3.2).
-class AppShell extends StatelessWidget {
+class AppShell extends ConsumerStatefulWidget {
   const AppShell({super.key, required this.shell});
 
   final StatefulNavigationShell shell;
+
+  @override
+  ConsumerState<AppShell> createState() => _AppShellState();
+}
+
+class _AppShellState extends ConsumerState<AppShell> {
+  StatefulNavigationShell get shell => widget.shell;
+
+  @override
+  void initState() {
+    super.initState();
+    _startSession();
+  }
+
+  /// Entrée dans l'application connectée : la base locale n'appartient qu'à un utilisateur,
+  /// puis première synchronisation.
+  Future<void> _startSession() async {
+    final db = ref.read(databaseProvider);
+    final userId = ref.read(supabaseProvider).auth.currentUser!.id;
+    if (await db.setting('owner_user_id') != userId) {
+      await db.wipe();
+      await db.setSetting('owner_user_id', userId);
+    }
+    await ref.read(syncControllerProvider.notifier).sync();
+  }
 
   void _go(int index) => shell.goBranch(index, initialLocation: index == shell.currentIndex);
 

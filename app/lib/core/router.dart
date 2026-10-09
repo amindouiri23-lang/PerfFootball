@@ -7,8 +7,12 @@ import '../features/auth/auth_repository.dart';
 import '../features/auth/auth_screens.dart';
 import '../features/home/home_screen.dart';
 import '../features/profile/profile_screens.dart';
+import '../features/team/player_screens.dart';
+import '../features/team/team_form_screen.dart';
+import '../features/team/team_screen.dart';
 import 'widgets/app_shell.dart';
 import 'widgets/coming_soon.dart';
+import 'widgets/sync_indicator.dart';
 
 const _publicRoutes = {'/login', '/forgot-password'};
 
@@ -30,6 +34,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/login', builder: (_, _) => const LoginScreen()),
       GoRoute(path: '/forgot-password', builder: (_, _) => const ForgotPasswordScreen()),
       GoRoute(path: '/new-password', builder: (_, _) => const NewPasswordScreen()),
+      GoRoute(path: '/sync', builder: (_, _) => const SyncScreen()),
       StatefulShellRoute.indexedStack(
         builder: (_, _, shell) => AppShell(shell: shell),
         branches: [
@@ -41,7 +46,22 @@ final routerProvider = Provider<GoRouter>((ref) {
             GoRoute(path: '/matches', builder: (_, _) => const ComingSoon(title: 'Matchs')),
           ]),
           StatefulShellBranch(routes: [
-            GoRoute(path: '/team', builder: (_, _) => const ComingSoon(title: 'Mon équipe')),
+            GoRoute(
+              path: '/team',
+              builder: (_, _) => const TeamScreen(),
+              routes: [
+                GoRoute(path: 'new', builder: (_, _) => const TeamFormScreen()),
+                GoRoute(path: 'edit', builder: (_, _) => const TeamFormScreen(editActive: true)),
+                GoRoute(path: 'players/new', builder: (_, _) => const PlayerFormScreen()),
+                GoRoute(
+                  path: 'players/:id',
+                  builder: (_, s) => PlayerScreen(id: s.pathParameters['id']!),
+                  routes: [
+                    GoRoute(path: 'edit', builder: (_, s) => PlayerFormScreen(id: s.pathParameters['id'])),
+                  ],
+                ),
+              ],
+            ),
           ]),
           StatefulShellBranch(routes: [
             GoRoute(
