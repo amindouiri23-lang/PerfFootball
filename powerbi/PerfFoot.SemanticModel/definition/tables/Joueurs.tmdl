@@ -1,0 +1,65 @@
+table Joueurs
+	lineageTag: 7a79b70c-c974-5af3-8bd9-f2352820901b
+
+	column id
+		dataType: string
+		isHidden
+		lineageTag: ea84f5dd-3f44-5b2e-a618-0a259589e1f5
+		summarizeBy: none
+		sourceColumn: id
+
+	column team_id
+		dataType: string
+		isHidden
+		lineageTag: 40e1c7fb-4fa0-57e7-a7ca-f4bebba83bdc
+		summarizeBy: none
+		sourceColumn: team_id
+
+	column Joueur
+		dataType: string
+		lineageTag: 6bcdf45e-39bf-5055-a8de-a1c758e615fc
+		summarizeBy: none
+		sourceColumn: full_name
+
+	column 'Numéro'
+		dataType: int64
+		formatString: 0
+		lineageTag: 7e388623-ab46-5245-9af2-e6bef5f8b55b
+		summarizeBy: none
+		sourceColumn: shirt_number
+
+	column Poste
+		dataType: string
+		lineageTag: 89d301fc-8e61-5ef4-906a-7420b738b665
+		summarizeBy: none
+		sourceColumn: position
+
+	column 'Date de naissance'
+		dataType: dateTime
+		formatString: dd/mm/yyyy
+		lineageTag: e1c22843-569b-5995-8b8e-389ea5a29cf9
+		summarizeBy: none
+		sourceColumn: birth_date
+
+	column 'Taille (cm)'
+		dataType: int64
+		formatString: 0
+		lineageTag: 8b36dc45-4939-5085-95e1-5a1167cd50c2
+		summarizeBy: none
+		sourceColumn: height_cm
+
+	column 'Supprimé'
+		dataType: boolean
+		lineageTag: 9044f023-ce6f-5586-834b-2d528f7338b5
+		summarizeBy: none
+		sourceColumn: is_deleted
+
+	partition Joueurs = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database(Serveur, BaseDeDonnees),
+				    Data = Source{[Schema = "reporting", Item = "players"]}[Data],
+				    Libelles_position = Table.TransformColumns(Data, {{"position", each if _ = null then null else Record.FieldOrDefault([#"GK" = "Gardien", #"DEF" = "Défenseur", #"MID" = "Milieu", #"FWD" = "Attaquant"], _, _), type text}})
+				in
+				    Libelles_position

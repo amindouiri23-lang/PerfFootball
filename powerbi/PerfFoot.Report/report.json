@@ -1,0 +1,264 @@
+{
+  "config": "{\"version\": \"5.43\", \"activeSectionIndex\": 0, \"defaultDrillFilterOtherVisuals\": true}",
+  "layoutOptimization": 0,
+  "sections": [
+    {
+      "name": "p1",
+      "displayName": "Vue d'ensemble",
+      "displayOption": 1,
+      "width": 1280,
+      "height": 720,
+      "ordinal": 0,
+      "config": "{}",
+      "filters": "[]",
+      "visualContainers": [
+        {
+          "x": 20,
+          "y": 20,
+          "z": 0,
+          "width": 240,
+          "height": 110,
+          "config": "{\"name\": \"p1c0\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 20, \"y\": 20, \"z\": 0, \"width\": 240, \"height\": 110}}], \"singleVisual\": {\"visualType\": \"card\", \"projections\": {\"Values\": [{\"queryRef\": \"Mesures.Joueurs suivis\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"t0\", \"Entity\": \"Mesures\", \"Type\": 0}], \"Select\": [{\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t0\"}}, \"Property\": \"Joueurs suivis\"}, \"Name\": \"Mesures.Joueurs suivis\"}]}, \"drillFilterOtherVisuals\": true, \"vcObjects\": {\"title\": [{\"properties\": {\"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}, \"text\": {\"expr\": {\"Literal\": {\"Value\": \"'Joueurs suivis'\"}}}}}]}}}",
+          "filters": "[]"
+        },
+        {
+          "x": 270,
+          "y": 20,
+          "z": 0,
+          "width": 240,
+          "height": 110,
+          "config": "{\"name\": \"p1c1\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 270, \"y\": 20, \"z\": 0, \"width\": 240, \"height\": 110}}], \"singleVisual\": {\"visualType\": \"card\", \"projections\": {\"Values\": [{\"queryRef\": \"Mesures.Présence %\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"t0\", \"Entity\": \"Mesures\", \"Type\": 0}], \"Select\": [{\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t0\"}}, \"Property\": \"Présence %\"}, \"Name\": \"Mesures.Présence %\"}]}, \"drillFilterOtherVisuals\": true, \"vcObjects\": {\"title\": [{\"properties\": {\"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}, \"text\": {\"expr\": {\"Literal\": {\"Value\": \"'Présence %'\"}}}}}]}}}",
+          "filters": "[]"
+        },
+        {
+          "x": 520,
+          "y": 20,
+          "z": 0,
+          "width": 240,
+          "height": 110,
+          "config": "{\"name\": \"p1c2\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 520, \"y\": 20, \"z\": 0, \"width\": 240, \"height\": 110}}], \"singleVisual\": {\"visualType\": \"card\", \"projections\": {\"Values\": [{\"queryRef\": \"Mesures.Charge totale (UA)\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"t0\", \"Entity\": \"Mesures\", \"Type\": 0}], \"Select\": [{\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t0\"}}, \"Property\": \"Charge totale (UA)\"}, \"Name\": \"Mesures.Charge totale (UA)\"}]}, \"drillFilterOtherVisuals\": true, \"vcObjects\": {\"title\": [{\"properties\": {\"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}, \"text\": {\"expr\": {\"Literal\": {\"Value\": \"'Charge totale (UA)'\"}}}}}]}}}",
+          "filters": "[]"
+        },
+        {
+          "x": 770,
+          "y": 20,
+          "z": 0,
+          "width": 240,
+          "height": 110,
+          "config": "{\"name\": \"p1c3\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 770, \"y\": 20, \"z\": 0, \"width\": 240, \"height\": 110}}], \"singleVisual\": {\"visualType\": \"card\", \"projections\": {\"Values\": [{\"queryRef\": \"Mesures.Bien-être moyen (/25)\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"t0\", \"Entity\": \"Mesures\", \"Type\": 0}], \"Select\": [{\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t0\"}}, \"Property\": \"Bien-être moyen (/25)\"}, \"Name\": \"Mesures.Bien-être moyen (/25)\"}]}, \"drillFilterOtherVisuals\": true, \"vcObjects\": {\"title\": [{\"properties\": {\"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}, \"text\": {\"expr\": {\"Literal\": {\"Value\": \"'Bien-être moyen (/25)'\"}}}}}]}}}",
+          "filters": "[]"
+        },
+        {
+          "x": 1020,
+          "y": 20,
+          "z": 0,
+          "width": 240,
+          "height": 110,
+          "config": "{\"name\": \"p1c4\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 1020, \"y\": 20, \"z\": 0, \"width\": 240, \"height\": 110}}], \"singleVisual\": {\"visualType\": \"card\", \"projections\": {\"Values\": [{\"queryRef\": \"Mesures.Blessures en cours\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"t0\", \"Entity\": \"Mesures\", \"Type\": 0}], \"Select\": [{\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t0\"}}, \"Property\": \"Blessures en cours\"}, \"Name\": \"Mesures.Blessures en cours\"}]}, \"drillFilterOtherVisuals\": true, \"vcObjects\": {\"title\": [{\"properties\": {\"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}, \"text\": {\"expr\": {\"Literal\": {\"Value\": \"'Blessures en cours'\"}}}}}]}}}",
+          "filters": "[]"
+        },
+        {
+          "x": 20,
+          "y": 150,
+          "z": 0,
+          "width": 620,
+          "height": 300,
+          "config": "{\"name\": \"p1v1\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 20, \"y\": 150, \"z\": 0, \"width\": 620, \"height\": 300}}], \"singleVisual\": {\"visualType\": \"columnChart\", \"projections\": {\"Category\": [{\"queryRef\": \"Calendrier.Semaine\"}], \"Y\": [{\"queryRef\": \"Mesures.Charge séances (UA)\"}, {\"queryRef\": \"Mesures.Charge matchs (UA)\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"t0\", \"Entity\": \"Calendrier\", \"Type\": 0}, {\"Name\": \"t1\", \"Entity\": \"Mesures\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t0\"}}, \"Property\": \"Semaine\"}, \"Name\": \"Calendrier.Semaine\"}, {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t1\"}}, \"Property\": \"Charge séances (UA)\"}, \"Name\": \"Mesures.Charge séances (UA)\"}, {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t1\"}}, \"Property\": \"Charge matchs (UA)\"}, \"Name\": \"Mesures.Charge matchs (UA)\"}]}, \"drillFilterOtherVisuals\": true, \"vcObjects\": {\"title\": [{\"properties\": {\"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}, \"text\": {\"expr\": {\"Literal\": {\"Value\": \"'Charge d''entraînement par semaine'\"}}}}}]}}}",
+          "filters": "[]"
+        },
+        {
+          "x": 20,
+          "y": 470,
+          "z": 0,
+          "width": 300,
+          "height": 230,
+          "config": "{\"name\": \"p1v2\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 20, \"y\": 470, \"z\": 0, \"width\": 300, \"height\": 230}}], \"singleVisual\": {\"visualType\": \"slicer\", \"projections\": {\"Values\": [{\"queryRef\": \"Calendrier.Saison\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"t0\", \"Entity\": \"Calendrier\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t0\"}}, \"Property\": \"Saison\"}, \"Name\": \"Calendrier.Saison\"}]}, \"drillFilterOtherVisuals\": true, \"vcObjects\": {\"title\": [{\"properties\": {\"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}, \"text\": {\"expr\": {\"Literal\": {\"Value\": \"'Saison'\"}}}}}]}}}",
+          "filters": "[]"
+        },
+        {
+          "x": 340,
+          "y": 470,
+          "z": 0,
+          "width": 300,
+          "height": 230,
+          "config": "{\"name\": \"p1v3\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 340, \"y\": 470, \"z\": 0, \"width\": 300, \"height\": 230}}], \"singleVisual\": {\"visualType\": \"slicer\", \"projections\": {\"Values\": [{\"queryRef\": \"Joueurs.Poste\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"t0\", \"Entity\": \"Joueurs\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t0\"}}, \"Property\": \"Poste\"}, \"Name\": \"Joueurs.Poste\"}]}, \"drillFilterOtherVisuals\": true, \"vcObjects\": {\"title\": [{\"properties\": {\"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}, \"text\": {\"expr\": {\"Literal\": {\"Value\": \"'Poste'\"}}}}}]}}}",
+          "filters": "[]"
+        },
+        {
+          "x": 660,
+          "y": 150,
+          "z": 0,
+          "width": 600,
+          "height": 550,
+          "config": "{\"name\": \"p1v4\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 660, \"y\": 150, \"z\": 0, \"width\": 600, \"height\": 550}}], \"singleVisual\": {\"visualType\": \"tableEx\", \"projections\": {\"Values\": [{\"queryRef\": \"Joueurs.Joueur\"}, {\"queryRef\": \"Mesures.Présence %\"}, {\"queryRef\": \"Mesures.Matchs joués\"}, {\"queryRef\": \"Mesures.Minutes jouées\"}, {\"queryRef\": \"Mesures.Buts\"}, {\"queryRef\": \"Mesures.Passes décisives\"}, {\"queryRef\": \"Mesures.Charge totale (UA)\"}, {\"queryRef\": \"Mesures.ACWR\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"t0\", \"Entity\": \"Joueurs\", \"Type\": 0}, {\"Name\": \"t1\", \"Entity\": \"Mesures\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t0\"}}, \"Property\": \"Joueur\"}, \"Name\": \"Joueurs.Joueur\"}, {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t1\"}}, \"Property\": \"Présence %\"}, \"Name\": \"Mesures.Présence %\"}, {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t1\"}}, \"Property\": \"Matchs joués\"}, \"Name\": \"Mesures.Matchs joués\"}, {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t1\"}}, \"Property\": \"Minutes jouées\"}, \"Name\": \"Mesures.Minutes jouées\"}, {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t1\"}}, \"Property\": \"Buts\"}, \"Name\": \"Mesures.Buts\"}, {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t1\"}}, \"Property\": \"Passes décisives\"}, \"Name\": \"Mesures.Passes décisives\"}, {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t1\"}}, \"Property\": \"Charge totale (UA)\"}, \"Name\": \"Mesures.Charge totale (UA)\"}, {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t1\"}}, \"Property\": \"ACWR\"}, \"Name\": \"Mesures.ACWR\"}]}, \"drillFilterOtherVisuals\": true, \"vcObjects\": {\"title\": [{\"properties\": {\"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}, \"text\": {\"expr\": {\"Literal\": {\"Value\": \"'Joueurs'\"}}}}}]}}}",
+          "filters": "[]"
+        }
+      ]
+    },
+    {
+      "name": "p2",
+      "displayName": "Charge et ACWR",
+      "displayOption": 1,
+      "width": 1280,
+      "height": 720,
+      "ordinal": 1,
+      "config": "{}",
+      "filters": "[]",
+      "visualContainers": [
+        {
+          "x": 20,
+          "y": 20,
+          "z": 0,
+          "width": 240,
+          "height": 680,
+          "config": "{\"name\": \"p2v1\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 20, \"y\": 20, \"z\": 0, \"width\": 240, \"height\": 680}}], \"singleVisual\": {\"visualType\": \"slicer\", \"projections\": {\"Values\": [{\"queryRef\": \"Joueurs.Joueur\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"t0\", \"Entity\": \"Joueurs\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t0\"}}, \"Property\": \"Joueur\"}, \"Name\": \"Joueurs.Joueur\"}]}, \"drillFilterOtherVisuals\": true, \"vcObjects\": {\"title\": [{\"properties\": {\"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}, \"text\": {\"expr\": {\"Literal\": {\"Value\": \"'Joueur'\"}}}}}]}}}",
+          "filters": "[]"
+        },
+        {
+          "x": 280,
+          "y": 20,
+          "z": 0,
+          "width": 980,
+          "height": 320,
+          "config": "{\"name\": \"p2v2\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 280, \"y\": 20, \"z\": 0, \"width\": 980, \"height\": 320}}], \"singleVisual\": {\"visualType\": \"lineChart\", \"projections\": {\"Category\": [{\"queryRef\": \"Calendrier.Semaine\"}], \"Y\": [{\"queryRef\": \"Mesures.ACWR\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"t0\", \"Entity\": \"Calendrier\", \"Type\": 0}, {\"Name\": \"t1\", \"Entity\": \"Mesures\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t0\"}}, \"Property\": \"Semaine\"}, \"Name\": \"Calendrier.Semaine\"}, {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t1\"}}, \"Property\": \"ACWR\"}, \"Name\": \"Mesures.ACWR\"}]}, \"drillFilterOtherVisuals\": true, \"vcObjects\": {\"title\": [{\"properties\": {\"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}, \"text\": {\"expr\": {\"Literal\": {\"Value\": \"'ACWR (charge aiguë 7 j / chronique 28 j) — zone de risque au-dessus de 1,5'\"}}}}}]}}}",
+          "filters": "[]"
+        },
+        {
+          "x": 280,
+          "y": 360,
+          "z": 0,
+          "width": 980,
+          "height": 340,
+          "config": "{\"name\": \"p2v3\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 280, \"y\": 360, \"z\": 0, \"width\": 980, \"height\": 340}}], \"singleVisual\": {\"visualType\": \"pivotTable\", \"projections\": {\"Rows\": [{\"queryRef\": \"Joueurs.Joueur\"}], \"Columns\": [{\"queryRef\": \"Calendrier.Semaine\"}], \"Values\": [{\"queryRef\": \"Mesures.Charge totale (UA)\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"t0\", \"Entity\": \"Joueurs\", \"Type\": 0}, {\"Name\": \"t1\", \"Entity\": \"Calendrier\", \"Type\": 0}, {\"Name\": \"t2\", \"Entity\": \"Mesures\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t0\"}}, \"Property\": \"Joueur\"}, \"Name\": \"Joueurs.Joueur\"}, {\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t1\"}}, \"Property\": \"Semaine\"}, \"Name\": \"Calendrier.Semaine\"}, {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t2\"}}, \"Property\": \"Charge totale (UA)\"}, \"Name\": \"Mesures.Charge totale (UA)\"}]}, \"drillFilterOtherVisuals\": true, \"vcObjects\": {\"title\": [{\"properties\": {\"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}, \"text\": {\"expr\": {\"Literal\": {\"Value\": \"'Charge par joueur et par semaine (RPE × minutes)'\"}}}}}]}}}",
+          "filters": "[]"
+        }
+      ]
+    },
+    {
+      "name": "p3",
+      "displayName": "Bien-être",
+      "displayOption": 1,
+      "width": 1280,
+      "height": 720,
+      "ordinal": 2,
+      "config": "{}",
+      "filters": "[]",
+      "visualContainers": [
+        {
+          "x": 20,
+          "y": 20,
+          "z": 0,
+          "width": 1240,
+          "height": 300,
+          "config": "{\"name\": \"p3v1\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 20, \"y\": 20, \"z\": 0, \"width\": 1240, \"height\": 300}}], \"singleVisual\": {\"visualType\": \"lineChart\", \"projections\": {\"Category\": [{\"queryRef\": \"Calendrier.Date\"}], \"Y\": [{\"queryRef\": \"Mesures.Bien-être moyen (/25)\"}, {\"queryRef\": \"Mesures.Sommeil moyen (h)\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"t0\", \"Entity\": \"Calendrier\", \"Type\": 0}, {\"Name\": \"t1\", \"Entity\": \"Mesures\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t0\"}}, \"Property\": \"Date\"}, \"Name\": \"Calendrier.Date\"}, {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t1\"}}, \"Property\": \"Bien-être moyen (/25)\"}, \"Name\": \"Mesures.Bien-être moyen (/25)\"}, {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t1\"}}, \"Property\": \"Sommeil moyen (h)\"}, \"Name\": \"Mesures.Sommeil moyen (h)\"}]}, \"drillFilterOtherVisuals\": true, \"vcObjects\": {\"title\": [{\"properties\": {\"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}, \"text\": {\"expr\": {\"Literal\": {\"Value\": \"'Bien-être moyen de l''équipe (/25) et sommeil (h)'\"}}}}}]}}}",
+          "filters": "[]"
+        },
+        {
+          "x": 20,
+          "y": 340,
+          "z": 0,
+          "width": 1240,
+          "height": 360,
+          "config": "{\"name\": \"p3v2\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 20, \"y\": 340, \"z\": 0, \"width\": 1240, \"height\": 360}}], \"singleVisual\": {\"visualType\": \"pivotTable\", \"projections\": {\"Rows\": [{\"queryRef\": \"Joueurs.Joueur\"}], \"Columns\": [{\"queryRef\": \"Calendrier.Date\"}], \"Values\": [{\"queryRef\": \"Mesures.Bien-être moyen (/25)\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"t0\", \"Entity\": \"Joueurs\", \"Type\": 0}, {\"Name\": \"t1\", \"Entity\": \"Calendrier\", \"Type\": 0}, {\"Name\": \"t2\", \"Entity\": \"Mesures\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t0\"}}, \"Property\": \"Joueur\"}, \"Name\": \"Joueurs.Joueur\"}, {\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t1\"}}, \"Property\": \"Date\"}, \"Name\": \"Calendrier.Date\"}, {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t2\"}}, \"Property\": \"Bien-être moyen (/25)\"}, \"Name\": \"Mesures.Bien-être moyen (/25)\"}]}, \"drillFilterOtherVisuals\": true, \"vcObjects\": {\"title\": [{\"properties\": {\"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}, \"text\": {\"expr\": {\"Literal\": {\"Value\": \"'Bien-être par joueur (/25)'\"}}}}}]}}}",
+          "filters": "[]"
+        }
+      ]
+    },
+    {
+      "name": "p4",
+      "displayName": "Matchs",
+      "displayOption": 1,
+      "width": 1280,
+      "height": 720,
+      "ordinal": 3,
+      "config": "{}",
+      "filters": "[]",
+      "visualContainers": [
+        {
+          "x": 20,
+          "y": 20,
+          "z": 0,
+          "width": 620,
+          "height": 320,
+          "config": "{\"name\": \"p4v1\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 20, \"y\": 20, \"z\": 0, \"width\": 620, \"height\": 320}}], \"singleVisual\": {\"visualType\": \"tableEx\", \"projections\": {\"Values\": [{\"queryRef\": \"Matchs.Date\"}, {\"queryRef\": \"Matchs.Adversaire\"}, {\"queryRef\": \"Matchs.Lieu\"}, {\"queryRef\": \"Matchs.Compétition\"}, {\"queryRef\": \"Matchs.Score\"}, {\"queryRef\": \"Matchs.Résultat\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"t0\", \"Entity\": \"Matchs\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t0\"}}, \"Property\": \"Date\"}, \"Name\": \"Matchs.Date\"}, {\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t0\"}}, \"Property\": \"Adversaire\"}, \"Name\": \"Matchs.Adversaire\"}, {\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t0\"}}, \"Property\": \"Lieu\"}, \"Name\": \"Matchs.Lieu\"}, {\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t0\"}}, \"Property\": \"Compétition\"}, \"Name\": \"Matchs.Compétition\"}, {\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t0\"}}, \"Property\": \"Score\"}, \"Name\": \"Matchs.Score\"}, {\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t0\"}}, \"Property\": \"Résultat\"}, \"Name\": \"Matchs.Résultat\"}]}, \"drillFilterOtherVisuals\": true, \"vcObjects\": {\"title\": [{\"properties\": {\"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}, \"text\": {\"expr\": {\"Literal\": {\"Value\": \"'Résultats'\"}}}}}]}}}",
+          "filters": "[]"
+        },
+        {
+          "x": 660,
+          "y": 20,
+          "z": 0,
+          "width": 600,
+          "height": 320,
+          "config": "{\"name\": \"p4v2\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 660, \"y\": 20, \"z\": 0, \"width\": 600, \"height\": 320}}], \"singleVisual\": {\"visualType\": \"clusteredBarChart\", \"projections\": {\"Category\": [{\"queryRef\": \"Joueurs.Joueur\"}], \"Y\": [{\"queryRef\": \"Mesures.Minutes jouées\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"t0\", \"Entity\": \"Joueurs\", \"Type\": 0}, {\"Name\": \"t1\", \"Entity\": \"Mesures\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t0\"}}, \"Property\": \"Joueur\"}, \"Name\": \"Joueurs.Joueur\"}, {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t1\"}}, \"Property\": \"Minutes jouées\"}, \"Name\": \"Mesures.Minutes jouées\"}]}, \"drillFilterOtherVisuals\": true, \"vcObjects\": {\"title\": [{\"properties\": {\"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}, \"text\": {\"expr\": {\"Literal\": {\"Value\": \"'Temps de jeu'\"}}}}}]}}}",
+          "filters": "[]"
+        },
+        {
+          "x": 20,
+          "y": 360,
+          "z": 0,
+          "width": 1240,
+          "height": 340,
+          "config": "{\"name\": \"p4v3\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 20, \"y\": 360, \"z\": 0, \"width\": 1240, \"height\": 340}}], \"singleVisual\": {\"visualType\": \"tableEx\", \"projections\": {\"Values\": [{\"queryRef\": \"Joueurs.Joueur\"}, {\"queryRef\": \"Mesures.Matchs joués\"}, {\"queryRef\": \"Mesures.Minutes jouées\"}, {\"queryRef\": \"Mesures.Buts\"}, {\"queryRef\": \"Mesures.Passes décisives\"}, {\"queryRef\": \"Mesures.Cartons jaunes\"}, {\"queryRef\": \"Mesures.Cartons rouges\"}, {\"queryRef\": \"Mesures.Charge matchs (UA)\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"t0\", \"Entity\": \"Joueurs\", \"Type\": 0}, {\"Name\": \"t1\", \"Entity\": \"Mesures\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t0\"}}, \"Property\": \"Joueur\"}, \"Name\": \"Joueurs.Joueur\"}, {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t1\"}}, \"Property\": \"Matchs joués\"}, \"Name\": \"Mesures.Matchs joués\"}, {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t1\"}}, \"Property\": \"Minutes jouées\"}, \"Name\": \"Mesures.Minutes jouées\"}, {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t1\"}}, \"Property\": \"Buts\"}, \"Name\": \"Mesures.Buts\"}, {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t1\"}}, \"Property\": \"Passes décisives\"}, \"Name\": \"Mesures.Passes décisives\"}, {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t1\"}}, \"Property\": \"Cartons jaunes\"}, \"Name\": \"Mesures.Cartons jaunes\"}, {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t1\"}}, \"Property\": \"Cartons rouges\"}, \"Name\": \"Mesures.Cartons rouges\"}, {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t1\"}}, \"Property\": \"Charge matchs (UA)\"}, \"Name\": \"Mesures.Charge matchs (UA)\"}]}, \"drillFilterOtherVisuals\": true, \"vcObjects\": {\"title\": [{\"properties\": {\"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}, \"text\": {\"expr\": {\"Literal\": {\"Value\": \"'Statistiques par joueur'\"}}}}}]}}}",
+          "filters": "[]"
+        }
+      ]
+    },
+    {
+      "name": "p5",
+      "displayName": "Blessures",
+      "displayOption": 1,
+      "width": 1280,
+      "height": 720,
+      "ordinal": 4,
+      "config": "{}",
+      "filters": "[]",
+      "visualContainers": [
+        {
+          "x": 20,
+          "y": 20,
+          "z": 0,
+          "width": 406,
+          "height": 110,
+          "config": "{\"name\": \"p5c0\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 20, \"y\": 20, \"z\": 0, \"width\": 406, \"height\": 110}}], \"singleVisual\": {\"visualType\": \"card\", \"projections\": {\"Values\": [{\"queryRef\": \"Mesures.Blessures en cours\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"t0\", \"Entity\": \"Mesures\", \"Type\": 0}], \"Select\": [{\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t0\"}}, \"Property\": \"Blessures en cours\"}, \"Name\": \"Mesures.Blessures en cours\"}]}, \"drillFilterOtherVisuals\": true, \"vcObjects\": {\"title\": [{\"properties\": {\"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}, \"text\": {\"expr\": {\"Literal\": {\"Value\": \"'Blessures en cours'\"}}}}}]}}}",
+          "filters": "[]"
+        },
+        {
+          "x": 436,
+          "y": 20,
+          "z": 0,
+          "width": 406,
+          "height": 110,
+          "config": "{\"name\": \"p5c1\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 436, \"y\": 20, \"z\": 0, \"width\": 406, \"height\": 110}}], \"singleVisual\": {\"visualType\": \"card\", \"projections\": {\"Values\": [{\"queryRef\": \"Mesures.Nombre de blessures\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"t0\", \"Entity\": \"Mesures\", \"Type\": 0}], \"Select\": [{\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t0\"}}, \"Property\": \"Nombre de blessures\"}, \"Name\": \"Mesures.Nombre de blessures\"}]}, \"drillFilterOtherVisuals\": true, \"vcObjects\": {\"title\": [{\"properties\": {\"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}, \"text\": {\"expr\": {\"Literal\": {\"Value\": \"'Nombre de blessures'\"}}}}}]}}}",
+          "filters": "[]"
+        },
+        {
+          "x": 852,
+          "y": 20,
+          "z": 0,
+          "width": 406,
+          "height": 110,
+          "config": "{\"name\": \"p5c2\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 852, \"y\": 20, \"z\": 0, \"width\": 406, \"height\": 110}}], \"singleVisual\": {\"visualType\": \"card\", \"projections\": {\"Values\": [{\"queryRef\": \"Mesures.Jours d'absence\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"t0\", \"Entity\": \"Mesures\", \"Type\": 0}], \"Select\": [{\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t0\"}}, \"Property\": \"Jours d'absence\"}, \"Name\": \"Mesures.Jours d'absence\"}]}, \"drillFilterOtherVisuals\": true, \"vcObjects\": {\"title\": [{\"properties\": {\"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}, \"text\": {\"expr\": {\"Literal\": {\"Value\": \"'Jours d''absence'\"}}}}}]}}}",
+          "filters": "[]"
+        },
+        {
+          "x": 20,
+          "y": 150,
+          "z": 0,
+          "width": 800,
+          "height": 550,
+          "config": "{\"name\": \"p5v1\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 20, \"y\": 150, \"z\": 0, \"width\": 800, \"height\": 550}}], \"singleVisual\": {\"visualType\": \"tableEx\", \"projections\": {\"Values\": [{\"queryRef\": \"Joueurs.Joueur\"}, {\"queryRef\": \"Blessures.Date\"}, {\"queryRef\": \"Blessures.Zone\"}, {\"queryRef\": \"Blessures.Côté\"}, {\"queryRef\": \"Blessures.Type\"}, {\"queryRef\": \"Blessures.Gravité\"}, {\"queryRef\": \"Blessures.En cours\"}, {\"queryRef\": \"Blessures.Jours d'absence\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"t0\", \"Entity\": \"Joueurs\", \"Type\": 0}, {\"Name\": \"t1\", \"Entity\": \"Blessures\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t0\"}}, \"Property\": \"Joueur\"}, \"Name\": \"Joueurs.Joueur\"}, {\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t1\"}}, \"Property\": \"Date\"}, \"Name\": \"Blessures.Date\"}, {\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t1\"}}, \"Property\": \"Zone\"}, \"Name\": \"Blessures.Zone\"}, {\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t1\"}}, \"Property\": \"Côté\"}, \"Name\": \"Blessures.Côté\"}, {\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t1\"}}, \"Property\": \"Type\"}, \"Name\": \"Blessures.Type\"}, {\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t1\"}}, \"Property\": \"Gravité\"}, \"Name\": \"Blessures.Gravité\"}, {\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t1\"}}, \"Property\": \"En cours\"}, \"Name\": \"Blessures.En cours\"}, {\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t1\"}}, \"Property\": \"Jours d'absence\"}, \"Name\": \"Blessures.Jours d'absence\"}]}, \"drillFilterOtherVisuals\": true, \"vcObjects\": {\"title\": [{\"properties\": {\"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}, \"text\": {\"expr\": {\"Literal\": {\"Value\": \"'Blessures'\"}}}}}]}}}",
+          "filters": "[]"
+        },
+        {
+          "x": 840,
+          "y": 150,
+          "z": 0,
+          "width": 420,
+          "height": 550,
+          "config": "{\"name\": \"p5v2\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 840, \"y\": 150, \"z\": 0, \"width\": 420, \"height\": 550}}], \"singleVisual\": {\"visualType\": \"clusteredBarChart\", \"projections\": {\"Category\": [{\"queryRef\": \"Blessures.Zone\"}], \"Y\": [{\"queryRef\": \"Mesures.Nombre de blessures\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"t0\", \"Entity\": \"Blessures\", \"Type\": 0}, {\"Name\": \"t1\", \"Entity\": \"Mesures\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t0\"}}, \"Property\": \"Zone\"}, \"Name\": \"Blessures.Zone\"}, {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t1\"}}, \"Property\": \"Nombre de blessures\"}, \"Name\": \"Mesures.Nombre de blessures\"}]}, \"drillFilterOtherVisuals\": true, \"vcObjects\": {\"title\": [{\"properties\": {\"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}, \"text\": {\"expr\": {\"Literal\": {\"Value\": \"'Blessures par zone'\"}}}}}]}}}",
+          "filters": "[]"
+        }
+      ]
+    }
+  ]
+}

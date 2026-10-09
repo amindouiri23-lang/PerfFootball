@@ -1,0 +1,58 @@
+table 'Séances'
+	lineageTag: d4ae9293-8032-5ae3-9949-30174c2df1a0
+
+	column id
+		dataType: string
+		isHidden
+		lineageTag: f5ac905c-4a34-5376-9799-b228ef49fd75
+		summarizeBy: none
+		sourceColumn: id
+
+	column Date
+		dataType: dateTime
+		formatString: dd/mm/yyyy
+		lineageTag: 696ef3d0-f3c8-5b98-892b-696f043b2def
+		summarizeBy: none
+		sourceColumn: date
+
+	column Type
+		dataType: string
+		lineageTag: fb6870a1-9501-595f-a7da-c0a761c3ab17
+		summarizeBy: none
+		sourceColumn: type
+
+	column 'Durée prévue (min)'
+		dataType: int64
+		formatString: 0
+		lineageTag: 3f72b906-f461-5f27-9168-4927d3890669
+		summarizeBy: none
+		sourceColumn: planned_duration_min
+
+	column Objectif
+		dataType: string
+		lineageTag: 48fc1d2d-b2fa-52f9-8914-1297b86077ad
+		summarizeBy: none
+		sourceColumn: objective
+
+	column Remarques
+		dataType: string
+		lineageTag: ff3cb923-9a4d-5719-8200-77c4d0023b79
+		summarizeBy: none
+		sourceColumn: remarks
+
+	column 'État'
+		dataType: string
+		lineageTag: 60b0a61a-000f-54b9-bca4-572d30caf966
+		summarizeBy: none
+		sourceColumn: status
+
+	partition 'Séances' = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database(Serveur, BaseDeDonnees),
+				    Data = Source{[Schema = "reporting", Item = "sessions"]}[Data],
+				    Libelles_type = Table.TransformColumns(Data, {{"type", each if _ = null then null else Record.FieldOrDefault([#"technical" = "Technique", #"tactical" = "Tactique", #"physical" = "Physique", #"mixed" = "Mixte", #"recovery" = "Récupération", #"gym" = "Musculation", #"other" = "Autre"], _, _), type text}}),
+				    Libelles_status = Table.TransformColumns(Libelles_type, {{"status", each if _ = null then null else Record.FieldOrDefault([#"planned" = "Planifié", #"in_progress" = "En cours", #"completed" = "Terminé"], _, _), type text}})
+				in
+				    Libelles_status

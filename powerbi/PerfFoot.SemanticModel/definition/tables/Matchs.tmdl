@@ -1,0 +1,87 @@
+table Matchs
+	lineageTag: 0fc7f714-990a-5cf1-8238-0f1ba2ec68d4
+
+	column id
+		dataType: string
+		isHidden
+		lineageTag: 67205541-dc04-59a4-998c-03d77505586a
+		summarizeBy: none
+		sourceColumn: id
+
+	column Date
+		dataType: dateTime
+		formatString: dd/mm/yyyy
+		lineageTag: 680954ca-6fc3-5da8-983c-538163252ab9
+		summarizeBy: none
+		sourceColumn: date
+
+	column Adversaire
+		dataType: string
+		lineageTag: 9f50e148-a112-5032-b686-038ac9d54c4c
+		summarizeBy: none
+		sourceColumn: opponent
+
+	column Lieu
+		dataType: string
+		lineageTag: fe2a89b5-b772-5a8b-8fbb-d72c4e19e0b2
+		summarizeBy: none
+		sourceColumn: home_away
+
+	column 'Compétition'
+		dataType: string
+		lineageTag: b8b340de-1291-5b96-bd78-33897685d7ac
+		summarizeBy: none
+		sourceColumn: competition
+
+	column 'Durée (min)'
+		dataType: int64
+		formatString: 0
+		lineageTag: b6d643fe-f240-5827-96e9-3af9499b5dd4
+		summarizeBy: none
+		sourceColumn: duration_min
+
+	column 'Buts pour'
+		dataType: int64
+		formatString: 0
+		lineageTag: 5d2c5906-344b-5074-96e0-75a92ba9b39d
+		summarizeBy: none
+		sourceColumn: goals_for
+
+	column 'Buts contre'
+		dataType: int64
+		formatString: 0
+		lineageTag: b5e9a460-4146-5735-a8b5-7b47cb742ec9
+		summarizeBy: none
+		sourceColumn: goals_against
+
+	column Score
+		dataType: string
+		lineageTag: 0fdfff82-22c9-5880-86d8-274595b839cd
+		summarizeBy: none
+		sourceColumn: score
+
+	column 'Résultat'
+		dataType: string
+		lineageTag: c1fa1874-9036-591c-ad0f-667b09996e16
+		summarizeBy: none
+		sourceColumn: result
+
+	column 'État'
+		dataType: string
+		lineageTag: 46c0a939-971c-547e-8153-f147bb4f998c
+		summarizeBy: none
+		sourceColumn: status
+
+	partition Matchs = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database(Serveur, BaseDeDonnees),
+				    Data = Source{[Schema = "reporting", Item = "matches"]}[Data],
+				    Libelles_home_away = Table.TransformColumns(Data, {{"home_away", each if _ = null then null else Record.FieldOrDefault([#"H" = "Domicile", #"A" = "Extérieur", #"N" = "Neutre"], _, _), type text}}),
+				    Libelles_competition = Table.TransformColumns(Libelles_home_away, {{"competition", each if _ = null then null else Record.FieldOrDefault([#"league" = "Championnat", #"cup" = "Coupe", #"friendly" = "Amical", #"tournament" = "Tournoi"], _, _), type text}}),
+				    Libelles_result = Table.TransformColumns(Libelles_competition, {{"result", each if _ = null then null else Record.FieldOrDefault([#"W" = "Victoire", #"D" = "Nul", #"L" = "Défaite"], _, _), type text}}),
+				    Libelles_status = Table.TransformColumns(Libelles_result, {{"status", each if _ = null then null else Record.FieldOrDefault([#"planned" = "Planifié", #"in_progress" = "En cours", #"completed" = "Terminé"], _, _), type text}}),
+				    Ajout_score = Table.AddColumn(Libelles_status, "score", each if [goals_for] = null or [goals_against] = null then null else Text.From([goals_for]) & " - " & Text.From([goals_against]), type text)
+				in
+				    Ajout_score

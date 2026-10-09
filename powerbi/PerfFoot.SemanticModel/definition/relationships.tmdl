@@ -1,0 +1,64 @@
+relationship 891a7df6-6c7a-557d-80cf-dc45c5288e6b
+	fromColumn: Joueurs.team_id
+	toColumn: 'Équipes'.id
+
+relationship 4791eea4-949f-5082-bb79-aeeaa27ef5fd
+	fromColumn: 'Présences'.player_id
+	toColumn: Joueurs.id
+
+relationship d70117c5-46ba-5458-ae19-7033a0ca775a
+	fromColumn: 'Présences'.session_id
+	toColumn: 'Séances'.id
+
+relationship a73250dc-889a-5ef2-b492-1208bc94687b
+	fromColumn: 'Présences'.Date
+	toColumn: Calendrier.Date
+
+relationship e0fc6066-5060-5e70-a72f-c7bfd7806fb5
+	fromColumn: 'Bien-être'.player_id
+	toColumn: Joueurs.id
+
+relationship 72d4bf7f-4580-587c-85f6-e931b04ca971
+	fromColumn: 'Bien-être'.session_id
+	toColumn: 'Séances'.id
+
+relationship a5d2f791-ad19-58a8-b596-1c64fcd2b7ef
+	fromColumn: 'Bien-être'.Date
+	toColumn: Calendrier.Date
+
+relationship 99f12900-38f1-5e75-8152-e17e40ebd633
+	fromColumn: 'Feuilles de match'.player_id
+	toColumn: Joueurs.id
+
+relationship 6e53fbf0-b8bd-5a97-910c-e2c9881260e6
+	fromColumn: 'Feuilles de match'.match_id
+	toColumn: Matchs.id
+
+relationship dd33ddf5-abcf-5615-9b5f-bc1ca3c274b9
+	fromColumn: 'Feuilles de match'.Date
+	toColumn: Calendrier.Date
+
+relationship 57d2eeea-e2bc-5aa9-bbc1-69889022d3bc
+	fromColumn: 'Événements'.player_id
+	toColumn: Joueurs.id
+
+relationship 60f04d65-fff1-5cd5-ab56-013347820651
+	isActive: false
+	fromColumn: 'Événements'.assist_player_id
+	toColumn: Joueurs.id
+
+relationship f837cc52-76a6-5e67-b841-cf79e2d8b3b2
+	fromColumn: 'Événements'.match_id
+	toColumn: Matchs.id
+
+relationship e8ab2773-d6ed-5130-ad5c-31d7afd57c99
+	fromColumn: 'Événements'.Date
+	toColumn: Calendrier.Date
+
+relationship 12aea952-2b44-52a9-a562-25f5399f46b8
+	fromColumn: Blessures.player_id
+	toColumn: Joueurs.id
+
+relationship a946e231-d6a0-53d2-bb6c-4456c0547eb4
+	fromColumn: Blessures.Date
+	toColumn: Calendrier.Date

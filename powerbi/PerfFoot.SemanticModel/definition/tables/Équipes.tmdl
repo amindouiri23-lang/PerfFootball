@@ -1,0 +1,42 @@
+table 'Équipes'
+	lineageTag: 46e80f7b-07d5-5024-bb9e-cf0cba3b1a34
+
+	column id
+		dataType: string
+		isHidden
+		lineageTag: 018399f9-1863-51f4-a9ad-85bf864af8bc
+		summarizeBy: none
+		sourceColumn: id
+
+	column 'Équipe'
+		dataType: string
+		lineageTag: 93dd6497-fa63-5aff-9f0f-d04373ca1516
+		summarizeBy: none
+		sourceColumn: name
+
+	column Club
+		dataType: string
+		lineageTag: 1793c279-56e6-5e95-b70c-5032885aec74
+		summarizeBy: none
+		sourceColumn: club_name
+
+	column 'Catégorie'
+		dataType: string
+		lineageTag: 05d64d45-ae61-5a39-a87f-cc58a4226dc2
+		summarizeBy: none
+		sourceColumn: category
+
+	column Saison
+		dataType: string
+		lineageTag: 5f416969-0dc3-58a6-9f8e-f5856a704472
+		summarizeBy: none
+		sourceColumn: season
+
+	partition 'Équipes' = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database(Serveur, BaseDeDonnees),
+				    Data = Source{[Schema = "reporting", Item = "teams"]}[Data]
+				in
+				    Data

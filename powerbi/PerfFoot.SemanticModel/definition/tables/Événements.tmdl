@@ -1,0 +1,60 @@
+table 'Événements'
+	lineageTag: 6bcd9320-7e29-5277-b2b1-f97730a12cb2
+
+	column id
+		dataType: string
+		isHidden
+		lineageTag: fbf27519-3a63-5011-80e3-ca5edb048875
+		summarizeBy: none
+		sourceColumn: id
+
+	column match_id
+		dataType: string
+		isHidden
+		lineageTag: 0bf58ebf-9a3f-50a7-af7c-c67cd686cf6d
+		summarizeBy: none
+		sourceColumn: match_id
+
+	column player_id
+		dataType: string
+		isHidden
+		lineageTag: bb9b2784-f629-5676-abe7-fa949fd4e458
+		summarizeBy: none
+		sourceColumn: player_id
+
+	column assist_player_id
+		dataType: string
+		isHidden
+		lineageTag: d0603235-e830-5f82-b768-9d01bf37d488
+		summarizeBy: none
+		sourceColumn: assist_player_id
+
+	column Date
+		dataType: dateTime
+		formatString: dd/mm/yyyy
+		lineageTag: b75a7879-9718-5d0d-b47a-7a789a62d5b1
+		summarizeBy: none
+		sourceColumn: date
+
+	column Type
+		dataType: string
+		lineageTag: 88886cc5-f6e7-5583-9fe8-ede94e6f6d34
+		summarizeBy: none
+		sourceColumn: type
+
+	column Minute
+		dataType: int64
+		formatString: 0
+		lineageTag: dea08cb5-25f0-5208-af8d-41c0049eb968
+		summarizeBy: none
+		sourceColumn: minute
+
+	partition 'Événements' = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database(Serveur, BaseDeDonnees),
+				    Data = Source{[Schema = "reporting", Item = "match_events"]}[Data],
+				    Libelles_type = Table.TransformColumns(Data, {{"type", each if _ = null then null else Record.FieldOrDefault([#"goal" = "But", #"yellow_card" = "Carton jaune", #"red_card" = "Carton rouge"], _, _), type text}})
+				in
+				    Libelles_type

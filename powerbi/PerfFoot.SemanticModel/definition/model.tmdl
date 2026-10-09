@@ -1,0 +1,16 @@
+model Model
+	culture: fr-FR
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	sourceQueryCulture: fr-FR
+
+ref table 'Équipes'
+ref table Joueurs
+ref table 'Séances'
+ref table 'Présences'
+ref table 'Bien-être'
+ref table Matchs
+ref table 'Feuilles de match'
+ref table 'Événements'
+ref table Blessures
+ref table Calendrier
+ref table Mesures

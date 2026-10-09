@@ -1,0 +1,93 @@
+table Mesures
+	lineageTag: 72a7b381-4394-5d3c-ab52-80f26601c7a7
+
+	measure 'Joueurs suivis' = CALCULATE(COUNTROWS(Joueurs), Joueurs[Supprimé] = FALSE())
+		formatString: 0
+		lineageTag: 5d451403-24f9-57c4-a834-09da46fdf22a
+
+	measure 'Présence %' = DIVIDE(CALCULATE(COUNTROWS('Présences'), 'Présences'[Présent] = TRUE()), COUNTROWS('Présences'))
+		formatString: 0%
+		lineageTag: d25e3093-896c-52ba-9680-a91c196a6b08
+
+	measure 'Charge séances (UA)' = SUMX('Présences', 'Présences'[RPE] * 'Présences'[Durée (min)])
+		formatString: #,0
+		lineageTag: 7eeafadb-6891-5696-a7f7-398c9a54191c
+
+	measure 'Charge matchs (UA)' = SUMX('Feuilles de match', 'Feuilles de match'[RPE] * 'Feuilles de match'[Minutes jouées])
+		formatString: #,0
+		lineageTag: 95b08fef-7d4d-514d-90d1-0657d2053d59
+
+	measure 'Charge totale (UA)' = [Charge séances (UA)] + [Charge matchs (UA)]
+		formatString: #,0
+		lineageTag: 2660745c-44e2-5902-860e-8ed8af094f8e
+
+	measure 'Charge aiguë 7 j (UA)' = CALCULATE([Charge totale (UA)], DATESINPERIOD(Calendrier[Date], MAX(Calendrier[Date]), -7, DAY))
+		formatString: #,0
+		lineageTag: 47f2e226-1da3-5c45-b4b0-040b933a31ca
+
+	measure 'Charge chronique (UA/sem.)' = DIVIDE(CALCULATE([Charge totale (UA)], DATESINPERIOD(Calendrier[Date], MAX(Calendrier[Date]), -28, DAY)), 4)
+		formatString: #,0
+		lineageTag: bd1c0821-f7b0-59bb-ae19-64461b582523
+
+	measure ACWR = DIVIDE([Charge aiguë 7 j (UA)], [Charge chronique (UA/sem.)])
+		formatString: 0.00
+		lineageTag: f21183d6-b3d4-57b5-901f-279590f58ab2
+
+	measure 'Minutes jouées' = SUM('Feuilles de match'[Minutes jouées])
+		formatString: #,0
+		lineageTag: 4bc0d28c-3538-581b-9746-16e47f5f3c63
+
+	measure 'Matchs joués' = CALCULATE(COUNTROWS('Feuilles de match'), 'Feuilles de match'[Minutes jouées] > 0)
+		formatString: 0
+		lineageTag: 8c950e3d-d1cb-5aa8-83fb-0fb901ce6880
+
+	measure Buts = CALCULATE(COUNTROWS('Événements'), 'Événements'[Type] = "But")
+		formatString: 0
+		lineageTag: 288e7eec-bd02-5aa9-adf9-76b3d48b9756
+
+	measure 'Passes décisives' = CALCULATE(COUNTROWS('Événements'), 'Événements'[Type] = "But", USERELATIONSHIP('Événements'[assist_player_id], Joueurs[id]))
+		formatString: 0
+		lineageTag: 427d0f73-5078-5a6c-b0fc-43b6a62141a1
+
+	measure 'Cartons jaunes' = CALCULATE(COUNTROWS('Événements'), 'Événements'[Type] = "Carton jaune")
+		formatString: 0
+		lineageTag: 8f2686ca-5a42-56ed-8081-f21cf21eb000
+
+	measure 'Cartons rouges' = CALCULATE(COUNTROWS('Événements'), 'Événements'[Type] = "Carton rouge")
+		formatString: 0
+		lineageTag: 591afd64-43da-5edb-9192-83b4690582bb
+
+	measure 'Bien-être moyen (/25)' = AVERAGE('Bien-être'[Score (/25)])
+		formatString: 0.0
+		lineageTag: 3ab56a4b-b32f-5e2b-97b9-c7a6dbd252a4
+
+	measure 'Sommeil moyen (h)' = AVERAGE('Bien-être'[Sommeil (h)])
+		formatString: 0.0
+		lineageTag: 7a84cafd-0241-550b-8aea-9522ace7f79d
+
+	measure 'Nombre de blessures' = COUNTROWS(Blessures)
+		formatString: 0
+		lineageTag: 4907b88b-db4e-59b6-a458-3a52020b15ac
+
+	measure 'Blessures en cours' = CALCULATE(COUNTROWS(Blessures), Blessures[En cours] = TRUE())
+		formatString: 0
+		lineageTag: 926b48e9-bea9-5e07-bc8d-a8ed42e252ce
+
+	measure 'Jours d''absence' = SUM(Blessures[Jours d'absence])
+		formatString: #,0
+		lineageTag: 710bf73f-c28a-57f8-84bc-bb259d118cde
+
+	column _
+		dataType: string
+		isHidden
+		lineageTag: 511db4cc-d477-5f65-8725-8b969201792d
+		summarizeBy: none
+		sourceColumn: _
+
+	partition Mesures = m
+		mode: import
+		source =
+				let
+				    Source = #table(type table [_ = text], {})
+				in
+				    Source

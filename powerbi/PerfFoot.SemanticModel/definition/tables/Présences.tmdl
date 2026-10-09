@@ -1,0 +1,79 @@
+table 'Présences'
+	lineageTag: 486e1399-f41f-52a4-94a4-7863a8c7241f
+
+	column id
+		dataType: string
+		isHidden
+		lineageTag: 81263d6d-f35e-5151-a5d3-f8e9e89622f0
+		summarizeBy: none
+		sourceColumn: id
+
+	column session_id
+		dataType: string
+		isHidden
+		lineageTag: 13a84ee4-0b9f-5f77-b7d1-d84fe2d1951b
+		summarizeBy: none
+		sourceColumn: session_id
+
+	column player_id
+		dataType: string
+		isHidden
+		lineageTag: 1dde7801-b2eb-5909-bffe-3817029a3bf0
+		summarizeBy: none
+		sourceColumn: player_id
+
+	column Date
+		dataType: dateTime
+		formatString: dd/mm/yyyy
+		lineageTag: 4e837d71-7106-5a27-9eaf-09444bc0d962
+		summarizeBy: none
+		sourceColumn: date
+
+	column 'Type de séance'
+		dataType: string
+		lineageTag: b1fc7cd7-a05b-5701-a8d2-038acd71ec42
+		summarizeBy: none
+		sourceColumn: session_type
+
+	column 'Présent'
+		dataType: boolean
+		lineageTag: 4ff668cf-e883-5ab2-80a9-d2d1bb13f154
+		summarizeBy: none
+		sourceColumn: present
+
+	column 'Motif d''absence'
+		dataType: string
+		lineageTag: 8ae526cd-e117-565e-91b2-b15f24937c3a
+		summarizeBy: none
+		sourceColumn: absence_reason
+
+	column 'Durée (min)'
+		dataType: int64
+		formatString: 0
+		lineageTag: eb40a253-5e3d-52de-9e6f-1d22f409c7d6
+		summarizeBy: none
+		sourceColumn: duration_min
+
+	column RPE
+		dataType: int64
+		formatString: 0
+		lineageTag: 4ab7835a-89ab-55b8-8cae-22bdaa17267e
+		summarizeBy: none
+		sourceColumn: rpe
+
+	column Remarque
+		dataType: string
+		lineageTag: 1035ede6-b82e-52cd-bafe-f545989c3e50
+		summarizeBy: none
+		sourceColumn: remark
+
+	partition 'Présences' = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database(Serveur, BaseDeDonnees),
+				    Data = Source{[Schema = "reporting", Item = "session_players"]}[Data],
+				    Libelles_session_type = Table.TransformColumns(Data, {{"session_type", each if _ = null then null else Record.FieldOrDefault([#"technical" = "Technique", #"tactical" = "Tactique", #"physical" = "Physique", #"mixed" = "Mixte", #"recovery" = "Récupération", #"gym" = "Musculation", #"other" = "Autre"], _, _), type text}}),
+				    Libelles_absence_reason = Table.TransformColumns(Libelles_session_type, {{"absence_reason", each if _ = null then null else Record.FieldOrDefault([#"injured" = "Blessé", #"sick" = "Malade", #"national_team" = "Sélection", #"personal" = "Personnel", #"other" = "Autre", #"not_selected" = "Non retenu", #"suspended" = "Suspendu"], _, _), type text}})
+				in
+				    Libelles_absence_reason

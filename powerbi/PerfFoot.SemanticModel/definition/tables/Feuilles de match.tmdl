@@ -1,0 +1,85 @@
+table 'Feuilles de match'
+	lineageTag: 9dec1cca-b437-5c2f-967b-ab0b9cd82fc3
+
+	column id
+		dataType: string
+		isHidden
+		lineageTag: f2eb9509-1048-596e-b2e1-6ea199dbecc4
+		summarizeBy: none
+		sourceColumn: id
+
+	column match_id
+		dataType: string
+		isHidden
+		lineageTag: d159b17f-e88d-53b8-9068-d47c61f81570
+		summarizeBy: none
+		sourceColumn: match_id
+
+	column player_id
+		dataType: string
+		isHidden
+		lineageTag: f1495dcd-76ce-5b06-89dc-4cdd2f68fee1
+		summarizeBy: none
+		sourceColumn: player_id
+
+	column Date
+		dataType: dateTime
+		formatString: dd/mm/yyyy
+		lineageTag: b1130e94-ebdb-582b-b629-a3866d0a2b13
+		summarizeBy: none
+		sourceColumn: date
+
+	column Adversaire
+		dataType: string
+		lineageTag: df7d26fb-310d-50c1-88ed-658b73845119
+		summarizeBy: none
+		sourceColumn: opponent
+
+	column 'Présent'
+		dataType: boolean
+		lineageTag: da757485-05eb-544c-a2f3-c8afd14f693c
+		summarizeBy: none
+		sourceColumn: present
+
+	column 'Motif d''absence'
+		dataType: string
+		lineageTag: f6158c44-57cc-52fc-b394-bd1d05e2790d
+		summarizeBy: none
+		sourceColumn: absence_reason
+
+	column 'Rôle'
+		dataType: string
+		lineageTag: e8ef8d86-fbdf-5860-872b-fd9d173861df
+		summarizeBy: none
+		sourceColumn: role
+
+	column 'Minutes jouées'
+		dataType: int64
+		formatString: 0
+		lineageTag: 49ecd3f1-58ae-531a-ac1c-c5f906434763
+		summarizeBy: none
+		sourceColumn: minutes_played
+
+	column RPE
+		dataType: int64
+		formatString: 0
+		lineageTag: 61fedcee-6ec0-53e5-9796-95f269c99529
+		summarizeBy: none
+		sourceColumn: rpe
+
+	column Remarque
+		dataType: string
+		lineageTag: 1081053f-3c16-53b2-9685-9fc1ed9e542a
+		summarizeBy: none
+		sourceColumn: remark
+
+	partition 'Feuilles de match' = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database(Serveur, BaseDeDonnees),
+				    Data = Source{[Schema = "reporting", Item = "match_players"]}[Data],
+				    Libelles_absence_reason = Table.TransformColumns(Data, {{"absence_reason", each if _ = null then null else Record.FieldOrDefault([#"injured" = "Blessé", #"sick" = "Malade", #"national_team" = "Sélection", #"personal" = "Personnel", #"other" = "Autre", #"not_selected" = "Non retenu", #"suspended" = "Suspendu"], _, _), type text}}),
+				    Libelles_role = Table.TransformColumns(Libelles_absence_reason, {{"role", each if _ = null then null else Record.FieldOrDefault([#"starter" = "Titulaire", #"sub" = "Remplaçant"], _, _), type text}})
+				in
+				    Libelles_role

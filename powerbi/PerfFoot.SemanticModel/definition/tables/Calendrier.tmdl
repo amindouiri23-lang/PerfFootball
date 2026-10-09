@@ -1,0 +1,46 @@
+table Calendrier
+	lineageTag: b162391c-ea50-5184-8183-3a809a08fb52
+
+	column Date
+		dataType: dateTime
+		formatString: dd/mm/yyyy
+		lineageTag: ee96bccf-90e6-5bce-8203-038d7851005e
+		summarizeBy: none
+		sourceColumn: Date
+
+	column Semaine
+		dataType: dateTime
+		formatString: dd/mm/yyyy
+		lineageTag: a07d9860-24e6-5071-8697-7ea5544d0dac
+		summarizeBy: none
+		sourceColumn: Semaine
+
+	column Mois
+		dataType: string
+		lineageTag: 633d8335-c438-52b1-8fef-91a3dc030421
+		summarizeBy: none
+		sourceColumn: Mois
+
+	column Saison
+		dataType: string
+		lineageTag: 9a84fe07-877e-579f-8ecf-02717385af4b
+		summarizeBy: none
+		sourceColumn: Saison
+
+	partition Calendrier = m
+		mode: import
+		source =
+				let
+				    Debut = #date(2025, 7, 1),
+				    Fin = Date.AddDays(Date.From(DateTime.LocalNow()), 60),
+				    Dates = List.Dates(Debut, Duration.Days(Fin - Debut) + 1, #duration(1, 0, 0, 0)),
+				    Base = Table.FromList(Dates, Splitter.SplitByNothing(), {"Date"}),
+				    Typed = Table.TransformColumnTypes(Base, {{"Date", type date}}),
+				    Semaine = Table.AddColumn(Typed, "Semaine", each Date.StartOfWeek([Date], Day.Monday), type date),
+				    Mois = Table.AddColumn(Semaine, "Mois", each Date.ToText([Date], "yyyy-MM"), type text),
+				    Saison = Table.AddColumn(Mois, "Saison", each
+				        let y = Date.Year([Date]) in
+				            if Date.Month([Date]) >= 7 then Text.From(y) & "-" & Text.From(y + 1)
+				            else Text.From(y - 1) & "-" & Text.From(y), type text)
+				in
+				    Saison

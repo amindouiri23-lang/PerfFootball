@@ -1,0 +1,94 @@
+table 'Bien-être'
+	lineageTag: c59794c3-ae18-5b62-8db4-52ef138df16c
+
+	column id
+		dataType: string
+		isHidden
+		lineageTag: 98d4965f-d0a7-5573-8f46-27db4838861a
+		summarizeBy: none
+		sourceColumn: id
+
+	column session_id
+		dataType: string
+		isHidden
+		lineageTag: ce4c8e77-ef66-58d7-a1b1-6af015a66a46
+		summarizeBy: none
+		sourceColumn: session_id
+
+	column player_id
+		dataType: string
+		isHidden
+		lineageTag: f08b2091-e269-5435-9e74-9ca1740fb25b
+		summarizeBy: none
+		sourceColumn: player_id
+
+	column Date
+		dataType: dateTime
+		formatString: dd/mm/yyyy
+		lineageTag: 29976fd5-6c27-51a5-9482-43f9f221bda2
+		summarizeBy: none
+		sourceColumn: date
+
+	column 'Sommeil (h)'
+		dataType: double
+		formatString: 0.0
+		lineageTag: f66b2c0b-3fd2-5efa-8f17-b1f183fd390b
+		summarizeBy: none
+		sourceColumn: sleep_hours
+
+	column 'Qualité du sommeil'
+		dataType: int64
+		formatString: 0
+		lineageTag: 6c24b197-00e3-5753-a18b-9dcbedaf9976
+		summarizeBy: none
+		sourceColumn: sleep_quality
+
+	column Fatigue
+		dataType: int64
+		formatString: 0
+		lineageTag: 4ed52b42-407a-5f27-928d-f87d2153817f
+		summarizeBy: none
+		sourceColumn: fatigue
+
+	column Courbatures
+		dataType: int64
+		formatString: 0
+		lineageTag: 42642fff-978e-58cc-94e6-0411675d9080
+		summarizeBy: none
+		sourceColumn: soreness
+
+	column Stress
+		dataType: int64
+		formatString: 0
+		lineageTag: ae41b2c9-c017-5b28-adca-0983b4868b98
+		summarizeBy: none
+		sourceColumn: stress
+
+	column Humeur
+		dataType: int64
+		formatString: 0
+		lineageTag: ec0fd278-9c00-569b-9dec-fad1c338c4d6
+		summarizeBy: none
+		sourceColumn: mood
+
+	column 'Score (/25)'
+		dataType: int64
+		formatString: 0
+		lineageTag: 75eb9de4-6c76-56e4-aede-fc759548bd1c
+		summarizeBy: none
+		sourceColumn: total_score
+
+	column Remarque
+		dataType: string
+		lineageTag: e5e0c232-aab1-55cc-8616-d1f293dca7de
+		summarizeBy: none
+		sourceColumn: remark
+
+	partition 'Bien-être' = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database(Serveur, BaseDeDonnees),
+				    Data = Source{[Schema = "reporting", Item = "wellness"]}[Data]
+				in
+				    Data

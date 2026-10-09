@@ -1,0 +1,101 @@
+table Blessures
+	lineageTag: 95528b90-ddc2-5ebc-87eb-5e8db96a7974
+
+	column id
+		dataType: string
+		isHidden
+		lineageTag: 341cf6c2-724e-5f27-bffb-d101050251bf
+		summarizeBy: none
+		sourceColumn: id
+
+	column player_id
+		dataType: string
+		isHidden
+		lineageTag: d21d969a-96cc-55c1-b1a7-f1ad131b007b
+		summarizeBy: none
+		sourceColumn: player_id
+
+	column Date
+		dataType: dateTime
+		formatString: dd/mm/yyyy
+		lineageTag: e41b57ae-29c7-5b02-bb13-3a6896de2d71
+		summarizeBy: none
+		sourceColumn: date
+
+	column Minute
+		dataType: int64
+		formatString: 0
+		lineageTag: 23ec991f-887f-5880-9361-ce06a0cf692b
+		summarizeBy: none
+		sourceColumn: minute
+
+	column Zone
+		dataType: string
+		lineageTag: 5592ba8a-1ea7-5e4e-80e6-daa5bc8dcbc7
+		summarizeBy: none
+		sourceColumn: body_area
+
+	column 'Côté'
+		dataType: string
+		lineageTag: 33672664-2b2c-5eef-8bfa-e2fca62364cc
+		summarizeBy: none
+		sourceColumn: side
+
+	column Type
+		dataType: string
+		lineageTag: 5ad02ddd-399b-501c-b2e8-ee2cb962ec20
+		summarizeBy: none
+		sourceColumn: type
+
+	column Circonstance
+		dataType: string
+		lineageTag: b8632f87-3bd7-5823-b233-06650464050b
+		summarizeBy: none
+		sourceColumn: mechanism
+
+	column 'Gravité'
+		dataType: string
+		lineageTag: 0afe4117-dcc3-5bfb-86d8-b3b11c5c2d7f
+		summarizeBy: none
+		sourceColumn: severity
+
+	column 'Retour prévu'
+		dataType: dateTime
+		formatString: dd/mm/yyyy
+		lineageTag: 1ab5c7eb-de3a-550a-8052-e53857b54700
+		summarizeBy: none
+		sourceColumn: expected_return_date
+
+	column 'Date de retour'
+		dataType: dateTime
+		formatString: dd/mm/yyyy
+		lineageTag: f7bc1d2d-121f-58eb-b016-631b0127ea45
+		summarizeBy: none
+		sourceColumn: return_date
+
+	column 'En cours'
+		dataType: boolean
+		lineageTag: 6577c280-c95b-526d-971a-ef524b8d851f
+		summarizeBy: none
+		sourceColumn: is_open
+
+	column 'Jours d''absence'
+		dataType: int64
+		formatString: 0
+		lineageTag: 35676fe1-506f-5e3c-96aa-8766ece90345
+		summarizeBy: none
+		sourceColumn: days_out
+
+	partition Blessures = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database(Serveur, BaseDeDonnees),
+				    Data = Source{[Schema = "reporting", Item = "injuries"]}[Data],
+				    Libelles_body_area = Table.TransformColumns(Data, {{"body_area", each if _ = null then null else Record.FieldOrDefault([#"head" = "Tête", #"neck" = "Cou", #"shoulder" = "Épaule", #"arm" = "Bras", #"back" = "Dos", #"hip_groin" = "Hanche/aine", #"thigh_front" = "Cuisse avant", #"thigh_back" = "Cuisse arrière", #"knee" = "Genou", #"calf" = "Mollet", #"ankle" = "Cheville", #"foot" = "Pied", #"other" = "Autre"], _, _), type text}}),
+				    Libelles_side = Table.TransformColumns(Libelles_body_area, {{"side", each if _ = null then null else Record.FieldOrDefault([#"left" = "Gauche", #"right" = "Droit", #"both" = "Les deux"], _, _), type text}}),
+				    Libelles_type = Table.TransformColumns(Libelles_side, {{"type", each if _ = null then null else Record.FieldOrDefault([#"muscle" = "Musculaire", #"ligament" = "Ligamentaire", #"bone" = "Osseuse", #"contusion" = "Contusion", #"tendon" = "Tendineuse", #"other" = "Autre"], _, _), type text}}),
+				    Libelles_mechanism = Table.TransformColumns(Libelles_type, {{"mechanism", each if _ = null then null else Record.FieldOrDefault([#"contact" = "Contact", #"non_contact" = "Sans contact", #"overuse" = "Surmenage"], _, _), type text}}),
+				    Libelles_severity = Table.TransformColumns(Libelles_mechanism, {{"severity", each if _ = null then null else Record.FieldOrDefault([#"minor" = "Légère", #"moderate" = "Modérée", #"severe" = "Grave"], _, _), type text}})
+				in
+				    Libelles_severity
