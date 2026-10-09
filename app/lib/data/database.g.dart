@@ -4690,6 +4690,2608 @@ class WellnessCompanion extends UpdateCompanion<WellnessEntry> {
   }
 }
 
+class $MatchesTable extends Matches
+    with TableInfo<$MatchesTable, FootballMatch> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $MatchesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<String> createdAt = GeneratedColumn<String>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<String> updatedAt = GeneratedColumn<String>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _serverUpdatedAtMeta = const VerificationMeta(
+    'serverUpdatedAt',
+  );
+  @override
+  late final GeneratedColumn<String> serverUpdatedAt = GeneratedColumn<String>(
+    'server_updated_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deletedMeta = const VerificationMeta(
+    'deleted',
+  );
+  @override
+  late final GeneratedColumn<bool> deleted = GeneratedColumn<bool>(
+    'deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _isDirtyMeta = const VerificationMeta(
+    'isDirty',
+  );
+  @override
+  late final GeneratedColumn<bool> isDirty = GeneratedColumn<bool>(
+    'is_dirty',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_dirty" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _teamIdMeta = const VerificationMeta('teamId');
+  @override
+  late final GeneratedColumn<String> teamId = GeneratedColumn<String>(
+    'team_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _dateMeta = const VerificationMeta('date');
+  @override
+  late final GeneratedColumn<String> date = GeneratedColumn<String>(
+    'date',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _kickOffTimeMeta = const VerificationMeta(
+    'kickOffTime',
+  );
+  @override
+  late final GeneratedColumn<String> kickOffTime = GeneratedColumn<String>(
+    'kick_off_time',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _opponentMeta = const VerificationMeta(
+    'opponent',
+  );
+  @override
+  late final GeneratedColumn<String> opponent = GeneratedColumn<String>(
+    'opponent',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _homeAwayMeta = const VerificationMeta(
+    'homeAway',
+  );
+  @override
+  late final GeneratedColumn<String> homeAway = GeneratedColumn<String>(
+    'home_away',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _competitionMeta = const VerificationMeta(
+    'competition',
+  );
+  @override
+  late final GeneratedColumn<String> competition = GeneratedColumn<String>(
+    'competition',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _durationMinMeta = const VerificationMeta(
+    'durationMin',
+  );
+  @override
+  late final GeneratedColumn<int> durationMin = GeneratedColumn<int>(
+    'duration_min',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(90),
+  );
+  static const VerificationMeta _goalsForMeta = const VerificationMeta(
+    'goalsFor',
+  );
+  @override
+  late final GeneratedColumn<int> goalsFor = GeneratedColumn<int>(
+    'goals_for',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _goalsAgainstMeta = const VerificationMeta(
+    'goalsAgainst',
+  );
+  @override
+  late final GeneratedColumn<int> goalsAgainst = GeneratedColumn<int>(
+    'goals_against',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _remarksMeta = const VerificationMeta(
+    'remarks',
+  );
+  @override
+  late final GeneratedColumn<String> remarks = GeneratedColumn<String>(
+    'remarks',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('planned'),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    createdAt,
+    updatedAt,
+    serverUpdatedAt,
+    deleted,
+    isDirty,
+    teamId,
+    date,
+    kickOffTime,
+    opponent,
+    homeAway,
+    competition,
+    durationMin,
+    goalsFor,
+    goalsAgainst,
+    remarks,
+    status,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'matches';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<FootballMatch> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('server_updated_at')) {
+      context.handle(
+        _serverUpdatedAtMeta,
+        serverUpdatedAt.isAcceptableOrUnknown(
+          data['server_updated_at']!,
+          _serverUpdatedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('deleted')) {
+      context.handle(
+        _deletedMeta,
+        deleted.isAcceptableOrUnknown(data['deleted']!, _deletedMeta),
+      );
+    }
+    if (data.containsKey('is_dirty')) {
+      context.handle(
+        _isDirtyMeta,
+        isDirty.isAcceptableOrUnknown(data['is_dirty']!, _isDirtyMeta),
+      );
+    }
+    if (data.containsKey('team_id')) {
+      context.handle(
+        _teamIdMeta,
+        teamId.isAcceptableOrUnknown(data['team_id']!, _teamIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_teamIdMeta);
+    }
+    if (data.containsKey('date')) {
+      context.handle(
+        _dateMeta,
+        date.isAcceptableOrUnknown(data['date']!, _dateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_dateMeta);
+    }
+    if (data.containsKey('kick_off_time')) {
+      context.handle(
+        _kickOffTimeMeta,
+        kickOffTime.isAcceptableOrUnknown(
+          data['kick_off_time']!,
+          _kickOffTimeMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_kickOffTimeMeta);
+    }
+    if (data.containsKey('opponent')) {
+      context.handle(
+        _opponentMeta,
+        opponent.isAcceptableOrUnknown(data['opponent']!, _opponentMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_opponentMeta);
+    }
+    if (data.containsKey('home_away')) {
+      context.handle(
+        _homeAwayMeta,
+        homeAway.isAcceptableOrUnknown(data['home_away']!, _homeAwayMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_homeAwayMeta);
+    }
+    if (data.containsKey('competition')) {
+      context.handle(
+        _competitionMeta,
+        competition.isAcceptableOrUnknown(
+          data['competition']!,
+          _competitionMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_competitionMeta);
+    }
+    if (data.containsKey('duration_min')) {
+      context.handle(
+        _durationMinMeta,
+        durationMin.isAcceptableOrUnknown(
+          data['duration_min']!,
+          _durationMinMeta,
+        ),
+      );
+    }
+    if (data.containsKey('goals_for')) {
+      context.handle(
+        _goalsForMeta,
+        goalsFor.isAcceptableOrUnknown(data['goals_for']!, _goalsForMeta),
+      );
+    }
+    if (data.containsKey('goals_against')) {
+      context.handle(
+        _goalsAgainstMeta,
+        goalsAgainst.isAcceptableOrUnknown(
+          data['goals_against']!,
+          _goalsAgainstMeta,
+        ),
+      );
+    }
+    if (data.containsKey('remarks')) {
+      context.handle(
+        _remarksMeta,
+        remarks.isAcceptableOrUnknown(data['remarks']!, _remarksMeta),
+      );
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  FootballMatch map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return FootballMatch(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      serverUpdatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}server_updated_at'],
+      ),
+      deleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}deleted'],
+      )!,
+      isDirty: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_dirty'],
+      )!,
+      teamId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}team_id'],
+      )!,
+      date: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}date'],
+      )!,
+      kickOffTime: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}kick_off_time'],
+      )!,
+      opponent: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}opponent'],
+      )!,
+      homeAway: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}home_away'],
+      )!,
+      competition: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}competition'],
+      )!,
+      durationMin: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}duration_min'],
+      )!,
+      goalsFor: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}goals_for'],
+      ),
+      goalsAgainst: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}goals_against'],
+      ),
+      remarks: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}remarks'],
+      ),
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+    );
+  }
+
+  @override
+  $MatchesTable createAlias(String alias) {
+    return $MatchesTable(attachedDatabase, alias);
+  }
+}
+
+class FootballMatch extends DataClass implements Insertable<FootballMatch> {
+  final String id;
+  final String createdAt;
+  final String updatedAt;
+  final String? serverUpdatedAt;
+  final bool deleted;
+
+  /// Modifiée localement et pas encore envoyée. Jamais synchronisée.
+  final bool isDirty;
+  final String teamId;
+  final String date;
+  final String kickOffTime;
+  final String opponent;
+  final String homeAway;
+  final String competition;
+  final int durationMin;
+  final int? goalsFor;
+  final int? goalsAgainst;
+  final String? remarks;
+  final String status;
+  const FootballMatch({
+    required this.id,
+    required this.createdAt,
+    required this.updatedAt,
+    this.serverUpdatedAt,
+    required this.deleted,
+    required this.isDirty,
+    required this.teamId,
+    required this.date,
+    required this.kickOffTime,
+    required this.opponent,
+    required this.homeAway,
+    required this.competition,
+    required this.durationMin,
+    this.goalsFor,
+    this.goalsAgainst,
+    this.remarks,
+    required this.status,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['created_at'] = Variable<String>(createdAt);
+    map['updated_at'] = Variable<String>(updatedAt);
+    if (!nullToAbsent || serverUpdatedAt != null) {
+      map['server_updated_at'] = Variable<String>(serverUpdatedAt);
+    }
+    map['deleted'] = Variable<bool>(deleted);
+    map['is_dirty'] = Variable<bool>(isDirty);
+    map['team_id'] = Variable<String>(teamId);
+    map['date'] = Variable<String>(date);
+    map['kick_off_time'] = Variable<String>(kickOffTime);
+    map['opponent'] = Variable<String>(opponent);
+    map['home_away'] = Variable<String>(homeAway);
+    map['competition'] = Variable<String>(competition);
+    map['duration_min'] = Variable<int>(durationMin);
+    if (!nullToAbsent || goalsFor != null) {
+      map['goals_for'] = Variable<int>(goalsFor);
+    }
+    if (!nullToAbsent || goalsAgainst != null) {
+      map['goals_against'] = Variable<int>(goalsAgainst);
+    }
+    if (!nullToAbsent || remarks != null) {
+      map['remarks'] = Variable<String>(remarks);
+    }
+    map['status'] = Variable<String>(status);
+    return map;
+  }
+
+  MatchesCompanion toCompanion(bool nullToAbsent) {
+    return MatchesCompanion(
+      id: Value(id),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      serverUpdatedAt: serverUpdatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(serverUpdatedAt),
+      deleted: Value(deleted),
+      isDirty: Value(isDirty),
+      teamId: Value(teamId),
+      date: Value(date),
+      kickOffTime: Value(kickOffTime),
+      opponent: Value(opponent),
+      homeAway: Value(homeAway),
+      competition: Value(competition),
+      durationMin: Value(durationMin),
+      goalsFor: goalsFor == null && nullToAbsent
+          ? const Value.absent()
+          : Value(goalsFor),
+      goalsAgainst: goalsAgainst == null && nullToAbsent
+          ? const Value.absent()
+          : Value(goalsAgainst),
+      remarks: remarks == null && nullToAbsent
+          ? const Value.absent()
+          : Value(remarks),
+      status: Value(status),
+    );
+  }
+
+  factory FootballMatch.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return FootballMatch(
+      id: serializer.fromJson<String>(json['id']),
+      createdAt: serializer.fromJson<String>(json['createdAt']),
+      updatedAt: serializer.fromJson<String>(json['updatedAt']),
+      serverUpdatedAt: serializer.fromJson<String?>(json['serverUpdatedAt']),
+      deleted: serializer.fromJson<bool>(json['deleted']),
+      isDirty: serializer.fromJson<bool>(json['isDirty']),
+      teamId: serializer.fromJson<String>(json['teamId']),
+      date: serializer.fromJson<String>(json['date']),
+      kickOffTime: serializer.fromJson<String>(json['kickOffTime']),
+      opponent: serializer.fromJson<String>(json['opponent']),
+      homeAway: serializer.fromJson<String>(json['homeAway']),
+      competition: serializer.fromJson<String>(json['competition']),
+      durationMin: serializer.fromJson<int>(json['durationMin']),
+      goalsFor: serializer.fromJson<int?>(json['goalsFor']),
+      goalsAgainst: serializer.fromJson<int?>(json['goalsAgainst']),
+      remarks: serializer.fromJson<String?>(json['remarks']),
+      status: serializer.fromJson<String>(json['status']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'createdAt': serializer.toJson<String>(createdAt),
+      'updatedAt': serializer.toJson<String>(updatedAt),
+      'serverUpdatedAt': serializer.toJson<String?>(serverUpdatedAt),
+      'deleted': serializer.toJson<bool>(deleted),
+      'isDirty': serializer.toJson<bool>(isDirty),
+      'teamId': serializer.toJson<String>(teamId),
+      'date': serializer.toJson<String>(date),
+      'kickOffTime': serializer.toJson<String>(kickOffTime),
+      'opponent': serializer.toJson<String>(opponent),
+      'homeAway': serializer.toJson<String>(homeAway),
+      'competition': serializer.toJson<String>(competition),
+      'durationMin': serializer.toJson<int>(durationMin),
+      'goalsFor': serializer.toJson<int?>(goalsFor),
+      'goalsAgainst': serializer.toJson<int?>(goalsAgainst),
+      'remarks': serializer.toJson<String?>(remarks),
+      'status': serializer.toJson<String>(status),
+    };
+  }
+
+  FootballMatch copyWith({
+    String? id,
+    String? createdAt,
+    String? updatedAt,
+    Value<String?> serverUpdatedAt = const Value.absent(),
+    bool? deleted,
+    bool? isDirty,
+    String? teamId,
+    String? date,
+    String? kickOffTime,
+    String? opponent,
+    String? homeAway,
+    String? competition,
+    int? durationMin,
+    Value<int?> goalsFor = const Value.absent(),
+    Value<int?> goalsAgainst = const Value.absent(),
+    Value<String?> remarks = const Value.absent(),
+    String? status,
+  }) => FootballMatch(
+    id: id ?? this.id,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    serverUpdatedAt: serverUpdatedAt.present
+        ? serverUpdatedAt.value
+        : this.serverUpdatedAt,
+    deleted: deleted ?? this.deleted,
+    isDirty: isDirty ?? this.isDirty,
+    teamId: teamId ?? this.teamId,
+    date: date ?? this.date,
+    kickOffTime: kickOffTime ?? this.kickOffTime,
+    opponent: opponent ?? this.opponent,
+    homeAway: homeAway ?? this.homeAway,
+    competition: competition ?? this.competition,
+    durationMin: durationMin ?? this.durationMin,
+    goalsFor: goalsFor.present ? goalsFor.value : this.goalsFor,
+    goalsAgainst: goalsAgainst.present ? goalsAgainst.value : this.goalsAgainst,
+    remarks: remarks.present ? remarks.value : this.remarks,
+    status: status ?? this.status,
+  );
+  FootballMatch copyWithCompanion(MatchesCompanion data) {
+    return FootballMatch(
+      id: data.id.present ? data.id.value : this.id,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      serverUpdatedAt: data.serverUpdatedAt.present
+          ? data.serverUpdatedAt.value
+          : this.serverUpdatedAt,
+      deleted: data.deleted.present ? data.deleted.value : this.deleted,
+      isDirty: data.isDirty.present ? data.isDirty.value : this.isDirty,
+      teamId: data.teamId.present ? data.teamId.value : this.teamId,
+      date: data.date.present ? data.date.value : this.date,
+      kickOffTime: data.kickOffTime.present
+          ? data.kickOffTime.value
+          : this.kickOffTime,
+      opponent: data.opponent.present ? data.opponent.value : this.opponent,
+      homeAway: data.homeAway.present ? data.homeAway.value : this.homeAway,
+      competition: data.competition.present
+          ? data.competition.value
+          : this.competition,
+      durationMin: data.durationMin.present
+          ? data.durationMin.value
+          : this.durationMin,
+      goalsFor: data.goalsFor.present ? data.goalsFor.value : this.goalsFor,
+      goalsAgainst: data.goalsAgainst.present
+          ? data.goalsAgainst.value
+          : this.goalsAgainst,
+      remarks: data.remarks.present ? data.remarks.value : this.remarks,
+      status: data.status.present ? data.status.value : this.status,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FootballMatch(')
+          ..write('id: $id, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('serverUpdatedAt: $serverUpdatedAt, ')
+          ..write('deleted: $deleted, ')
+          ..write('isDirty: $isDirty, ')
+          ..write('teamId: $teamId, ')
+          ..write('date: $date, ')
+          ..write('kickOffTime: $kickOffTime, ')
+          ..write('opponent: $opponent, ')
+          ..write('homeAway: $homeAway, ')
+          ..write('competition: $competition, ')
+          ..write('durationMin: $durationMin, ')
+          ..write('goalsFor: $goalsFor, ')
+          ..write('goalsAgainst: $goalsAgainst, ')
+          ..write('remarks: $remarks, ')
+          ..write('status: $status')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    createdAt,
+    updatedAt,
+    serverUpdatedAt,
+    deleted,
+    isDirty,
+    teamId,
+    date,
+    kickOffTime,
+    opponent,
+    homeAway,
+    competition,
+    durationMin,
+    goalsFor,
+    goalsAgainst,
+    remarks,
+    status,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is FootballMatch &&
+          other.id == this.id &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.serverUpdatedAt == this.serverUpdatedAt &&
+          other.deleted == this.deleted &&
+          other.isDirty == this.isDirty &&
+          other.teamId == this.teamId &&
+          other.date == this.date &&
+          other.kickOffTime == this.kickOffTime &&
+          other.opponent == this.opponent &&
+          other.homeAway == this.homeAway &&
+          other.competition == this.competition &&
+          other.durationMin == this.durationMin &&
+          other.goalsFor == this.goalsFor &&
+          other.goalsAgainst == this.goalsAgainst &&
+          other.remarks == this.remarks &&
+          other.status == this.status);
+}
+
+class MatchesCompanion extends UpdateCompanion<FootballMatch> {
+  final Value<String> id;
+  final Value<String> createdAt;
+  final Value<String> updatedAt;
+  final Value<String?> serverUpdatedAt;
+  final Value<bool> deleted;
+  final Value<bool> isDirty;
+  final Value<String> teamId;
+  final Value<String> date;
+  final Value<String> kickOffTime;
+  final Value<String> opponent;
+  final Value<String> homeAway;
+  final Value<String> competition;
+  final Value<int> durationMin;
+  final Value<int?> goalsFor;
+  final Value<int?> goalsAgainst;
+  final Value<String?> remarks;
+  final Value<String> status;
+  final Value<int> rowid;
+  const MatchesCompanion({
+    this.id = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.serverUpdatedAt = const Value.absent(),
+    this.deleted = const Value.absent(),
+    this.isDirty = const Value.absent(),
+    this.teamId = const Value.absent(),
+    this.date = const Value.absent(),
+    this.kickOffTime = const Value.absent(),
+    this.opponent = const Value.absent(),
+    this.homeAway = const Value.absent(),
+    this.competition = const Value.absent(),
+    this.durationMin = const Value.absent(),
+    this.goalsFor = const Value.absent(),
+    this.goalsAgainst = const Value.absent(),
+    this.remarks = const Value.absent(),
+    this.status = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  MatchesCompanion.insert({
+    required String id,
+    required String createdAt,
+    required String updatedAt,
+    this.serverUpdatedAt = const Value.absent(),
+    this.deleted = const Value.absent(),
+    this.isDirty = const Value.absent(),
+    required String teamId,
+    required String date,
+    required String kickOffTime,
+    required String opponent,
+    required String homeAway,
+    required String competition,
+    this.durationMin = const Value.absent(),
+    this.goalsFor = const Value.absent(),
+    this.goalsAgainst = const Value.absent(),
+    this.remarks = const Value.absent(),
+    this.status = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt),
+       teamId = Value(teamId),
+       date = Value(date),
+       kickOffTime = Value(kickOffTime),
+       opponent = Value(opponent),
+       homeAway = Value(homeAway),
+       competition = Value(competition);
+  static Insertable<FootballMatch> custom({
+    Expression<String>? id,
+    Expression<String>? createdAt,
+    Expression<String>? updatedAt,
+    Expression<String>? serverUpdatedAt,
+    Expression<bool>? deleted,
+    Expression<bool>? isDirty,
+    Expression<String>? teamId,
+    Expression<String>? date,
+    Expression<String>? kickOffTime,
+    Expression<String>? opponent,
+    Expression<String>? homeAway,
+    Expression<String>? competition,
+    Expression<int>? durationMin,
+    Expression<int>? goalsFor,
+    Expression<int>? goalsAgainst,
+    Expression<String>? remarks,
+    Expression<String>? status,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (serverUpdatedAt != null) 'server_updated_at': serverUpdatedAt,
+      if (deleted != null) 'deleted': deleted,
+      if (isDirty != null) 'is_dirty': isDirty,
+      if (teamId != null) 'team_id': teamId,
+      if (date != null) 'date': date,
+      if (kickOffTime != null) 'kick_off_time': kickOffTime,
+      if (opponent != null) 'opponent': opponent,
+      if (homeAway != null) 'home_away': homeAway,
+      if (competition != null) 'competition': competition,
+      if (durationMin != null) 'duration_min': durationMin,
+      if (goalsFor != null) 'goals_for': goalsFor,
+      if (goalsAgainst != null) 'goals_against': goalsAgainst,
+      if (remarks != null) 'remarks': remarks,
+      if (status != null) 'status': status,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  MatchesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? createdAt,
+    Value<String>? updatedAt,
+    Value<String?>? serverUpdatedAt,
+    Value<bool>? deleted,
+    Value<bool>? isDirty,
+    Value<String>? teamId,
+    Value<String>? date,
+    Value<String>? kickOffTime,
+    Value<String>? opponent,
+    Value<String>? homeAway,
+    Value<String>? competition,
+    Value<int>? durationMin,
+    Value<int?>? goalsFor,
+    Value<int?>? goalsAgainst,
+    Value<String?>? remarks,
+    Value<String>? status,
+    Value<int>? rowid,
+  }) {
+    return MatchesCompanion(
+      id: id ?? this.id,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      serverUpdatedAt: serverUpdatedAt ?? this.serverUpdatedAt,
+      deleted: deleted ?? this.deleted,
+      isDirty: isDirty ?? this.isDirty,
+      teamId: teamId ?? this.teamId,
+      date: date ?? this.date,
+      kickOffTime: kickOffTime ?? this.kickOffTime,
+      opponent: opponent ?? this.opponent,
+      homeAway: homeAway ?? this.homeAway,
+      competition: competition ?? this.competition,
+      durationMin: durationMin ?? this.durationMin,
+      goalsFor: goalsFor ?? this.goalsFor,
+      goalsAgainst: goalsAgainst ?? this.goalsAgainst,
+      remarks: remarks ?? this.remarks,
+      status: status ?? this.status,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<String>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<String>(updatedAt.value);
+    }
+    if (serverUpdatedAt.present) {
+      map['server_updated_at'] = Variable<String>(serverUpdatedAt.value);
+    }
+    if (deleted.present) {
+      map['deleted'] = Variable<bool>(deleted.value);
+    }
+    if (isDirty.present) {
+      map['is_dirty'] = Variable<bool>(isDirty.value);
+    }
+    if (teamId.present) {
+      map['team_id'] = Variable<String>(teamId.value);
+    }
+    if (date.present) {
+      map['date'] = Variable<String>(date.value);
+    }
+    if (kickOffTime.present) {
+      map['kick_off_time'] = Variable<String>(kickOffTime.value);
+    }
+    if (opponent.present) {
+      map['opponent'] = Variable<String>(opponent.value);
+    }
+    if (homeAway.present) {
+      map['home_away'] = Variable<String>(homeAway.value);
+    }
+    if (competition.present) {
+      map['competition'] = Variable<String>(competition.value);
+    }
+    if (durationMin.present) {
+      map['duration_min'] = Variable<int>(durationMin.value);
+    }
+    if (goalsFor.present) {
+      map['goals_for'] = Variable<int>(goalsFor.value);
+    }
+    if (goalsAgainst.present) {
+      map['goals_against'] = Variable<int>(goalsAgainst.value);
+    }
+    if (remarks.present) {
+      map['remarks'] = Variable<String>(remarks.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MatchesCompanion(')
+          ..write('id: $id, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('serverUpdatedAt: $serverUpdatedAt, ')
+          ..write('deleted: $deleted, ')
+          ..write('isDirty: $isDirty, ')
+          ..write('teamId: $teamId, ')
+          ..write('date: $date, ')
+          ..write('kickOffTime: $kickOffTime, ')
+          ..write('opponent: $opponent, ')
+          ..write('homeAway: $homeAway, ')
+          ..write('competition: $competition, ')
+          ..write('durationMin: $durationMin, ')
+          ..write('goalsFor: $goalsFor, ')
+          ..write('goalsAgainst: $goalsAgainst, ')
+          ..write('remarks: $remarks, ')
+          ..write('status: $status, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $MatchPlayersTable extends MatchPlayers
+    with TableInfo<$MatchPlayersTable, MatchPlayer> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $MatchPlayersTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<String> createdAt = GeneratedColumn<String>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<String> updatedAt = GeneratedColumn<String>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _serverUpdatedAtMeta = const VerificationMeta(
+    'serverUpdatedAt',
+  );
+  @override
+  late final GeneratedColumn<String> serverUpdatedAt = GeneratedColumn<String>(
+    'server_updated_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deletedMeta = const VerificationMeta(
+    'deleted',
+  );
+  @override
+  late final GeneratedColumn<bool> deleted = GeneratedColumn<bool>(
+    'deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _isDirtyMeta = const VerificationMeta(
+    'isDirty',
+  );
+  @override
+  late final GeneratedColumn<bool> isDirty = GeneratedColumn<bool>(
+    'is_dirty',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_dirty" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _teamIdMeta = const VerificationMeta('teamId');
+  @override
+  late final GeneratedColumn<String> teamId = GeneratedColumn<String>(
+    'team_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _matchIdMeta = const VerificationMeta(
+    'matchId',
+  );
+  @override
+  late final GeneratedColumn<String> matchId = GeneratedColumn<String>(
+    'match_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _playerIdMeta = const VerificationMeta(
+    'playerId',
+  );
+  @override
+  late final GeneratedColumn<String> playerId = GeneratedColumn<String>(
+    'player_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _presentMeta = const VerificationMeta(
+    'present',
+  );
+  @override
+  late final GeneratedColumn<bool> present = GeneratedColumn<bool>(
+    'present',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("present" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  static const VerificationMeta _absenceReasonMeta = const VerificationMeta(
+    'absenceReason',
+  );
+  @override
+  late final GeneratedColumn<String> absenceReason = GeneratedColumn<String>(
+    'absence_reason',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _roleMeta = const VerificationMeta('role');
+  @override
+  late final GeneratedColumn<String> role = GeneratedColumn<String>(
+    'role',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _minutesPlayedMeta = const VerificationMeta(
+    'minutesPlayed',
+  );
+  @override
+  late final GeneratedColumn<int> minutesPlayed = GeneratedColumn<int>(
+    'minutes_played',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _rpeMeta = const VerificationMeta('rpe');
+  @override
+  late final GeneratedColumn<int> rpe = GeneratedColumn<int>(
+    'rpe',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _remarkMeta = const VerificationMeta('remark');
+  @override
+  late final GeneratedColumn<String> remark = GeneratedColumn<String>(
+    'remark',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    createdAt,
+    updatedAt,
+    serverUpdatedAt,
+    deleted,
+    isDirty,
+    teamId,
+    matchId,
+    playerId,
+    present,
+    absenceReason,
+    role,
+    minutesPlayed,
+    rpe,
+    remark,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'match_players';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<MatchPlayer> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('server_updated_at')) {
+      context.handle(
+        _serverUpdatedAtMeta,
+        serverUpdatedAt.isAcceptableOrUnknown(
+          data['server_updated_at']!,
+          _serverUpdatedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('deleted')) {
+      context.handle(
+        _deletedMeta,
+        deleted.isAcceptableOrUnknown(data['deleted']!, _deletedMeta),
+      );
+    }
+    if (data.containsKey('is_dirty')) {
+      context.handle(
+        _isDirtyMeta,
+        isDirty.isAcceptableOrUnknown(data['is_dirty']!, _isDirtyMeta),
+      );
+    }
+    if (data.containsKey('team_id')) {
+      context.handle(
+        _teamIdMeta,
+        teamId.isAcceptableOrUnknown(data['team_id']!, _teamIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_teamIdMeta);
+    }
+    if (data.containsKey('match_id')) {
+      context.handle(
+        _matchIdMeta,
+        matchId.isAcceptableOrUnknown(data['match_id']!, _matchIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_matchIdMeta);
+    }
+    if (data.containsKey('player_id')) {
+      context.handle(
+        _playerIdMeta,
+        playerId.isAcceptableOrUnknown(data['player_id']!, _playerIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_playerIdMeta);
+    }
+    if (data.containsKey('present')) {
+      context.handle(
+        _presentMeta,
+        present.isAcceptableOrUnknown(data['present']!, _presentMeta),
+      );
+    }
+    if (data.containsKey('absence_reason')) {
+      context.handle(
+        _absenceReasonMeta,
+        absenceReason.isAcceptableOrUnknown(
+          data['absence_reason']!,
+          _absenceReasonMeta,
+        ),
+      );
+    }
+    if (data.containsKey('role')) {
+      context.handle(
+        _roleMeta,
+        role.isAcceptableOrUnknown(data['role']!, _roleMeta),
+      );
+    }
+    if (data.containsKey('minutes_played')) {
+      context.handle(
+        _minutesPlayedMeta,
+        minutesPlayed.isAcceptableOrUnknown(
+          data['minutes_played']!,
+          _minutesPlayedMeta,
+        ),
+      );
+    }
+    if (data.containsKey('rpe')) {
+      context.handle(
+        _rpeMeta,
+        rpe.isAcceptableOrUnknown(data['rpe']!, _rpeMeta),
+      );
+    }
+    if (data.containsKey('remark')) {
+      context.handle(
+        _remarkMeta,
+        remark.isAcceptableOrUnknown(data['remark']!, _remarkMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  MatchPlayer map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return MatchPlayer(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      serverUpdatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}server_updated_at'],
+      ),
+      deleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}deleted'],
+      )!,
+      isDirty: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_dirty'],
+      )!,
+      teamId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}team_id'],
+      )!,
+      matchId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}match_id'],
+      )!,
+      playerId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}player_id'],
+      )!,
+      present: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}present'],
+      )!,
+      absenceReason: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}absence_reason'],
+      ),
+      role: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}role'],
+      ),
+      minutesPlayed: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}minutes_played'],
+      ),
+      rpe: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}rpe'],
+      ),
+      remark: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}remark'],
+      ),
+    );
+  }
+
+  @override
+  $MatchPlayersTable createAlias(String alias) {
+    return $MatchPlayersTable(attachedDatabase, alias);
+  }
+}
+
+class MatchPlayer extends DataClass implements Insertable<MatchPlayer> {
+  final String id;
+  final String createdAt;
+  final String updatedAt;
+  final String? serverUpdatedAt;
+  final bool deleted;
+
+  /// Modifiée localement et pas encore envoyée. Jamais synchronisée.
+  final bool isDirty;
+  final String teamId;
+  final String matchId;
+  final String playerId;
+  final bool present;
+  final String? absenceReason;
+  final String? role;
+  final int? minutesPlayed;
+  final int? rpe;
+  final String? remark;
+  const MatchPlayer({
+    required this.id,
+    required this.createdAt,
+    required this.updatedAt,
+    this.serverUpdatedAt,
+    required this.deleted,
+    required this.isDirty,
+    required this.teamId,
+    required this.matchId,
+    required this.playerId,
+    required this.present,
+    this.absenceReason,
+    this.role,
+    this.minutesPlayed,
+    this.rpe,
+    this.remark,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['created_at'] = Variable<String>(createdAt);
+    map['updated_at'] = Variable<String>(updatedAt);
+    if (!nullToAbsent || serverUpdatedAt != null) {
+      map['server_updated_at'] = Variable<String>(serverUpdatedAt);
+    }
+    map['deleted'] = Variable<bool>(deleted);
+    map['is_dirty'] = Variable<bool>(isDirty);
+    map['team_id'] = Variable<String>(teamId);
+    map['match_id'] = Variable<String>(matchId);
+    map['player_id'] = Variable<String>(playerId);
+    map['present'] = Variable<bool>(present);
+    if (!nullToAbsent || absenceReason != null) {
+      map['absence_reason'] = Variable<String>(absenceReason);
+    }
+    if (!nullToAbsent || role != null) {
+      map['role'] = Variable<String>(role);
+    }
+    if (!nullToAbsent || minutesPlayed != null) {
+      map['minutes_played'] = Variable<int>(minutesPlayed);
+    }
+    if (!nullToAbsent || rpe != null) {
+      map['rpe'] = Variable<int>(rpe);
+    }
+    if (!nullToAbsent || remark != null) {
+      map['remark'] = Variable<String>(remark);
+    }
+    return map;
+  }
+
+  MatchPlayersCompanion toCompanion(bool nullToAbsent) {
+    return MatchPlayersCompanion(
+      id: Value(id),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      serverUpdatedAt: serverUpdatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(serverUpdatedAt),
+      deleted: Value(deleted),
+      isDirty: Value(isDirty),
+      teamId: Value(teamId),
+      matchId: Value(matchId),
+      playerId: Value(playerId),
+      present: Value(present),
+      absenceReason: absenceReason == null && nullToAbsent
+          ? const Value.absent()
+          : Value(absenceReason),
+      role: role == null && nullToAbsent ? const Value.absent() : Value(role),
+      minutesPlayed: minutesPlayed == null && nullToAbsent
+          ? const Value.absent()
+          : Value(minutesPlayed),
+      rpe: rpe == null && nullToAbsent ? const Value.absent() : Value(rpe),
+      remark: remark == null && nullToAbsent
+          ? const Value.absent()
+          : Value(remark),
+    );
+  }
+
+  factory MatchPlayer.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return MatchPlayer(
+      id: serializer.fromJson<String>(json['id']),
+      createdAt: serializer.fromJson<String>(json['createdAt']),
+      updatedAt: serializer.fromJson<String>(json['updatedAt']),
+      serverUpdatedAt: serializer.fromJson<String?>(json['serverUpdatedAt']),
+      deleted: serializer.fromJson<bool>(json['deleted']),
+      isDirty: serializer.fromJson<bool>(json['isDirty']),
+      teamId: serializer.fromJson<String>(json['teamId']),
+      matchId: serializer.fromJson<String>(json['matchId']),
+      playerId: serializer.fromJson<String>(json['playerId']),
+      present: serializer.fromJson<bool>(json['present']),
+      absenceReason: serializer.fromJson<String?>(json['absenceReason']),
+      role: serializer.fromJson<String?>(json['role']),
+      minutesPlayed: serializer.fromJson<int?>(json['minutesPlayed']),
+      rpe: serializer.fromJson<int?>(json['rpe']),
+      remark: serializer.fromJson<String?>(json['remark']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'createdAt': serializer.toJson<String>(createdAt),
+      'updatedAt': serializer.toJson<String>(updatedAt),
+      'serverUpdatedAt': serializer.toJson<String?>(serverUpdatedAt),
+      'deleted': serializer.toJson<bool>(deleted),
+      'isDirty': serializer.toJson<bool>(isDirty),
+      'teamId': serializer.toJson<String>(teamId),
+      'matchId': serializer.toJson<String>(matchId),
+      'playerId': serializer.toJson<String>(playerId),
+      'present': serializer.toJson<bool>(present),
+      'absenceReason': serializer.toJson<String?>(absenceReason),
+      'role': serializer.toJson<String?>(role),
+      'minutesPlayed': serializer.toJson<int?>(minutesPlayed),
+      'rpe': serializer.toJson<int?>(rpe),
+      'remark': serializer.toJson<String?>(remark),
+    };
+  }
+
+  MatchPlayer copyWith({
+    String? id,
+    String? createdAt,
+    String? updatedAt,
+    Value<String?> serverUpdatedAt = const Value.absent(),
+    bool? deleted,
+    bool? isDirty,
+    String? teamId,
+    String? matchId,
+    String? playerId,
+    bool? present,
+    Value<String?> absenceReason = const Value.absent(),
+    Value<String?> role = const Value.absent(),
+    Value<int?> minutesPlayed = const Value.absent(),
+    Value<int?> rpe = const Value.absent(),
+    Value<String?> remark = const Value.absent(),
+  }) => MatchPlayer(
+    id: id ?? this.id,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    serverUpdatedAt: serverUpdatedAt.present
+        ? serverUpdatedAt.value
+        : this.serverUpdatedAt,
+    deleted: deleted ?? this.deleted,
+    isDirty: isDirty ?? this.isDirty,
+    teamId: teamId ?? this.teamId,
+    matchId: matchId ?? this.matchId,
+    playerId: playerId ?? this.playerId,
+    present: present ?? this.present,
+    absenceReason: absenceReason.present
+        ? absenceReason.value
+        : this.absenceReason,
+    role: role.present ? role.value : this.role,
+    minutesPlayed: minutesPlayed.present
+        ? minutesPlayed.value
+        : this.minutesPlayed,
+    rpe: rpe.present ? rpe.value : this.rpe,
+    remark: remark.present ? remark.value : this.remark,
+  );
+  MatchPlayer copyWithCompanion(MatchPlayersCompanion data) {
+    return MatchPlayer(
+      id: data.id.present ? data.id.value : this.id,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      serverUpdatedAt: data.serverUpdatedAt.present
+          ? data.serverUpdatedAt.value
+          : this.serverUpdatedAt,
+      deleted: data.deleted.present ? data.deleted.value : this.deleted,
+      isDirty: data.isDirty.present ? data.isDirty.value : this.isDirty,
+      teamId: data.teamId.present ? data.teamId.value : this.teamId,
+      matchId: data.matchId.present ? data.matchId.value : this.matchId,
+      playerId: data.playerId.present ? data.playerId.value : this.playerId,
+      present: data.present.present ? data.present.value : this.present,
+      absenceReason: data.absenceReason.present
+          ? data.absenceReason.value
+          : this.absenceReason,
+      role: data.role.present ? data.role.value : this.role,
+      minutesPlayed: data.minutesPlayed.present
+          ? data.minutesPlayed.value
+          : this.minutesPlayed,
+      rpe: data.rpe.present ? data.rpe.value : this.rpe,
+      remark: data.remark.present ? data.remark.value : this.remark,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MatchPlayer(')
+          ..write('id: $id, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('serverUpdatedAt: $serverUpdatedAt, ')
+          ..write('deleted: $deleted, ')
+          ..write('isDirty: $isDirty, ')
+          ..write('teamId: $teamId, ')
+          ..write('matchId: $matchId, ')
+          ..write('playerId: $playerId, ')
+          ..write('present: $present, ')
+          ..write('absenceReason: $absenceReason, ')
+          ..write('role: $role, ')
+          ..write('minutesPlayed: $minutesPlayed, ')
+          ..write('rpe: $rpe, ')
+          ..write('remark: $remark')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    createdAt,
+    updatedAt,
+    serverUpdatedAt,
+    deleted,
+    isDirty,
+    teamId,
+    matchId,
+    playerId,
+    present,
+    absenceReason,
+    role,
+    minutesPlayed,
+    rpe,
+    remark,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is MatchPlayer &&
+          other.id == this.id &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.serverUpdatedAt == this.serverUpdatedAt &&
+          other.deleted == this.deleted &&
+          other.isDirty == this.isDirty &&
+          other.teamId == this.teamId &&
+          other.matchId == this.matchId &&
+          other.playerId == this.playerId &&
+          other.present == this.present &&
+          other.absenceReason == this.absenceReason &&
+          other.role == this.role &&
+          other.minutesPlayed == this.minutesPlayed &&
+          other.rpe == this.rpe &&
+          other.remark == this.remark);
+}
+
+class MatchPlayersCompanion extends UpdateCompanion<MatchPlayer> {
+  final Value<String> id;
+  final Value<String> createdAt;
+  final Value<String> updatedAt;
+  final Value<String?> serverUpdatedAt;
+  final Value<bool> deleted;
+  final Value<bool> isDirty;
+  final Value<String> teamId;
+  final Value<String> matchId;
+  final Value<String> playerId;
+  final Value<bool> present;
+  final Value<String?> absenceReason;
+  final Value<String?> role;
+  final Value<int?> minutesPlayed;
+  final Value<int?> rpe;
+  final Value<String?> remark;
+  final Value<int> rowid;
+  const MatchPlayersCompanion({
+    this.id = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.serverUpdatedAt = const Value.absent(),
+    this.deleted = const Value.absent(),
+    this.isDirty = const Value.absent(),
+    this.teamId = const Value.absent(),
+    this.matchId = const Value.absent(),
+    this.playerId = const Value.absent(),
+    this.present = const Value.absent(),
+    this.absenceReason = const Value.absent(),
+    this.role = const Value.absent(),
+    this.minutesPlayed = const Value.absent(),
+    this.rpe = const Value.absent(),
+    this.remark = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  MatchPlayersCompanion.insert({
+    required String id,
+    required String createdAt,
+    required String updatedAt,
+    this.serverUpdatedAt = const Value.absent(),
+    this.deleted = const Value.absent(),
+    this.isDirty = const Value.absent(),
+    required String teamId,
+    required String matchId,
+    required String playerId,
+    this.present = const Value.absent(),
+    this.absenceReason = const Value.absent(),
+    this.role = const Value.absent(),
+    this.minutesPlayed = const Value.absent(),
+    this.rpe = const Value.absent(),
+    this.remark = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt),
+       teamId = Value(teamId),
+       matchId = Value(matchId),
+       playerId = Value(playerId);
+  static Insertable<MatchPlayer> custom({
+    Expression<String>? id,
+    Expression<String>? createdAt,
+    Expression<String>? updatedAt,
+    Expression<String>? serverUpdatedAt,
+    Expression<bool>? deleted,
+    Expression<bool>? isDirty,
+    Expression<String>? teamId,
+    Expression<String>? matchId,
+    Expression<String>? playerId,
+    Expression<bool>? present,
+    Expression<String>? absenceReason,
+    Expression<String>? role,
+    Expression<int>? minutesPlayed,
+    Expression<int>? rpe,
+    Expression<String>? remark,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (serverUpdatedAt != null) 'server_updated_at': serverUpdatedAt,
+      if (deleted != null) 'deleted': deleted,
+      if (isDirty != null) 'is_dirty': isDirty,
+      if (teamId != null) 'team_id': teamId,
+      if (matchId != null) 'match_id': matchId,
+      if (playerId != null) 'player_id': playerId,
+      if (present != null) 'present': present,
+      if (absenceReason != null) 'absence_reason': absenceReason,
+      if (role != null) 'role': role,
+      if (minutesPlayed != null) 'minutes_played': minutesPlayed,
+      if (rpe != null) 'rpe': rpe,
+      if (remark != null) 'remark': remark,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  MatchPlayersCompanion copyWith({
+    Value<String>? id,
+    Value<String>? createdAt,
+    Value<String>? updatedAt,
+    Value<String?>? serverUpdatedAt,
+    Value<bool>? deleted,
+    Value<bool>? isDirty,
+    Value<String>? teamId,
+    Value<String>? matchId,
+    Value<String>? playerId,
+    Value<bool>? present,
+    Value<String?>? absenceReason,
+    Value<String?>? role,
+    Value<int?>? minutesPlayed,
+    Value<int?>? rpe,
+    Value<String?>? remark,
+    Value<int>? rowid,
+  }) {
+    return MatchPlayersCompanion(
+      id: id ?? this.id,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      serverUpdatedAt: serverUpdatedAt ?? this.serverUpdatedAt,
+      deleted: deleted ?? this.deleted,
+      isDirty: isDirty ?? this.isDirty,
+      teamId: teamId ?? this.teamId,
+      matchId: matchId ?? this.matchId,
+      playerId: playerId ?? this.playerId,
+      present: present ?? this.present,
+      absenceReason: absenceReason ?? this.absenceReason,
+      role: role ?? this.role,
+      minutesPlayed: minutesPlayed ?? this.minutesPlayed,
+      rpe: rpe ?? this.rpe,
+      remark: remark ?? this.remark,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<String>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<String>(updatedAt.value);
+    }
+    if (serverUpdatedAt.present) {
+      map['server_updated_at'] = Variable<String>(serverUpdatedAt.value);
+    }
+    if (deleted.present) {
+      map['deleted'] = Variable<bool>(deleted.value);
+    }
+    if (isDirty.present) {
+      map['is_dirty'] = Variable<bool>(isDirty.value);
+    }
+    if (teamId.present) {
+      map['team_id'] = Variable<String>(teamId.value);
+    }
+    if (matchId.present) {
+      map['match_id'] = Variable<String>(matchId.value);
+    }
+    if (playerId.present) {
+      map['player_id'] = Variable<String>(playerId.value);
+    }
+    if (present.present) {
+      map['present'] = Variable<bool>(present.value);
+    }
+    if (absenceReason.present) {
+      map['absence_reason'] = Variable<String>(absenceReason.value);
+    }
+    if (role.present) {
+      map['role'] = Variable<String>(role.value);
+    }
+    if (minutesPlayed.present) {
+      map['minutes_played'] = Variable<int>(minutesPlayed.value);
+    }
+    if (rpe.present) {
+      map['rpe'] = Variable<int>(rpe.value);
+    }
+    if (remark.present) {
+      map['remark'] = Variable<String>(remark.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MatchPlayersCompanion(')
+          ..write('id: $id, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('serverUpdatedAt: $serverUpdatedAt, ')
+          ..write('deleted: $deleted, ')
+          ..write('isDirty: $isDirty, ')
+          ..write('teamId: $teamId, ')
+          ..write('matchId: $matchId, ')
+          ..write('playerId: $playerId, ')
+          ..write('present: $present, ')
+          ..write('absenceReason: $absenceReason, ')
+          ..write('role: $role, ')
+          ..write('minutesPlayed: $minutesPlayed, ')
+          ..write('rpe: $rpe, ')
+          ..write('remark: $remark, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $MatchEventsTable extends MatchEvents
+    with TableInfo<$MatchEventsTable, MatchEvent> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $MatchEventsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<String> createdAt = GeneratedColumn<String>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<String> updatedAt = GeneratedColumn<String>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _serverUpdatedAtMeta = const VerificationMeta(
+    'serverUpdatedAt',
+  );
+  @override
+  late final GeneratedColumn<String> serverUpdatedAt = GeneratedColumn<String>(
+    'server_updated_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deletedMeta = const VerificationMeta(
+    'deleted',
+  );
+  @override
+  late final GeneratedColumn<bool> deleted = GeneratedColumn<bool>(
+    'deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _isDirtyMeta = const VerificationMeta(
+    'isDirty',
+  );
+  @override
+  late final GeneratedColumn<bool> isDirty = GeneratedColumn<bool>(
+    'is_dirty',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_dirty" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _teamIdMeta = const VerificationMeta('teamId');
+  @override
+  late final GeneratedColumn<String> teamId = GeneratedColumn<String>(
+    'team_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _matchIdMeta = const VerificationMeta(
+    'matchId',
+  );
+  @override
+  late final GeneratedColumn<String> matchId = GeneratedColumn<String>(
+    'match_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _playerIdMeta = const VerificationMeta(
+    'playerId',
+  );
+  @override
+  late final GeneratedColumn<String> playerId = GeneratedColumn<String>(
+    'player_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _typeMeta = const VerificationMeta('type');
+  @override
+  late final GeneratedColumn<String> type = GeneratedColumn<String>(
+    'type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _minuteMeta = const VerificationMeta('minute');
+  @override
+  late final GeneratedColumn<int> minute = GeneratedColumn<int>(
+    'minute',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _assistPlayerIdMeta = const VerificationMeta(
+    'assistPlayerId',
+  );
+  @override
+  late final GeneratedColumn<String> assistPlayerId = GeneratedColumn<String>(
+    'assist_player_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _remarkMeta = const VerificationMeta('remark');
+  @override
+  late final GeneratedColumn<String> remark = GeneratedColumn<String>(
+    'remark',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    createdAt,
+    updatedAt,
+    serverUpdatedAt,
+    deleted,
+    isDirty,
+    teamId,
+    matchId,
+    playerId,
+    type,
+    minute,
+    assistPlayerId,
+    remark,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'match_events';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<MatchEvent> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('server_updated_at')) {
+      context.handle(
+        _serverUpdatedAtMeta,
+        serverUpdatedAt.isAcceptableOrUnknown(
+          data['server_updated_at']!,
+          _serverUpdatedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('deleted')) {
+      context.handle(
+        _deletedMeta,
+        deleted.isAcceptableOrUnknown(data['deleted']!, _deletedMeta),
+      );
+    }
+    if (data.containsKey('is_dirty')) {
+      context.handle(
+        _isDirtyMeta,
+        isDirty.isAcceptableOrUnknown(data['is_dirty']!, _isDirtyMeta),
+      );
+    }
+    if (data.containsKey('team_id')) {
+      context.handle(
+        _teamIdMeta,
+        teamId.isAcceptableOrUnknown(data['team_id']!, _teamIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_teamIdMeta);
+    }
+    if (data.containsKey('match_id')) {
+      context.handle(
+        _matchIdMeta,
+        matchId.isAcceptableOrUnknown(data['match_id']!, _matchIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_matchIdMeta);
+    }
+    if (data.containsKey('player_id')) {
+      context.handle(
+        _playerIdMeta,
+        playerId.isAcceptableOrUnknown(data['player_id']!, _playerIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_playerIdMeta);
+    }
+    if (data.containsKey('type')) {
+      context.handle(
+        _typeMeta,
+        type.isAcceptableOrUnknown(data['type']!, _typeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_typeMeta);
+    }
+    if (data.containsKey('minute')) {
+      context.handle(
+        _minuteMeta,
+        minute.isAcceptableOrUnknown(data['minute']!, _minuteMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_minuteMeta);
+    }
+    if (data.containsKey('assist_player_id')) {
+      context.handle(
+        _assistPlayerIdMeta,
+        assistPlayerId.isAcceptableOrUnknown(
+          data['assist_player_id']!,
+          _assistPlayerIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('remark')) {
+      context.handle(
+        _remarkMeta,
+        remark.isAcceptableOrUnknown(data['remark']!, _remarkMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  MatchEvent map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return MatchEvent(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      serverUpdatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}server_updated_at'],
+      ),
+      deleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}deleted'],
+      )!,
+      isDirty: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_dirty'],
+      )!,
+      teamId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}team_id'],
+      )!,
+      matchId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}match_id'],
+      )!,
+      playerId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}player_id'],
+      )!,
+      type: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}type'],
+      )!,
+      minute: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}minute'],
+      )!,
+      assistPlayerId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}assist_player_id'],
+      ),
+      remark: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}remark'],
+      ),
+    );
+  }
+
+  @override
+  $MatchEventsTable createAlias(String alias) {
+    return $MatchEventsTable(attachedDatabase, alias);
+  }
+}
+
+class MatchEvent extends DataClass implements Insertable<MatchEvent> {
+  final String id;
+  final String createdAt;
+  final String updatedAt;
+  final String? serverUpdatedAt;
+  final bool deleted;
+
+  /// Modifiée localement et pas encore envoyée. Jamais synchronisée.
+  final bool isDirty;
+  final String teamId;
+  final String matchId;
+  final String playerId;
+  final String type;
+  final int minute;
+  final String? assistPlayerId;
+  final String? remark;
+  const MatchEvent({
+    required this.id,
+    required this.createdAt,
+    required this.updatedAt,
+    this.serverUpdatedAt,
+    required this.deleted,
+    required this.isDirty,
+    required this.teamId,
+    required this.matchId,
+    required this.playerId,
+    required this.type,
+    required this.minute,
+    this.assistPlayerId,
+    this.remark,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['created_at'] = Variable<String>(createdAt);
+    map['updated_at'] = Variable<String>(updatedAt);
+    if (!nullToAbsent || serverUpdatedAt != null) {
+      map['server_updated_at'] = Variable<String>(serverUpdatedAt);
+    }
+    map['deleted'] = Variable<bool>(deleted);
+    map['is_dirty'] = Variable<bool>(isDirty);
+    map['team_id'] = Variable<String>(teamId);
+    map['match_id'] = Variable<String>(matchId);
+    map['player_id'] = Variable<String>(playerId);
+    map['type'] = Variable<String>(type);
+    map['minute'] = Variable<int>(minute);
+    if (!nullToAbsent || assistPlayerId != null) {
+      map['assist_player_id'] = Variable<String>(assistPlayerId);
+    }
+    if (!nullToAbsent || remark != null) {
+      map['remark'] = Variable<String>(remark);
+    }
+    return map;
+  }
+
+  MatchEventsCompanion toCompanion(bool nullToAbsent) {
+    return MatchEventsCompanion(
+      id: Value(id),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      serverUpdatedAt: serverUpdatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(serverUpdatedAt),
+      deleted: Value(deleted),
+      isDirty: Value(isDirty),
+      teamId: Value(teamId),
+      matchId: Value(matchId),
+      playerId: Value(playerId),
+      type: Value(type),
+      minute: Value(minute),
+      assistPlayerId: assistPlayerId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(assistPlayerId),
+      remark: remark == null && nullToAbsent
+          ? const Value.absent()
+          : Value(remark),
+    );
+  }
+
+  factory MatchEvent.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return MatchEvent(
+      id: serializer.fromJson<String>(json['id']),
+      createdAt: serializer.fromJson<String>(json['createdAt']),
+      updatedAt: serializer.fromJson<String>(json['updatedAt']),
+      serverUpdatedAt: serializer.fromJson<String?>(json['serverUpdatedAt']),
+      deleted: serializer.fromJson<bool>(json['deleted']),
+      isDirty: serializer.fromJson<bool>(json['isDirty']),
+      teamId: serializer.fromJson<String>(json['teamId']),
+      matchId: serializer.fromJson<String>(json['matchId']),
+      playerId: serializer.fromJson<String>(json['playerId']),
+      type: serializer.fromJson<String>(json['type']),
+      minute: serializer.fromJson<int>(json['minute']),
+      assistPlayerId: serializer.fromJson<String?>(json['assistPlayerId']),
+      remark: serializer.fromJson<String?>(json['remark']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'createdAt': serializer.toJson<String>(createdAt),
+      'updatedAt': serializer.toJson<String>(updatedAt),
+      'serverUpdatedAt': serializer.toJson<String?>(serverUpdatedAt),
+      'deleted': serializer.toJson<bool>(deleted),
+      'isDirty': serializer.toJson<bool>(isDirty),
+      'teamId': serializer.toJson<String>(teamId),
+      'matchId': serializer.toJson<String>(matchId),
+      'playerId': serializer.toJson<String>(playerId),
+      'type': serializer.toJson<String>(type),
+      'minute': serializer.toJson<int>(minute),
+      'assistPlayerId': serializer.toJson<String?>(assistPlayerId),
+      'remark': serializer.toJson<String?>(remark),
+    };
+  }
+
+  MatchEvent copyWith({
+    String? id,
+    String? createdAt,
+    String? updatedAt,
+    Value<String?> serverUpdatedAt = const Value.absent(),
+    bool? deleted,
+    bool? isDirty,
+    String? teamId,
+    String? matchId,
+    String? playerId,
+    String? type,
+    int? minute,
+    Value<String?> assistPlayerId = const Value.absent(),
+    Value<String?> remark = const Value.absent(),
+  }) => MatchEvent(
+    id: id ?? this.id,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    serverUpdatedAt: serverUpdatedAt.present
+        ? serverUpdatedAt.value
+        : this.serverUpdatedAt,
+    deleted: deleted ?? this.deleted,
+    isDirty: isDirty ?? this.isDirty,
+    teamId: teamId ?? this.teamId,
+    matchId: matchId ?? this.matchId,
+    playerId: playerId ?? this.playerId,
+    type: type ?? this.type,
+    minute: minute ?? this.minute,
+    assistPlayerId: assistPlayerId.present
+        ? assistPlayerId.value
+        : this.assistPlayerId,
+    remark: remark.present ? remark.value : this.remark,
+  );
+  MatchEvent copyWithCompanion(MatchEventsCompanion data) {
+    return MatchEvent(
+      id: data.id.present ? data.id.value : this.id,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      serverUpdatedAt: data.serverUpdatedAt.present
+          ? data.serverUpdatedAt.value
+          : this.serverUpdatedAt,
+      deleted: data.deleted.present ? data.deleted.value : this.deleted,
+      isDirty: data.isDirty.present ? data.isDirty.value : this.isDirty,
+      teamId: data.teamId.present ? data.teamId.value : this.teamId,
+      matchId: data.matchId.present ? data.matchId.value : this.matchId,
+      playerId: data.playerId.present ? data.playerId.value : this.playerId,
+      type: data.type.present ? data.type.value : this.type,
+      minute: data.minute.present ? data.minute.value : this.minute,
+      assistPlayerId: data.assistPlayerId.present
+          ? data.assistPlayerId.value
+          : this.assistPlayerId,
+      remark: data.remark.present ? data.remark.value : this.remark,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MatchEvent(')
+          ..write('id: $id, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('serverUpdatedAt: $serverUpdatedAt, ')
+          ..write('deleted: $deleted, ')
+          ..write('isDirty: $isDirty, ')
+          ..write('teamId: $teamId, ')
+          ..write('matchId: $matchId, ')
+          ..write('playerId: $playerId, ')
+          ..write('type: $type, ')
+          ..write('minute: $minute, ')
+          ..write('assistPlayerId: $assistPlayerId, ')
+          ..write('remark: $remark')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    createdAt,
+    updatedAt,
+    serverUpdatedAt,
+    deleted,
+    isDirty,
+    teamId,
+    matchId,
+    playerId,
+    type,
+    minute,
+    assistPlayerId,
+    remark,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is MatchEvent &&
+          other.id == this.id &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.serverUpdatedAt == this.serverUpdatedAt &&
+          other.deleted == this.deleted &&
+          other.isDirty == this.isDirty &&
+          other.teamId == this.teamId &&
+          other.matchId == this.matchId &&
+          other.playerId == this.playerId &&
+          other.type == this.type &&
+          other.minute == this.minute &&
+          other.assistPlayerId == this.assistPlayerId &&
+          other.remark == this.remark);
+}
+
+class MatchEventsCompanion extends UpdateCompanion<MatchEvent> {
+  final Value<String> id;
+  final Value<String> createdAt;
+  final Value<String> updatedAt;
+  final Value<String?> serverUpdatedAt;
+  final Value<bool> deleted;
+  final Value<bool> isDirty;
+  final Value<String> teamId;
+  final Value<String> matchId;
+  final Value<String> playerId;
+  final Value<String> type;
+  final Value<int> minute;
+  final Value<String?> assistPlayerId;
+  final Value<String?> remark;
+  final Value<int> rowid;
+  const MatchEventsCompanion({
+    this.id = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.serverUpdatedAt = const Value.absent(),
+    this.deleted = const Value.absent(),
+    this.isDirty = const Value.absent(),
+    this.teamId = const Value.absent(),
+    this.matchId = const Value.absent(),
+    this.playerId = const Value.absent(),
+    this.type = const Value.absent(),
+    this.minute = const Value.absent(),
+    this.assistPlayerId = const Value.absent(),
+    this.remark = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  MatchEventsCompanion.insert({
+    required String id,
+    required String createdAt,
+    required String updatedAt,
+    this.serverUpdatedAt = const Value.absent(),
+    this.deleted = const Value.absent(),
+    this.isDirty = const Value.absent(),
+    required String teamId,
+    required String matchId,
+    required String playerId,
+    required String type,
+    required int minute,
+    this.assistPlayerId = const Value.absent(),
+    this.remark = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt),
+       teamId = Value(teamId),
+       matchId = Value(matchId),
+       playerId = Value(playerId),
+       type = Value(type),
+       minute = Value(minute);
+  static Insertable<MatchEvent> custom({
+    Expression<String>? id,
+    Expression<String>? createdAt,
+    Expression<String>? updatedAt,
+    Expression<String>? serverUpdatedAt,
+    Expression<bool>? deleted,
+    Expression<bool>? isDirty,
+    Expression<String>? teamId,
+    Expression<String>? matchId,
+    Expression<String>? playerId,
+    Expression<String>? type,
+    Expression<int>? minute,
+    Expression<String>? assistPlayerId,
+    Expression<String>? remark,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (serverUpdatedAt != null) 'server_updated_at': serverUpdatedAt,
+      if (deleted != null) 'deleted': deleted,
+      if (isDirty != null) 'is_dirty': isDirty,
+      if (teamId != null) 'team_id': teamId,
+      if (matchId != null) 'match_id': matchId,
+      if (playerId != null) 'player_id': playerId,
+      if (type != null) 'type': type,
+      if (minute != null) 'minute': minute,
+      if (assistPlayerId != null) 'assist_player_id': assistPlayerId,
+      if (remark != null) 'remark': remark,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  MatchEventsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? createdAt,
+    Value<String>? updatedAt,
+    Value<String?>? serverUpdatedAt,
+    Value<bool>? deleted,
+    Value<bool>? isDirty,
+    Value<String>? teamId,
+    Value<String>? matchId,
+    Value<String>? playerId,
+    Value<String>? type,
+    Value<int>? minute,
+    Value<String?>? assistPlayerId,
+    Value<String?>? remark,
+    Value<int>? rowid,
+  }) {
+    return MatchEventsCompanion(
+      id: id ?? this.id,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      serverUpdatedAt: serverUpdatedAt ?? this.serverUpdatedAt,
+      deleted: deleted ?? this.deleted,
+      isDirty: isDirty ?? this.isDirty,
+      teamId: teamId ?? this.teamId,
+      matchId: matchId ?? this.matchId,
+      playerId: playerId ?? this.playerId,
+      type: type ?? this.type,
+      minute: minute ?? this.minute,
+      assistPlayerId: assistPlayerId ?? this.assistPlayerId,
+      remark: remark ?? this.remark,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<String>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<String>(updatedAt.value);
+    }
+    if (serverUpdatedAt.present) {
+      map['server_updated_at'] = Variable<String>(serverUpdatedAt.value);
+    }
+    if (deleted.present) {
+      map['deleted'] = Variable<bool>(deleted.value);
+    }
+    if (isDirty.present) {
+      map['is_dirty'] = Variable<bool>(isDirty.value);
+    }
+    if (teamId.present) {
+      map['team_id'] = Variable<String>(teamId.value);
+    }
+    if (matchId.present) {
+      map['match_id'] = Variable<String>(matchId.value);
+    }
+    if (playerId.present) {
+      map['player_id'] = Variable<String>(playerId.value);
+    }
+    if (type.present) {
+      map['type'] = Variable<String>(type.value);
+    }
+    if (minute.present) {
+      map['minute'] = Variable<int>(minute.value);
+    }
+    if (assistPlayerId.present) {
+      map['assist_player_id'] = Variable<String>(assistPlayerId.value);
+    }
+    if (remark.present) {
+      map['remark'] = Variable<String>(remark.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MatchEventsCompanion(')
+          ..write('id: $id, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('serverUpdatedAt: $serverUpdatedAt, ')
+          ..write('deleted: $deleted, ')
+          ..write('isDirty: $isDirty, ')
+          ..write('teamId: $teamId, ')
+          ..write('matchId: $matchId, ')
+          ..write('playerId: $playerId, ')
+          ..write('type: $type, ')
+          ..write('minute: $minute, ')
+          ..write('assistPlayerId: $assistPlayerId, ')
+          ..write('remark: $remark, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $InjuriesTable extends Injuries with TableInfo<$InjuriesTable, Injury> {
   @override
   final GeneratedDatabase attachedDatabase;
@@ -6235,6 +8837,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $SessionsTable sessions = $SessionsTable(this);
   late final $SessionPlayersTable sessionPlayers = $SessionPlayersTable(this);
   late final $WellnessTable wellness = $WellnessTable(this);
+  late final $MatchesTable matches = $MatchesTable(this);
+  late final $MatchPlayersTable matchPlayers = $MatchPlayersTable(this);
+  late final $MatchEventsTable matchEvents = $MatchEventsTable(this);
   late final $InjuriesTable injuries = $InjuriesTable(this);
   late final $SyncStateTable syncState = $SyncStateTable(this);
   late final $LocalSettingsTable localSettings = $LocalSettingsTable(this);
@@ -6249,6 +8854,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     sessions,
     sessionPlayers,
     wellness,
+    matches,
+    matchPlayers,
+    matchEvents,
     injuries,
     syncState,
     localSettings,
@@ -8466,6 +11074,1221 @@ typedef $$WellnessTableProcessedTableManager =
       WellnessEntry,
       PrefetchHooks Function()
     >;
+typedef $$MatchesTableCreateCompanionBuilder = MatchesCompanion Function({
+  required String id,
+  required String createdAt,
+  required String updatedAt,
+  Value<String?> serverUpdatedAt,
+  Value<bool> deleted,
+  Value<bool> isDirty,
+  required String teamId,
+  required String date,
+  required String kickOffTime,
+  required String opponent,
+  required String homeAway,
+  required String competition,
+  Value<int> durationMin,
+  Value<int?> goalsFor,
+  Value<int?> goalsAgainst,
+  Value<String?> remarks,
+  Value<String> status,
+  Value<int> rowid,
+});
+typedef $$MatchesTableUpdateCompanionBuilder = MatchesCompanion Function({
+  Value<String> id,
+  Value<String> createdAt,
+  Value<String> updatedAt,
+  Value<String?> serverUpdatedAt,
+  Value<bool> deleted,
+  Value<bool> isDirty,
+  Value<String> teamId,
+  Value<String> date,
+  Value<String> kickOffTime,
+  Value<String> opponent,
+  Value<String> homeAway,
+  Value<String> competition,
+  Value<int> durationMin,
+  Value<int?> goalsFor,
+  Value<int?> goalsAgainst,
+  Value<String?> remarks,
+  Value<String> status,
+  Value<int> rowid,
+});
+
+class $$MatchesTableFilterComposer
+    extends Composer<_$AppDatabase, $MatchesTable> {
+  $$MatchesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get serverUpdatedAt => $composableBuilder(
+    column: $table.serverUpdatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get deleted => $composableBuilder(
+    column: $table.deleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDirty => $composableBuilder(
+    column: $table.isDirty,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get teamId => $composableBuilder(
+    column: $table.teamId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get date => $composableBuilder(
+    column: $table.date,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get kickOffTime => $composableBuilder(
+    column: $table.kickOffTime,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get opponent => $composableBuilder(
+    column: $table.opponent,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get homeAway => $composableBuilder(
+    column: $table.homeAway,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get competition => $composableBuilder(
+    column: $table.competition,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get durationMin => $composableBuilder(
+    column: $table.durationMin,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get goalsFor => $composableBuilder(
+    column: $table.goalsFor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get goalsAgainst => $composableBuilder(
+    column: $table.goalsAgainst,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get remarks => $composableBuilder(
+    column: $table.remarks,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$MatchesTableOrderingComposer
+    extends Composer<_$AppDatabase, $MatchesTable> {
+  $$MatchesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get serverUpdatedAt => $composableBuilder(
+    column: $table.serverUpdatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get deleted => $composableBuilder(
+    column: $table.deleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDirty => $composableBuilder(
+    column: $table.isDirty,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get teamId => $composableBuilder(
+    column: $table.teamId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get date => $composableBuilder(
+    column: $table.date,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get kickOffTime => $composableBuilder(
+    column: $table.kickOffTime,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get opponent => $composableBuilder(
+    column: $table.opponent,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get homeAway => $composableBuilder(
+    column: $table.homeAway,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get competition => $composableBuilder(
+    column: $table.competition,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get durationMin => $composableBuilder(
+    column: $table.durationMin,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get goalsFor => $composableBuilder(
+    column: $table.goalsFor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get goalsAgainst => $composableBuilder(
+    column: $table.goalsAgainst,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get remarks => $composableBuilder(
+    column: $table.remarks,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$MatchesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $MatchesTable> {
+  $$MatchesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get serverUpdatedAt => $composableBuilder(
+    column: $table.serverUpdatedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get deleted =>
+      $composableBuilder(column: $table.deleted, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDirty =>
+      $composableBuilder(column: $table.isDirty, builder: (column) => column);
+
+  GeneratedColumn<String> get teamId =>
+      $composableBuilder(column: $table.teamId, builder: (column) => column);
+
+  GeneratedColumn<String> get date =>
+      $composableBuilder(column: $table.date, builder: (column) => column);
+
+  GeneratedColumn<String> get kickOffTime => $composableBuilder(
+    column: $table.kickOffTime,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get opponent =>
+      $composableBuilder(column: $table.opponent, builder: (column) => column);
+
+  GeneratedColumn<String> get homeAway =>
+      $composableBuilder(column: $table.homeAway, builder: (column) => column);
+
+  GeneratedColumn<String> get competition => $composableBuilder(
+    column: $table.competition,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get durationMin => $composableBuilder(
+    column: $table.durationMin,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get goalsFor =>
+      $composableBuilder(column: $table.goalsFor, builder: (column) => column);
+
+  GeneratedColumn<int> get goalsAgainst => $composableBuilder(
+    column: $table.goalsAgainst,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get remarks =>
+      $composableBuilder(column: $table.remarks, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+}
+
+class $$MatchesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $MatchesTable,
+          FootballMatch,
+          $$MatchesTableFilterComposer,
+          $$MatchesTableOrderingComposer,
+          $$MatchesTableAnnotationComposer,
+          $$MatchesTableCreateCompanionBuilder,
+          $$MatchesTableUpdateCompanionBuilder,
+          (
+            FootballMatch,
+            BaseReferences<_$AppDatabase, $MatchesTable, FootballMatch>,
+          ),
+          FootballMatch,
+          PrefetchHooks Function()
+        > {
+  $$MatchesTableTableManager(_$AppDatabase db, $MatchesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$MatchesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$MatchesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$MatchesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> createdAt = const Value.absent(),
+                Value<String> updatedAt = const Value.absent(),
+                Value<String?> serverUpdatedAt = const Value.absent(),
+                Value<bool> deleted = const Value.absent(),
+                Value<bool> isDirty = const Value.absent(),
+                Value<String> teamId = const Value.absent(),
+                Value<String> date = const Value.absent(),
+                Value<String> kickOffTime = const Value.absent(),
+                Value<String> opponent = const Value.absent(),
+                Value<String> homeAway = const Value.absent(),
+                Value<String> competition = const Value.absent(),
+                Value<int> durationMin = const Value.absent(),
+                Value<int?> goalsFor = const Value.absent(),
+                Value<int?> goalsAgainst = const Value.absent(),
+                Value<String?> remarks = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => MatchesCompanion(
+                id: id,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                serverUpdatedAt: serverUpdatedAt,
+                deleted: deleted,
+                isDirty: isDirty,
+                teamId: teamId,
+                date: date,
+                kickOffTime: kickOffTime,
+                opponent: opponent,
+                homeAway: homeAway,
+                competition: competition,
+                durationMin: durationMin,
+                goalsFor: goalsFor,
+                goalsAgainst: goalsAgainst,
+                remarks: remarks,
+                status: status,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String createdAt,
+                required String updatedAt,
+                Value<String?> serverUpdatedAt = const Value.absent(),
+                Value<bool> deleted = const Value.absent(),
+                Value<bool> isDirty = const Value.absent(),
+                required String teamId,
+                required String date,
+                required String kickOffTime,
+                required String opponent,
+                required String homeAway,
+                required String competition,
+                Value<int> durationMin = const Value.absent(),
+                Value<int?> goalsFor = const Value.absent(),
+                Value<int?> goalsAgainst = const Value.absent(),
+                Value<String?> remarks = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => MatchesCompanion.insert(
+                id: id,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                serverUpdatedAt: serverUpdatedAt,
+                deleted: deleted,
+                isDirty: isDirty,
+                teamId: teamId,
+                date: date,
+                kickOffTime: kickOffTime,
+                opponent: opponent,
+                homeAway: homeAway,
+                competition: competition,
+                durationMin: durationMin,
+                goalsFor: goalsFor,
+                goalsAgainst: goalsAgainst,
+                remarks: remarks,
+                status: status,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$MatchesTable, FootballMatch>(table),
+                  BaseReferences<_$AppDatabase, $MatchesTable, FootballMatch>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$MatchesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $MatchesTable,
+      FootballMatch,
+      $$MatchesTableFilterComposer,
+      $$MatchesTableOrderingComposer,
+      $$MatchesTableAnnotationComposer,
+      $$MatchesTableCreateCompanionBuilder,
+      $$MatchesTableUpdateCompanionBuilder,
+      (
+        FootballMatch,
+        BaseReferences<_$AppDatabase, $MatchesTable, FootballMatch>,
+      ),
+      FootballMatch,
+      PrefetchHooks Function()
+    >;
+typedef $$MatchPlayersTableCreateCompanionBuilder =
+    MatchPlayersCompanion Function({
+      required String id,
+      required String createdAt,
+      required String updatedAt,
+      Value<String?> serverUpdatedAt,
+      Value<bool> deleted,
+      Value<bool> isDirty,
+      required String teamId,
+      required String matchId,
+      required String playerId,
+      Value<bool> present,
+      Value<String?> absenceReason,
+      Value<String?> role,
+      Value<int?> minutesPlayed,
+      Value<int?> rpe,
+      Value<String?> remark,
+      Value<int> rowid,
+    });
+typedef $$MatchPlayersTableUpdateCompanionBuilder =
+    MatchPlayersCompanion Function({
+      Value<String> id,
+      Value<String> createdAt,
+      Value<String> updatedAt,
+      Value<String?> serverUpdatedAt,
+      Value<bool> deleted,
+      Value<bool> isDirty,
+      Value<String> teamId,
+      Value<String> matchId,
+      Value<String> playerId,
+      Value<bool> present,
+      Value<String?> absenceReason,
+      Value<String?> role,
+      Value<int?> minutesPlayed,
+      Value<int?> rpe,
+      Value<String?> remark,
+      Value<int> rowid,
+    });
+
+class $$MatchPlayersTableFilterComposer
+    extends Composer<_$AppDatabase, $MatchPlayersTable> {
+  $$MatchPlayersTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get serverUpdatedAt => $composableBuilder(
+    column: $table.serverUpdatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get deleted => $composableBuilder(
+    column: $table.deleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDirty => $composableBuilder(
+    column: $table.isDirty,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get teamId => $composableBuilder(
+    column: $table.teamId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get matchId => $composableBuilder(
+    column: $table.matchId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get playerId => $composableBuilder(
+    column: $table.playerId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get present => $composableBuilder(
+    column: $table.present,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get absenceReason => $composableBuilder(
+    column: $table.absenceReason,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get role => $composableBuilder(
+    column: $table.role,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get minutesPlayed => $composableBuilder(
+    column: $table.minutesPlayed,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get rpe => $composableBuilder(
+    column: $table.rpe,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get remark => $composableBuilder(
+    column: $table.remark,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$MatchPlayersTableOrderingComposer
+    extends Composer<_$AppDatabase, $MatchPlayersTable> {
+  $$MatchPlayersTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get serverUpdatedAt => $composableBuilder(
+    column: $table.serverUpdatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get deleted => $composableBuilder(
+    column: $table.deleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDirty => $composableBuilder(
+    column: $table.isDirty,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get teamId => $composableBuilder(
+    column: $table.teamId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get matchId => $composableBuilder(
+    column: $table.matchId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get playerId => $composableBuilder(
+    column: $table.playerId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get present => $composableBuilder(
+    column: $table.present,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get absenceReason => $composableBuilder(
+    column: $table.absenceReason,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get role => $composableBuilder(
+    column: $table.role,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get minutesPlayed => $composableBuilder(
+    column: $table.minutesPlayed,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get rpe => $composableBuilder(
+    column: $table.rpe,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get remark => $composableBuilder(
+    column: $table.remark,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$MatchPlayersTableAnnotationComposer
+    extends Composer<_$AppDatabase, $MatchPlayersTable> {
+  $$MatchPlayersTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get serverUpdatedAt => $composableBuilder(
+    column: $table.serverUpdatedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get deleted =>
+      $composableBuilder(column: $table.deleted, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDirty =>
+      $composableBuilder(column: $table.isDirty, builder: (column) => column);
+
+  GeneratedColumn<String> get teamId =>
+      $composableBuilder(column: $table.teamId, builder: (column) => column);
+
+  GeneratedColumn<String> get matchId =>
+      $composableBuilder(column: $table.matchId, builder: (column) => column);
+
+  GeneratedColumn<String> get playerId =>
+      $composableBuilder(column: $table.playerId, builder: (column) => column);
+
+  GeneratedColumn<bool> get present =>
+      $composableBuilder(column: $table.present, builder: (column) => column);
+
+  GeneratedColumn<String> get absenceReason => $composableBuilder(
+    column: $table.absenceReason,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get role =>
+      $composableBuilder(column: $table.role, builder: (column) => column);
+
+  GeneratedColumn<int> get minutesPlayed => $composableBuilder(
+    column: $table.minutesPlayed,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get rpe =>
+      $composableBuilder(column: $table.rpe, builder: (column) => column);
+
+  GeneratedColumn<String> get remark =>
+      $composableBuilder(column: $table.remark, builder: (column) => column);
+}
+
+class $$MatchPlayersTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $MatchPlayersTable,
+          MatchPlayer,
+          $$MatchPlayersTableFilterComposer,
+          $$MatchPlayersTableOrderingComposer,
+          $$MatchPlayersTableAnnotationComposer,
+          $$MatchPlayersTableCreateCompanionBuilder,
+          $$MatchPlayersTableUpdateCompanionBuilder,
+          (
+            MatchPlayer,
+            BaseReferences<_$AppDatabase, $MatchPlayersTable, MatchPlayer>,
+          ),
+          MatchPlayer,
+          PrefetchHooks Function()
+        > {
+  $$MatchPlayersTableTableManager(_$AppDatabase db, $MatchPlayersTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$MatchPlayersTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$MatchPlayersTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$MatchPlayersTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> createdAt = const Value.absent(),
+                Value<String> updatedAt = const Value.absent(),
+                Value<String?> serverUpdatedAt = const Value.absent(),
+                Value<bool> deleted = const Value.absent(),
+                Value<bool> isDirty = const Value.absent(),
+                Value<String> teamId = const Value.absent(),
+                Value<String> matchId = const Value.absent(),
+                Value<String> playerId = const Value.absent(),
+                Value<bool> present = const Value.absent(),
+                Value<String?> absenceReason = const Value.absent(),
+                Value<String?> role = const Value.absent(),
+                Value<int?> minutesPlayed = const Value.absent(),
+                Value<int?> rpe = const Value.absent(),
+                Value<String?> remark = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => MatchPlayersCompanion(
+                id: id,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                serverUpdatedAt: serverUpdatedAt,
+                deleted: deleted,
+                isDirty: isDirty,
+                teamId: teamId,
+                matchId: matchId,
+                playerId: playerId,
+                present: present,
+                absenceReason: absenceReason,
+                role: role,
+                minutesPlayed: minutesPlayed,
+                rpe: rpe,
+                remark: remark,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String createdAt,
+                required String updatedAt,
+                Value<String?> serverUpdatedAt = const Value.absent(),
+                Value<bool> deleted = const Value.absent(),
+                Value<bool> isDirty = const Value.absent(),
+                required String teamId,
+                required String matchId,
+                required String playerId,
+                Value<bool> present = const Value.absent(),
+                Value<String?> absenceReason = const Value.absent(),
+                Value<String?> role = const Value.absent(),
+                Value<int?> minutesPlayed = const Value.absent(),
+                Value<int?> rpe = const Value.absent(),
+                Value<String?> remark = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => MatchPlayersCompanion.insert(
+                id: id,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                serverUpdatedAt: serverUpdatedAt,
+                deleted: deleted,
+                isDirty: isDirty,
+                teamId: teamId,
+                matchId: matchId,
+                playerId: playerId,
+                present: present,
+                absenceReason: absenceReason,
+                role: role,
+                minutesPlayed: minutesPlayed,
+                rpe: rpe,
+                remark: remark,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$MatchPlayersTable, MatchPlayer>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $MatchPlayersTable,
+                    MatchPlayer
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$MatchPlayersTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $MatchPlayersTable,
+      MatchPlayer,
+      $$MatchPlayersTableFilterComposer,
+      $$MatchPlayersTableOrderingComposer,
+      $$MatchPlayersTableAnnotationComposer,
+      $$MatchPlayersTableCreateCompanionBuilder,
+      $$MatchPlayersTableUpdateCompanionBuilder,
+      (
+        MatchPlayer,
+        BaseReferences<_$AppDatabase, $MatchPlayersTable, MatchPlayer>,
+      ),
+      MatchPlayer,
+      PrefetchHooks Function()
+    >;
+typedef $$MatchEventsTableCreateCompanionBuilder =
+    MatchEventsCompanion Function({
+      required String id,
+      required String createdAt,
+      required String updatedAt,
+      Value<String?> serverUpdatedAt,
+      Value<bool> deleted,
+      Value<bool> isDirty,
+      required String teamId,
+      required String matchId,
+      required String playerId,
+      required String type,
+      required int minute,
+      Value<String?> assistPlayerId,
+      Value<String?> remark,
+      Value<int> rowid,
+    });
+typedef $$MatchEventsTableUpdateCompanionBuilder =
+    MatchEventsCompanion Function({
+      Value<String> id,
+      Value<String> createdAt,
+      Value<String> updatedAt,
+      Value<String?> serverUpdatedAt,
+      Value<bool> deleted,
+      Value<bool> isDirty,
+      Value<String> teamId,
+      Value<String> matchId,
+      Value<String> playerId,
+      Value<String> type,
+      Value<int> minute,
+      Value<String?> assistPlayerId,
+      Value<String?> remark,
+      Value<int> rowid,
+    });
+
+class $$MatchEventsTableFilterComposer
+    extends Composer<_$AppDatabase, $MatchEventsTable> {
+  $$MatchEventsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get serverUpdatedAt => $composableBuilder(
+    column: $table.serverUpdatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get deleted => $composableBuilder(
+    column: $table.deleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDirty => $composableBuilder(
+    column: $table.isDirty,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get teamId => $composableBuilder(
+    column: $table.teamId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get matchId => $composableBuilder(
+    column: $table.matchId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get playerId => $composableBuilder(
+    column: $table.playerId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get minute => $composableBuilder(
+    column: $table.minute,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get assistPlayerId => $composableBuilder(
+    column: $table.assistPlayerId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get remark => $composableBuilder(
+    column: $table.remark,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$MatchEventsTableOrderingComposer
+    extends Composer<_$AppDatabase, $MatchEventsTable> {
+  $$MatchEventsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get serverUpdatedAt => $composableBuilder(
+    column: $table.serverUpdatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get deleted => $composableBuilder(
+    column: $table.deleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDirty => $composableBuilder(
+    column: $table.isDirty,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get teamId => $composableBuilder(
+    column: $table.teamId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get matchId => $composableBuilder(
+    column: $table.matchId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get playerId => $composableBuilder(
+    column: $table.playerId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get minute => $composableBuilder(
+    column: $table.minute,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get assistPlayerId => $composableBuilder(
+    column: $table.assistPlayerId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get remark => $composableBuilder(
+    column: $table.remark,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$MatchEventsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $MatchEventsTable> {
+  $$MatchEventsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get serverUpdatedAt => $composableBuilder(
+    column: $table.serverUpdatedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get deleted =>
+      $composableBuilder(column: $table.deleted, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDirty =>
+      $composableBuilder(column: $table.isDirty, builder: (column) => column);
+
+  GeneratedColumn<String> get teamId =>
+      $composableBuilder(column: $table.teamId, builder: (column) => column);
+
+  GeneratedColumn<String> get matchId =>
+      $composableBuilder(column: $table.matchId, builder: (column) => column);
+
+  GeneratedColumn<String> get playerId =>
+      $composableBuilder(column: $table.playerId, builder: (column) => column);
+
+  GeneratedColumn<String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => column);
+
+  GeneratedColumn<int> get minute =>
+      $composableBuilder(column: $table.minute, builder: (column) => column);
+
+  GeneratedColumn<String> get assistPlayerId => $composableBuilder(
+    column: $table.assistPlayerId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get remark =>
+      $composableBuilder(column: $table.remark, builder: (column) => column);
+}
+
+class $$MatchEventsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $MatchEventsTable,
+          MatchEvent,
+          $$MatchEventsTableFilterComposer,
+          $$MatchEventsTableOrderingComposer,
+          $$MatchEventsTableAnnotationComposer,
+          $$MatchEventsTableCreateCompanionBuilder,
+          $$MatchEventsTableUpdateCompanionBuilder,
+          (
+            MatchEvent,
+            BaseReferences<_$AppDatabase, $MatchEventsTable, MatchEvent>,
+          ),
+          MatchEvent,
+          PrefetchHooks Function()
+        > {
+  $$MatchEventsTableTableManager(_$AppDatabase db, $MatchEventsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$MatchEventsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$MatchEventsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$MatchEventsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> createdAt = const Value.absent(),
+                Value<String> updatedAt = const Value.absent(),
+                Value<String?> serverUpdatedAt = const Value.absent(),
+                Value<bool> deleted = const Value.absent(),
+                Value<bool> isDirty = const Value.absent(),
+                Value<String> teamId = const Value.absent(),
+                Value<String> matchId = const Value.absent(),
+                Value<String> playerId = const Value.absent(),
+                Value<String> type = const Value.absent(),
+                Value<int> minute = const Value.absent(),
+                Value<String?> assistPlayerId = const Value.absent(),
+                Value<String?> remark = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => MatchEventsCompanion(
+                id: id,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                serverUpdatedAt: serverUpdatedAt,
+                deleted: deleted,
+                isDirty: isDirty,
+                teamId: teamId,
+                matchId: matchId,
+                playerId: playerId,
+                type: type,
+                minute: minute,
+                assistPlayerId: assistPlayerId,
+                remark: remark,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String createdAt,
+                required String updatedAt,
+                Value<String?> serverUpdatedAt = const Value.absent(),
+                Value<bool> deleted = const Value.absent(),
+                Value<bool> isDirty = const Value.absent(),
+                required String teamId,
+                required String matchId,
+                required String playerId,
+                required String type,
+                required int minute,
+                Value<String?> assistPlayerId = const Value.absent(),
+                Value<String?> remark = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => MatchEventsCompanion.insert(
+                id: id,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                serverUpdatedAt: serverUpdatedAt,
+                deleted: deleted,
+                isDirty: isDirty,
+                teamId: teamId,
+                matchId: matchId,
+                playerId: playerId,
+                type: type,
+                minute: minute,
+                assistPlayerId: assistPlayerId,
+                remark: remark,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$MatchEventsTable, MatchEvent>(table),
+                  BaseReferences<_$AppDatabase, $MatchEventsTable, MatchEvent>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$MatchEventsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $MatchEventsTable,
+      MatchEvent,
+      $$MatchEventsTableFilterComposer,
+      $$MatchEventsTableOrderingComposer,
+      $$MatchEventsTableAnnotationComposer,
+      $$MatchEventsTableCreateCompanionBuilder,
+      $$MatchEventsTableUpdateCompanionBuilder,
+      (
+        MatchEvent,
+        BaseReferences<_$AppDatabase, $MatchEventsTable, MatchEvent>,
+      ),
+      MatchEvent,
+      PrefetchHooks Function()
+    >;
 typedef $$InjuriesTableCreateCompanionBuilder = InjuriesCompanion Function({
   required String id,
   required String createdAt,
@@ -9275,6 +13098,12 @@ class $AppDatabaseManager {
       $$SessionPlayersTableTableManager(_db, _db.sessionPlayers);
   $$WellnessTableTableManager get wellness =>
       $$WellnessTableTableManager(_db, _db.wellness);
+  $$MatchesTableTableManager get matches =>
+      $$MatchesTableTableManager(_db, _db.matches);
+  $$MatchPlayersTableTableManager get matchPlayers =>
+      $$MatchPlayersTableTableManager(_db, _db.matchPlayers);
+  $$MatchEventsTableTableManager get matchEvents =>
+      $$MatchEventsTableTableManager(_db, _db.matchEvents);
   $$InjuriesTableTableManager get injuries =>
       $$InjuriesTableTableManager(_db, _db.injuries);
   $$SyncStateTableTableManager get syncState =>

@@ -31,7 +31,10 @@ const _tables = [
   _SyncTable('sessions'),
   _SyncTable('session_players', booleans: {'present'}),
   _SyncTable('wellness'),
-  _SyncTable('injuries'),
+  _SyncTable('matches'),
+  _SyncTable('match_players', booleans: {'present'}),
+  _SyncTable('match_events'),
+  _SyncTable('injuries'), // après sessions et matches, qu'elle référence
 ];
 
 /// Synchronisation hors ligne d'abord (docs/01 §6) :

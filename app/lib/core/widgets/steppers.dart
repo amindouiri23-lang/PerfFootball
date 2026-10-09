@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../features/sessions/session_repository.dart';
 
-/// Compteur − / + par pas de 5 minutes (specs §4.2 : éviter le clavier).
+/// Compteur − / + par pas de 5 minutes (specs §4.2 : éviter le clavier). Un appui sur la valeur
+/// permet de saisir la minute exacte (temps de jeu d'un remplaçant).
 class MinutesStepper extends StatelessWidget {
   const MinutesStepper({super.key, required this.value, required this.onChanged, this.min = 0, this.max = 240, this.step = 5});
 
@@ -11,6 +13,29 @@ class MinutesStepper extends StatelessWidget {
   final int max;
   final int step;
   final ValueChanged<int> onChanged;
+
+  Future<void> _type(BuildContext context) async {
+    final controller = TextEditingController(text: '$value');
+    final v = await showDialog<int>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Minutes'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          decoration: InputDecoration(helperText: 'Entre $min et $max'),
+          onSubmitted: (t) => Navigator.of(context).pop(int.tryParse(t)),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Annuler')),
+          FilledButton(onPressed: () => Navigator.of(context).pop(int.tryParse(controller.text)), child: const Text('OK')),
+        ],
+      ),
+    );
+    if (v != null) onChanged(v.clamp(min, max));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +50,13 @@ class MinutesStepper extends StatelessWidget {
           icon: const Icon(Icons.remove),
           onPressed: value > min ? () => onChanged((value - step).clamp(min, max)) : null,
         ),
-        SizedBox(width: 64, child: Text('$value min', textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.w600))),
+        InkWell(
+          onTap: () => _type(context),
+          child: SizedBox(
+            width: 64,
+            child: Text('$value min', textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.w600)),
+          ),
+        ),
         IconButton(
           tooltip: 'Plus $step min',
           icon: const Icon(Icons.add),

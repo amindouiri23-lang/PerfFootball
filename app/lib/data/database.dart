@@ -89,6 +89,45 @@ class Wellness extends Table with SyncColumns {
   TextColumn get remark => text().nullable()();
 }
 
+@DataClassName('FootballMatch')
+class Matches extends Table with SyncColumns {
+  TextColumn get teamId => text()();
+  TextColumn get date => text()();
+  TextColumn get kickOffTime => text()();
+  TextColumn get opponent => text()();
+  TextColumn get homeAway => text()();
+  TextColumn get competition => text()();
+  IntColumn get durationMin => integer().withDefault(const Constant(90))();
+  IntColumn get goalsFor => integer().nullable()();
+  IntColumn get goalsAgainst => integer().nullable()();
+  TextColumn get remarks => text().nullable()();
+  TextColumn get status => text().withDefault(const Constant('planned'))();
+}
+
+/// Feuille de match d'un joueur (id déterministe : match + joueur).
+class MatchPlayers extends Table with SyncColumns {
+  TextColumn get teamId => text()();
+  TextColumn get matchId => text()();
+  TextColumn get playerId => text()();
+  BoolColumn get present => boolean().withDefault(const Constant(true))();
+  TextColumn get absenceReason => text().nullable()();
+  TextColumn get role => text().nullable()();
+  IntColumn get minutesPlayed => integer().nullable()();
+  IntColumn get rpe => integer().nullable()();
+  TextColumn get remark => text().nullable()();
+}
+
+/// But (avec passeur éventuel) ou carton. Les blessures de match sont dans Injuries.
+class MatchEvents extends Table with SyncColumns {
+  TextColumn get teamId => text()();
+  TextColumn get matchId => text()();
+  TextColumn get playerId => text()();
+  TextColumn get type => text()();
+  IntColumn get minute => integer()();
+  TextColumn get assistPlayerId => text().nullable()();
+  TextColumn get remark => text().nullable()();
+}
+
 class Injuries extends Table with SyncColumns {
   TextColumn get teamId => text()();
   TextColumn get playerId => text()();
@@ -124,12 +163,15 @@ class LocalSettings extends Table {
   Set<Column> get primaryKey => {key};
 }
 
-@DriftDatabase(tables: [Teams, TeamMembers, Players, Sessions, SessionPlayers, Wellness, Injuries, SyncState, LocalSettings])
+@DriftDatabase(tables: [
+  Teams, TeamMembers, Players, Sessions, SessionPlayers, Wellness, Matches, MatchPlayers, MatchEvents, Injuries,
+  SyncState, LocalSettings,
+])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? openConnection());
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -137,6 +179,12 @@ class AppDatabase extends _$AppDatabase {
           if (from < 2) {
             // v2 : séances, présence, bien-être, blessures.
             for (final TableInfo t in [sessions, sessionPlayers, wellness, injuries]) {
+              await m.createTable(t);
+            }
+          }
+          if (from < 3) {
+            // v3 : matchs, feuilles de match, événements.
+            for (final TableInfo t in [matches, matchPlayers, matchEvents]) {
               await m.createTable(t);
             }
           }

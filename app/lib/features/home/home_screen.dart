@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../core/widgets/sync_indicator.dart';
 import '../../data/sync.dart';
+import '../matches/match_repository.dart';
 import '../profile/profile_repository.dart';
 import '../sessions/session_repository.dart';
 import '../sessions/sessions_list_screen.dart';
@@ -82,11 +83,52 @@ class HomeScreen extends ConsumerWidget {
             ]),
           ),
         ),
+      ..._nextMatch(context, ref, teamId),
       const SizedBox(height: 8),
-      OutlinedButton.icon(
-        onPressed: () => context.go('/sessions/new'),
-        icon: const Icon(Icons.add),
-        label: const Text('Nouvelle séance'),
+      Row(children: [
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: () => context.go('/sessions/new'),
+            icon: const Icon(Icons.add),
+            label: const Text('Séance'),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: () => context.go('/matches/new'),
+            icon: const Icon(Icons.add),
+            label: const Text('Match'),
+          ),
+        ),
+      ]),
+    ];
+  }
+
+  /// Match du jour ou prochain match non terminé, avec le compte à rebours en jours.
+  List<Widget> _nextMatch(BuildContext context, WidgetRef ref, String teamId) {
+    final today = isoDate(DateTime.now());
+    final next = (ref.watch(matchesProvider(teamId)).value ?? const [])
+        .where((m) => m.date.compareTo(today) >= 0 && m.status != 'completed')
+        .toList()
+      ..sort((a, b) => '${a.date} ${a.kickOffTime}'.compareTo('${b.date} ${b.kickOffTime}'));
+    if (next.isEmpty) return const [];
+    final m = next.first;
+    final days = m.day.difference(DateTime.parse(today)).inDays;
+    final theme = Theme.of(context);
+    return [
+      const SizedBox(height: 16),
+      Text(days == 0 ? 'MATCH DU JOUR' : 'PROCHAIN MATCH', style: theme.textTheme.labelLarge?.copyWith(color: theme.colorScheme.primary)),
+      const SizedBox(height: 8),
+      Card(
+        child: ListTile(
+          leading: const Icon(Icons.sports_soccer),
+          title: Text('${m.opponent} · ${homeAwayLabels[m.homeAway]}'),
+          subtitle: Text('${m.dayLabel} · ${m.time} · ${competitions[m.competition]}'
+              '${days > 0 ? ' · dans $days jour${days > 1 ? 's' : ''}' : ''}'),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => context.go(m.status == 'planned' && days == 0 ? '/matches/${m.id}/squad' : '/matches/${m.id}'),
+        ),
       ),
     ];
   }

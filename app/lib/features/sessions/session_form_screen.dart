@@ -152,7 +152,10 @@ class _SessionFormScreenState extends ConsumerState<SessionFormScreen> {
       const SizedBox(height: 16),
       Text('Durée prévue *', style: theme.textTheme.labelLarge),
       const SizedBox(height: 8),
-      MinutesStepper(value: _duration, min: 10, max: 240, onChanged: (v) => setState(() => _duration = v)),
+      Align(
+        alignment: Alignment.centerLeft,
+        child: MinutesStepper(value: _duration, min: 10, max: 240, onChanged: (v) => setState(() => _duration = v)),
+      ),
       const SizedBox(height: 16),
       TextField(
         controller: _objective,

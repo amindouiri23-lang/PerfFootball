@@ -7,6 +7,11 @@ import '../features/auth/auth_repository.dart';
 import '../features/auth/auth_screens.dart';
 import '../features/home/home_screen.dart';
 import '../features/profile/profile_screens.dart';
+import '../features/matches/end_match_screen.dart';
+import '../features/matches/match_form_screen.dart';
+import '../features/matches/match_screen.dart';
+import '../features/matches/matches_list_screen.dart';
+import '../features/matches/squad_screen.dart';
 import '../features/sessions/attendance_screen.dart';
 import '../features/sessions/closing_screen.dart';
 import '../features/sessions/injury_form_screen.dart';
@@ -18,7 +23,6 @@ import '../features/team/player_screens.dart';
 import '../features/team/team_form_screen.dart';
 import '../features/team/team_screen.dart';
 import 'widgets/app_shell.dart';
-import 'widgets/coming_soon.dart';
 import 'widgets/sync_indicator.dart';
 
 const _publicRoutes = {'/login', '/forgot-password'};
@@ -85,7 +89,27 @@ final routerProvider = Provider<GoRouter>((ref) {
             ),
           ]),
           StatefulShellBranch(routes: [
-            GoRoute(path: '/matches', builder: (_, _) => const ComingSoon(title: 'Matchs')),
+            GoRoute(
+              path: '/matches',
+              builder: (_, _) => const MatchesListScreen(),
+              routes: [
+                GoRoute(path: 'new', builder: (_, _) => const MatchFormScreen()),
+                GoRoute(
+                  path: ':id',
+                  builder: (_, s) => MatchScreen(id: s.pathParameters['id']!),
+                  routes: [
+                    GoRoute(path: 'edit', builder: (_, s) => MatchFormScreen(id: s.pathParameters['id'])),
+                    GoRoute(path: 'squad', builder: (_, s) => SquadScreen(matchId: s.pathParameters['id']!)),
+                    GoRoute(path: 'end', builder: (_, s) => EndMatchScreen(matchId: s.pathParameters['id']!)),
+                    GoRoute(
+                      path: 'injury/:playerId',
+                      builder: (_, s) =>
+                          InjuryFormScreen(matchId: s.pathParameters['id']!, playerId: s.pathParameters['playerId']!),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ]),
           StatefulShellBranch(routes: [
             GoRoute(

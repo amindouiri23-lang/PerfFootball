@@ -5,14 +5,18 @@ import 'package:intl/intl.dart';
 
 import '../../core/router.dart';
 import '../../core/widgets/form_page.dart';
+import '../matches/match_repository.dart';
 import '../team/team_repository.dart';
 import 'session_repository.dart';
 
-/// E15 — Déclarer une blessure pendant une séance. Le joueur et le contexte sont pré-remplis.
+/// E15 — Déclarer une blessure pendant une séance ou un match ([sessionId] ou [matchId]).
+/// Le joueur et le contexte sont pré-remplis ; pour un match, la minute est demandée.
 class InjuryFormScreen extends ConsumerStatefulWidget {
-  const InjuryFormScreen({super.key, required this.sessionId, required this.playerId});
+  const InjuryFormScreen({super.key, this.sessionId, this.matchId, required this.playerId})
+      : assert((sessionId == null) != (matchId == null));
 
-  final String sessionId;
+  final String? sessionId;
+  final String? matchId;
   final String playerId;
 
   @override
@@ -21,6 +25,7 @@ class InjuryFormScreen extends ConsumerStatefulWidget {
 
 class _InjuryFormScreenState extends ConsumerState<InjuryFormScreen> {
   final _description = TextEditingController();
+  final _minute = TextEditingController();
   String? _area;
   String? _side;
   String? _type;
@@ -29,26 +34,50 @@ class _InjuryFormScreenState extends ConsumerState<InjuryFormScreen> {
   DateTime? _expectedReturn;
   bool _submitted = false;
 
+  int? get _minuteValue => int.tryParse(_minute.text);
+  bool get _minuteValid => widget.matchId == null || _minute.text.isEmpty || (_minuteValue! >= 1 && _minuteValue! <= 130);
+
   Future<void> _save() async {
     setState(() => _submitted = true);
-    if ([_area, _type, _mechanism, _severity].contains(null)) return;
-    final s = ref.read(sessionProvider(widget.sessionId)).value!;
+    if ([_area, _type, _mechanism, _severity].contains(null) || !_minuteValid) return;
+    final ctx = _context(listen: false)!;
     final player = ref.read(playerProvider(widget.playerId)).value;
     final text = _description.text.trim();
     await ref.read(sessionRepositoryProvider).saveInjury(
-          teamId: s.teamId, playerId: widget.playerId, sessionId: s.id, date: s.date,
+          teamId: ctx.teamId, playerId: widget.playerId, sessionId: widget.sessionId, matchId: widget.matchId,
+          minute: widget.matchId == null ? null : _minuteValue, date: ctx.date,
           bodyArea: _area!, side: _side, type: _type!, mechanism: _mechanism!, severity: _severity!,
           description: text.isEmpty ? null : text,
           expectedReturnDate: _expectedReturn == null ? null : isoDate(_expectedReturn!),
         );
     if (!mounted) return;
     showMessage(context, 'Blessure de ${player?.fullName ?? 'ce joueur'} enregistrée');
-    context.go('/sessions/${s.id}');
+    context.go(ctx.back);
+  }
+
+  /// Séance ou match d'origine : équipe, date, libellé et écran de retour.
+  /// [listen] : vrai pendant build (ref.watch), faux dans un rappel (ref.read).
+  ({String teamId, String date, DateTime day, String label, String back})? _context({bool listen = true}) {
+    if (widget.sessionId != null) {
+      final p = sessionProvider(widget.sessionId!);
+      final s = (listen ? ref.watch(p) : ref.read(p)).value;
+      return s == null
+          ? null
+          : (teamId: s.teamId, date: s.date, day: s.day,
+              label: 'Séance du ${DateFormat('d/MM', 'fr_FR').format(s.day)} · ${sessionTypes[s.type]}',
+              back: '/sessions/${s.id}');
+    }
+    final p = matchProvider(widget.matchId!);
+    final m = (listen ? ref.watch(p) : ref.read(p)).value;
+    return m == null
+        ? null
+        : (teamId: m.teamId, date: m.date, day: m.day, label: 'Match contre ${m.opponent}', back: '/matches/${m.id}');
   }
 
   @override
   void dispose() {
     _description.dispose();
+    _minute.dispose();
     super.dispose();
   }
 
@@ -79,17 +108,28 @@ class _InjuryFormScreenState extends ConsumerState<InjuryFormScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final s = ref.watch(sessionProvider(widget.sessionId)).value;
+    final ctx = _context();
     final player = ref.watch(playerProvider(widget.playerId)).value;
-    if (s == null) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    if (ctx == null) return const Scaffold(body: Center(child: CircularProgressIndicator()));
     return FormPage(title: 'Déclarer une blessure', children: [
       ListTile(
         contentPadding: EdgeInsets.zero,
         leading: CircleAvatar(child: Text(player?.initials ?? '?')),
         title: Text(player?.fullName ?? ''),
-        subtitle: Text('Séance du ${DateFormat('d/MM', 'fr_FR').format(s.day)} · ${sessionTypes[s.type]}'),
+        subtitle: Text(ctx.label),
       ),
       const SizedBox(height: 8),
+      if (widget.matchId != null) ...[
+        TextField(
+          controller: _minute,
+          keyboardType: TextInputType.number,
+          decoration: InputDecoration(
+            labelText: 'Minute',
+            errorText: _submitted && !_minuteValid ? 'Entre 1 et 130' : null,
+          ),
+        ),
+        const SizedBox(height: 16),
+      ],
       _chips('Zone du corps', bodyAreas, _area, (v) => _area = v),
       _chips('Côté', injurySides, _side, (v) => _side = v, required: false),
       _chips('Type', injuryTypes, _type, (v) => _type = v),
@@ -97,8 +137,8 @@ class _InjuryFormScreenState extends ConsumerState<InjuryFormScreen> {
       _chips('Gravité estimée', severities, _severity, (v) => _severity = v),
       InkWell(
         onTap: () async {
-          final d = await showDatePicker(context: context, initialDate: _expectedReturn ?? s.day.add(const Duration(days: 7)),
-              firstDate: s.day, lastDate: s.day.add(const Duration(days: 365)));
+          final d = await showDatePicker(context: context, initialDate: _expectedReturn ?? ctx.day.add(const Duration(days: 7)),
+              firstDate: ctx.day, lastDate: ctx.day.add(const Duration(days: 365)));
           if (d != null) setState(() => _expectedReturn = d);
         },
         child: InputDecorator(
