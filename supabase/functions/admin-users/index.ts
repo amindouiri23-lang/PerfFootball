@@ -15,6 +15,13 @@ const admin = createClient(
   { auth: { autoRefreshToken: false, persistSession: false } },
 );
 
+// En-têtes CORS : nécessaires pour la version web de l'application (sans effet sur Android et iOS).
+const CORS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
 const JOB_TITLES = ["fitness_coach", "head_coach", "assistant_coach", "physio", "doctor", "other"];
 const BANNED = "876000h"; // ~100 ans
 
@@ -131,6 +138,7 @@ async function setDisabled(userId: string, disabled: boolean) {
 }
 
 Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   try {
     if (req.method !== "POST") throw new HttpError(405, "POST uniquement.");
     const me = await caller(req);
@@ -145,11 +153,11 @@ Deno.serve(async (req) => {
       case "enable": result = await setDisabled(targetId(body, me), false); break;
       default: throw new HttpError(400, "Action inconnue.");
     }
-    return Response.json(result);
+    return Response.json(result, { headers: CORS });
   } catch (e) {
     const status = e instanceof HttpError ? e.status : 500;
     // Ne jamais journaliser le corps de la requête ni un mot de passe.
     if (status === 500) console.error("admin-users:", e instanceof Error ? e.message : e);
-    return Response.json({ error: e instanceof HttpError ? e.message : "Erreur interne." }, { status });
+    return Response.json({ error: e instanceof HttpError ? e.message : "Erreur interne." }, { status, headers: CORS });
   }
 });

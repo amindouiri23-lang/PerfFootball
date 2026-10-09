@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "perffoot-web",
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": ["/c", "cd app && C:\\Users\\stagiaire4\\dev\\flutter\\bin\\flutter.bat run -d web-server --web-port 8686 --dart-define-from-file=env.json"],
+      "port": 8686
+    }
+  ]
+}
