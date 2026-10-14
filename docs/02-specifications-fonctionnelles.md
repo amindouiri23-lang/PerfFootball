@@ -137,6 +137,12 @@ Application (barre de navigation)
 - **Enregistrement automatique** sur les écrans de saisie ; un bouton « Valider » uniquement pour
   passer à l'étape suivante.
 - **Fort contraste** (lisible en plein soleil) et **mode sombre**.
+- **Identité visuelle (v2)** : rouge et blanc du Club Africain, style jeu de foot ; thème sombre par
+  défaut (clair au choix dans les réglages) ; titres en capitales condensées. Accueil en « centre du
+  club » (identité, prochain match, état de l'effectif, charge de la semaine prévue et réalisée) ;
+  effectif en **cartes joueurs** (numéro, poste, photo, nom, minutes, buts, passes ; carte grise si
+  blessé ; appui long : modifier ou supprimer) ; fiche joueur avec grande carte et bloc *Physique*
+  (présence et derniers tests, barre = joueur / meilleur résultat de l'équipe). Aucune note inventée.
 - Couleurs de l'échelle d'effort et du bien-être : vert (facile / bon) → orange → rouge
   (difficile / mauvais). La couleur n'est jamais le seul repère : le chiffre est toujours affiché.
 - Toute **suppression** demande une confirmation.

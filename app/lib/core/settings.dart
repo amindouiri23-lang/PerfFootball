@@ -12,11 +12,12 @@ const deviceSettingKeys = {themeKey, sessionDurationKey, matchDurationKey};
 const themeModes = {'system': 'Système', 'light': 'Clair', 'dark': 'Sombre'};
 
 final themeModeProvider = StreamProvider<ThemeMode>((ref) => ref.watch(databaseProvider).watchSetting(themeKey).map(
-      (v) => switch (v) { 'light' => ThemeMode.light, 'dark' => ThemeMode.dark, _ => ThemeMode.system },
+      // Sombre par défaut (style « jeu de foot ») ; le choix fait dans les réglages est respecté.
+      (v) => switch (v) { 'light' => ThemeMode.light, 'system' => ThemeMode.system, _ => ThemeMode.dark },
     ));
 
 final themeSettingProvider = StreamProvider<String>(
-  (ref) => ref.watch(databaseProvider).watchSetting(themeKey).map((v) => v ?? 'system'),
+  (ref) => ref.watch(databaseProvider).watchSetting(themeKey).map((v) => v ?? 'dark'),
 );
 
 /// Durée par défaut (minutes) d'une nouvelle séance ou d'un nouveau match.

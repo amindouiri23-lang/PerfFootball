@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/photos.dart';
+import '../../core/theme.dart';
 import '../../core/widgets/sync_indicator.dart';
 import '../../data/database.dart';
 import '../../data/sync.dart';
@@ -12,8 +14,8 @@ import '../sessions/session_repository.dart';
 import '../sessions/sessions_list_screen.dart';
 import '../team/team_repository.dart';
 
-/// E10 — Accueil : séances du jour avec l'action adaptée à leur état. Matchs et infirmerie
-/// arrivent avec leurs modules.
+/// E10 — Accueil, façon « centre du club » d'un jeu de foot : identité de l'équipe, prochain match,
+/// état de l'effectif, charge de la semaine, séances du jour, infirmerie.
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
@@ -29,10 +31,8 @@ class HomeScreen extends ConsumerWidget {
         actions: const [SyncIndicator()],
       ),
       body: ListView(padding: const EdgeInsets.all(16), children: [
-        Text(
-          [today[0].toUpperCase() + today.substring(1), if (team.value != null) team.value!.name].join(' · '),
-          style: theme.textTheme.titleMedium,
-        ),
+        if (team.value != null) _clubHeader(context, team.value!),
+        Text(today[0].toUpperCase() + today.substring(1), style: theme.textTheme.bodyMedium),
         const SizedBox(height: 16),
         if (team.hasValue && team.value == null && ref.watch(firstSyncDoneProvider))
           Card(
@@ -58,7 +58,10 @@ class HomeScreen extends ConsumerWidget {
       ..sort((a, b) => a.startTime.compareTo(b.startTime));
     final theme = Theme.of(context);
     return [
-      Text("AUJOURD'HUI", style: theme.textTheme.labelLarge?.copyWith(color: theme.colorScheme.primary)),
+      ..._nextMatch(context, ref, teamId),
+      ..._squadAndLoad(context, ref, teamId),
+      const SizedBox(height: 16),
+      Text("AUJOURD'HUI", style: sectionLabel(context)),
       const SizedBox(height: 8),
       if (sessions.isEmpty) const Text("Aucune séance prévue aujourd'hui."),
       for (final s in sessions)
@@ -84,7 +87,6 @@ class HomeScreen extends ConsumerWidget {
             ]),
           ),
         ),
-      ..._nextMatch(context, ref, teamId),
       ..._infirmary(context, ref, teamId),
       const SizedBox(height: 8),
       Row(children: [
@@ -107,6 +109,95 @@ class HomeScreen extends ConsumerWidget {
     ];
   }
 
+  /// En-tête du club : logo de l'équipe (modifiable dans « Modifier l'équipe »), club et équipe.
+  Widget _clubHeader(BuildContext context, Team team) => Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: Row(children: [
+          PhotoAvatar(path: team.logoPath, initials: team.name.substring(0, 1).toUpperCase(), radius: 28),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              if (team.clubName != null) Text(team.clubName!.toUpperCase(), style: sectionLabel(context)),
+              Text(team.name.toUpperCase(), style: gameTitle(context, size: 28)),
+            ]),
+          ),
+        ]),
+      );
+
+  /// État de l'effectif (joueurs, aptes, blessés) et charge de la semaine en cours : prévue (durée × RPE
+  /// prévu) et réalisée (moyenne des présents notés), additionnées sur les séances du lundi au dimanche.
+  List<Widget> _squadAndLoad(BuildContext context, WidgetRef ref, String teamId) {
+    final theme = Theme.of(context);
+    final players = ref.watch(playersProvider(teamId)).value ?? const <Player>[];
+    final ids = {for (final p in players) p.id};
+    final injured = {
+      for (final i in ref.watch(openInjuriesProvider(teamId)).value ?? const <Injury>[])
+        if (ids.contains(i.playerId)) i.playerId,
+    };
+    final now = DateTime.now();
+    final monday = DateTime(now.year, now.month, now.day).subtract(Duration(days: now.weekday - 1));
+    final week = (ref.watch(sessionsProvider(teamId)).value ?? const <TrainingSession>[])
+        .where((s) => !s.day.isBefore(monday) && s.day.isBefore(monday.add(const Duration(days: 7))))
+        .toList();
+    final rows = ref.watch(teamSessionPlayersProvider(teamId)).value ?? const <SessionPlayer>[];
+    final planned = week.fold(0, (sum, s) => sum + (s.plannedLoad ?? 0));
+    final done = week.fold(0, (sum, s) => sum + (meanObservedLoad(rows.where((r) => r.sessionId == s.id)) ?? 0));
+    Widget number(String value, String label, {Color? color}) => Expanded(
+          child: Column(children: [
+            Text(value, style: gameTitle(context, size: 30, color: color)),
+            Text(label, style: theme.textTheme.bodySmall),
+          ]),
+        );
+    return [
+      Text("ÉTAT DE L'EFFECTIF", style: sectionLabel(context)),
+      const SizedBox(height: 8),
+      Card(
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: () => context.go('/team'),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Row(children: [
+              number('${players.length}', 'joueurs'),
+              number('${players.length - injured.length}', 'aptes'),
+              number('${injured.length}', injured.length > 1 ? 'blessés' : 'blessé',
+                  color: injured.isEmpty ? null : theme.colorScheme.primary),
+            ]),
+          ),
+        ),
+      ),
+      if (planned > 0 || done > 0) ...[
+        const SizedBox(height: 16),
+        Text('CHARGE DE LA SEMAINE', style: sectionLabel(context)),
+        const SizedBox(height: 8),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              Row(children: [
+                Text('$done UA', style: gameTitle(context, size: 24)),
+                const Spacer(),
+                if (planned > 0) Text('prévu $planned UA', style: theme.textTheme.bodySmall),
+              ]),
+              if (planned > 0) ...[
+                const SizedBox(height: 6),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(3),
+                  child: LinearProgressIndicator(
+                    value: (done / planned).clamp(0.0, 1.0),
+                    minHeight: 6,
+                    color: theme.colorScheme.primary,
+                    backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                  ),
+                ),
+              ],
+            ]),
+          ),
+        ),
+      ],
+    ];
+  }
+
   /// Joueurs blessés (blessure sans date de retour) → infirmerie.
   List<Widget> _infirmary(BuildContext context, WidgetRef ref, String teamId) {
     final players = {for (final p in ref.watch(playersProvider(teamId)).value ?? const <Player>[]) p.id: p};
@@ -118,7 +209,7 @@ class HomeScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     return [
       const SizedBox(height: 16),
-      Text('INFIRMERIE', style: theme.textTheme.labelLarge?.copyWith(color: theme.colorScheme.primary)),
+      Text('INFIRMERIE', style: sectionLabel(context)),
       const SizedBox(height: 8),
       Card(
         color: injured.isEmpty ? null : theme.colorScheme.errorContainer,
@@ -147,19 +238,35 @@ class HomeScreen extends ConsumerWidget {
     final days = m.day.difference(DateTime.parse(today)).inDays;
     final theme = Theme.of(context);
     return [
-      const SizedBox(height: 16),
-      Text(days == 0 ? 'MATCH DU JOUR' : 'PROCHAIN MATCH', style: theme.textTheme.labelLarge?.copyWith(color: theme.colorScheme.primary)),
+      Text(days == 0 ? 'MATCH DU JOUR' : 'PROCHAIN MATCH', style: sectionLabel(context)),
       const SizedBox(height: 8),
       Card(
-        child: ListTile(
-          leading: const Icon(Icons.sports_soccer),
-          title: Text('${m.opponent} · ${homeAwayLabels[m.homeAway]}'),
-          subtitle: Text('${m.dayLabel} · ${m.time} · ${m.competitionLabel}'
-              '${days > 0 ? ' · dans $days jour${days > 1 ? 's' : ''}' : ''}'),
-          trailing: const Icon(Icons.chevron_right),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+          side: BorderSide(color: theme.colorScheme.primary, width: 1.5),
+        ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
           onTap: () => context.go(m.status == 'planned' && days == 0 ? '/matches/${m.id}/squad' : '/matches/${m.id}'),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(children: [
+              Text(m.competitionLabel.toUpperCase(), style: sectionLabel(context)),
+              const SizedBox(height: 6),
+              Row(children: [
+                Expanded(child: Text(m.homeAway == 'A' ? m.opponent.toUpperCase() : 'NOUS',
+                    style: gameTitle(context, size: 22), textAlign: TextAlign.center)),
+                Text(days == 0 ? m.time : 'J-$days', style: gameTitle(context, size: 18, color: theme.colorScheme.primary)),
+                Expanded(child: Text(m.homeAway == 'A' ? 'NOUS' : m.opponent.toUpperCase(),
+                    style: gameTitle(context, size: 22), textAlign: TextAlign.center)),
+              ]),
+              const SizedBox(height: 4),
+              Text('${m.dayLabel} · ${m.time} · ${homeAwayLabels[m.homeAway]}', style: theme.textTheme.bodySmall),
+            ]),
+          ),
         ),
       ),
+      const SizedBox(height: 16),
     ];
   }
 }

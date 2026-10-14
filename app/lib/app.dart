@@ -16,7 +16,7 @@ class PerfFootApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       theme: buildTheme(Brightness.light),
       darkTheme: buildTheme(Brightness.dark),
-      themeMode: ref.watch(themeModeProvider).value ?? ThemeMode.system,
+      themeMode: ref.watch(themeModeProvider).value ?? ThemeMode.dark,
       locale: const Locale('fr', 'FR'),
       supportedLocales: const [Locale('fr', 'FR')],
       localizationsDelegates: GlobalMaterialLocalizations.delegates,

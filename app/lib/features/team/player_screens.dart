@@ -15,6 +15,9 @@ import '../matches/matches_list_screen.dart' show ScoreChip;
 import '../sessions/session_repository.dart';
 import '../sessions/wellness_screens.dart' show wellnessTotal;
 import '../tests/test_screens.dart' show PlayerTestsTab;
+import '../../core/theme.dart' show sectionLabel;
+import '../../core/widgets/player_card.dart';
+import '../tests/test_repository.dart';
 import 'player_files.dart';
 import 'player_history.dart';
 import 'team_screen.dart';
@@ -80,39 +83,38 @@ class PlayerScreen extends ConsumerWidget {
                   child: Padding(
                     padding: const EdgeInsets.all(16),
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Row(children: [
-                        InkWell(
-                          customBorder: const CircleBorder(),
-                          onTap: () async {
-                            final path = await pickAndUploadPhoto(context, ref, 'teams/${p.teamId}/players/${p.id}.jpg');
-                            if (path != null) await ref.read(teamRepositoryProvider).setPlayerPhoto(p.id, path);
-                          },
-                          child: Stack(children: [
-                            PhotoAvatar(path: p.photoPath, initials: p.initials, radius: 36),
-                            const Positioned(
-                              right: 0,
-                              bottom: 0,
-                              child: CircleAvatar(radius: 11, child: Icon(Icons.photo_camera, size: 13)),
-                            ),
-                          ]),
+                      Center(
+                        child: SizedBox(
+                          width: 260,
+                          child: PlayerCard(
+                            player: p,
+                            large: true,
+                            injured: openInjury != null,
+                            stats: [
+                              if (stats.minutes > 0) "${stats.minutes}′",
+                              if (stats.goals > 0) '${stats.goals} B',
+                              if (stats.assists > 0) '${stats.assists} PD',
+                            ],
+                            // Un appui sur la carte change la photo du joueur.
+                            onTap: () async {
+                              final path = await pickAndUploadPhoto(context, ref, 'teams/${p.teamId}/players/${p.id}.jpg');
+                              if (path != null) await ref.read(teamRepositoryProvider).setPlayerPhoto(p.id, path);
+                            },
+                          ),
                         ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                            Text('${p.shirtNumber != null ? '#${p.shirtNumber} ' : ''}${p.fullName}',
-                                style: theme.textTheme.titleLarge),
-                            Text(details),
-                            if (openInjury != null)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 4),
-                                child: Wrap(spacing: 6, crossAxisAlignment: WrapCrossAlignment.center, children: [
-                                  const InjuredBadge(),
-                                  Text(injuryLabel(openInjury), style: theme.textTheme.bodySmall),
-                                ]),
-                              ),
-                          ]),
+                      ),
+                      const SizedBox(height: 10),
+                      Center(child: Text(details, textAlign: TextAlign.center)),
+                      if (openInjury != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Center(
+                            child: Wrap(spacing: 6, crossAxisAlignment: WrapCrossAlignment.center, children: [
+                              const InjuredBadge(),
+                              Text(injuryLabel(openInjury), style: theme.textTheme.bodySmall),
+                            ]),
+                          ),
                         ),
-                      ]),
                       const SizedBox(height: 16),
                       Card(
                         child: Padding(
@@ -127,6 +129,7 @@ class PlayerScreen extends ConsumerWidget {
                           ]),
                         ),
                       ),
+                      _PhysicalBars(player: p, attendance: stats.attendance),
                     ]),
                   ),
                 ),
@@ -225,6 +228,62 @@ class PlayerScreen extends ConsumerWidget {
   Widget _list(String? empty, List<Widget> children) => empty != null
       ? Center(child: Padding(padding: const EdgeInsets.all(24), child: Text(empty)))
       : ListView(padding: EdgeInsets.zero, children: children);
+}
+
+/// Bloc « Physique » de la fiche : présence, puis le dernier meilleur résultat de chaque test, la barre
+/// comparant le joueur au meilleur de l'équipe (100 % = meilleur résultat de l'équipe pour ce test).
+class _PhysicalBars extends ConsumerWidget {
+  const _PhysicalBars({required this.player, required this.attendance});
+
+  final Player player;
+  final int? attendance;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final types = {for (final t in ref.watch(testTypesProvider(player.teamId)).value ?? const <TestType>[]) t.id: t};
+    final mine = bestByTest(ref.watch(playerTestResultsProvider(player.id)).value ?? const <TestResult>[], types);
+    final team = ref.watch(teamTestResultsProvider(player.teamId)).value ?? const <TestResult>[];
+    final rows = <(String, String, double)>[
+      if (attendance != null) ('Présence', '$attendance %', attendance! / 100),
+    ];
+    for (final t in types.values.where((t) => t.better != 'none' && mine.containsKey(t.id))) {
+      final values = team.where((r) => r.testTypeId == t.id).map((r) => r.value);
+      final teamBest = t.best(values);
+      final v = mine[t.id]!.first.value;
+      final ratio = t.better == 'lower' ? (v == 0 ? 0.0 : teamBest / v) : (teamBest == 0 ? 0.0 : v / teamBest);
+      rows.add((t.name, '${formatTestValue(v)}${t.unitLabel}', ratio.clamp(0.0, 1.0)));
+      if (rows.length >= 5) break;
+    }
+    if (rows.isEmpty) return const SizedBox.shrink();
+    final theme = Theme.of(context);
+    return Card(
+      margin: const EdgeInsets.only(top: 12),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text('PHYSIQUE', style: sectionLabel(context)),
+          for (final r in rows) ...[
+            const SizedBox(height: 8),
+            Row(children: [Expanded(child: Text(r.$1)), Text(r.$2, style: const TextStyle(fontWeight: FontWeight.w600))]),
+            const SizedBox(height: 4),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(3),
+              child: LinearProgressIndicator(
+                value: r.$3,
+                minHeight: 6,
+                color: theme.colorScheme.primary,
+                backgroundColor: theme.colorScheme.surfaceContainerHighest,
+              ),
+            ),
+          ],
+          if (rows.length > (attendance != null ? 1 : 0)) ...[
+            const SizedBox(height: 8),
+            Text('Barres des tests : par rapport au meilleur résultat de l\'équipe.', style: theme.textTheme.bodySmall),
+          ],
+        ]),
+      ),
+    );
+  }
 }
 
 /// E09 — Ajouter / modifier un joueur.

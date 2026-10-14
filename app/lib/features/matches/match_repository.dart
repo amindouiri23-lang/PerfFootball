@@ -76,6 +76,17 @@ final matchInjuriesProvider = StreamProvider.family<List<Injury>, String>((ref, 
   return (db.select(db.injuries)..where((i) => i.matchId.equals(matchId) & i.deleted.equals(false))).watch();
 });
 
+/// Feuilles de match et événements de toute l'équipe (statistiques des cartes joueurs de l'effectif).
+final teamMatchPlayersProvider = StreamProvider.family<List<MatchPlayer>, String>((ref, teamId) {
+  final db = ref.watch(databaseProvider);
+  return (db.select(db.matchPlayers)..where((p) => p.teamId.equals(teamId) & p.deleted.equals(false))).watch();
+});
+
+final teamMatchEventsProvider = StreamProvider.family<List<MatchEvent>, String>((ref, teamId) {
+  final db = ref.watch(databaseProvider);
+  return (db.select(db.matchEvents)..where((e) => e.teamId.equals(teamId) & e.deleted.equals(false))).watch();
+});
+
 /// Cartons rouges de toute l'équipe (rappel « Suspendu ? » sur la feuille du match suivant).
 final teamRedCardsProvider = StreamProvider.family<List<MatchEvent>, String>((ref, teamId) {
   final db = ref.watch(databaseProvider);

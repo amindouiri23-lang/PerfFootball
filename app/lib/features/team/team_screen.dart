@@ -4,10 +4,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/router.dart';
 import '../../core/photos.dart';
-import '../../core/widgets/injured_badge.dart';
+import '../../core/widgets/player_card.dart';
 import '../../core/widgets/sync_indicator.dart';
 import '../../data/database.dart';
 import '../../data/sync.dart';
+import '../matches/match_repository.dart';
 import '../sessions/session_repository.dart';
 import 'team_repository.dart';
 
@@ -40,6 +41,16 @@ class _TeamScreenState extends ConsumerState<TeamScreen> {
   Widget _roster(BuildContext context, Team team) {
     final players = ref.watch(playersProvider(team.id)).value ?? const <Player>[];
     final injured = {for (final i in ref.watch(openInjuriesProvider(team.id)).value ?? const <Injury>[]) i.playerId};
+    // Statistiques réelles de la saison pour les cartes : minutes jouées, buts, passes décisives.
+    final minutes = <String, int>{};
+    for (final r in ref.watch(teamMatchPlayersProvider(team.id)).value ?? const <MatchPlayer>[]) {
+      if (r.present && r.minutesPlayed != null) minutes[r.playerId] = (minutes[r.playerId] ?? 0) + r.minutesPlayed!;
+    }
+    final goals = <String, int>{}, assists = <String, int>{};
+    for (final e in (ref.watch(teamMatchEventsProvider(team.id)).value ?? const <MatchEvent>[]).where((e) => e.type == 'goal')) {
+      goals[e.playerId] = (goals[e.playerId] ?? 0) + 1;
+      if (e.assistPlayerId != null) assists[e.assistPlayerId!] = (assists[e.assistPlayerId!] ?? 0) + 1;
+    }
     final q = _query.toLowerCase();
     final shown = players
         .where((p) => _position == null || p.position == _position)
@@ -111,9 +122,55 @@ class _TeamScreenState extends ConsumerState<TeamScreen> {
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
                 child: Text('${shown.length} joueur${shown.length > 1 ? 's' : ''}'),
               ),
-              for (final p in shown) _PlayerTile(p, injured: injured.contains(p.id)),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                    maxCrossAxisExtent: 190, mainAxisExtent: 176, crossAxisSpacing: 10, mainAxisSpacing: 10,
+                  ),
+                  itemCount: shown.length,
+                  itemBuilder: (context, i) {
+                    final p = shown[i];
+                    return PlayerCard(
+                      player: p,
+                      injured: injured.contains(p.id),
+                      stats: [
+                        if ((minutes[p.id] ?? 0) > 0) "${minutes[p.id]}′",
+                        if ((goals[p.id] ?? 0) > 0) '${goals[p.id]} B',
+                        if ((assists[p.id] ?? 0) > 0) '${assists[p.id]} PD',
+                      ],
+                      onTap: () => context.go('/team/players/${p.id}'),
+                      onLongPress: () => _playerActions(context, p),
+                    );
+                  },
+                ),
+              ),
             ]),
     );
+  }
+
+  /// Appui long sur une carte : modifier ou supprimer le joueur.
+  Future<void> _playerActions(BuildContext context, Player p) async {
+    final v = await showModalBottomSheet<String>(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          ListTile(title: Text(p.fullName)),
+          ListTile(leading: const Icon(Icons.edit_outlined), title: const Text('Modifier'),
+              onTap: () => Navigator.of(context).pop('edit')),
+          ListTile(leading: const Icon(Icons.delete_outline), title: const Text('Supprimer'),
+              onTap: () => Navigator.of(context).pop('delete')),
+        ]),
+      ),
+    );
+    if (!context.mounted || v == null) return;
+    if (v == 'edit') {
+      context.go('/team/players/${p.id}/edit');
+    } else {
+      await confirmDeletePlayer(context, ref, p);
+    }
   }
 
   Future<void> _switchTeam(BuildContext context) async {
@@ -135,36 +192,6 @@ class _TeamScreenState extends ConsumerState<TeamScreen> {
       ),
     );
     if (id != null) await ref.read(teamRepositoryProvider).setActiveTeam(id);
-  }
-}
-
-class _PlayerTile extends ConsumerWidget {
-  const _PlayerTile(this.p, {required this.injured});
-
-  final Player p;
-  final bool injured;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return ListTile(
-      leading: PhotoAvatar(path: p.photoPath, initials: p.initials),
-      title: Text('${p.shirtNumber != null ? '${p.shirtNumber}  ' : ''}${p.fullName}'),
-      subtitle: Text(p.positionLabel),
-      onTap: () => context.go('/team/players/${p.id}'),
-      trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-        if (injured) const InjuredBadge(),
-        PopupMenuButton<String>(
-          tooltip: 'Actions',
-          onSelected: (v) => v == 'edit'
-              ? context.go('/team/players/${p.id}/edit')
-              : confirmDeletePlayer(context, ref, p),
-          itemBuilder: (_) => const [
-            PopupMenuItem(value: 'edit', child: Text('Modifier')),
-            PopupMenuItem(value: 'delete', child: Text('Supprimer')),
-          ],
-        ),
-      ]),
-    );
   }
 }
 

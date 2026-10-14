@@ -1,7 +1,7 @@
 name: perffoot
 description: "A new Flutter project."
 publish_to: 'none'
-version: 0.2.2+4
+version: 0.3.0+5
 
 environment:
   sdk: ^3.13.4
@@ -35,3 +35,11 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  # Titres « jeu de foot » : Barlow Condensed (licence OFL, assets/fonts/OFL.txt), embarquée pour le hors-ligne.
+  fonts:
+    - family: BarlowCondensed
+      fonts:
+        - asset: assets/fonts/BarlowCondensed-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/BarlowCondensed-Bold.ttf
+          weight: 700
