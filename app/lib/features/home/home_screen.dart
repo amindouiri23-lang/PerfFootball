@@ -154,7 +154,7 @@ class HomeScreen extends ConsumerWidget {
         child: ListTile(
           leading: const Icon(Icons.sports_soccer),
           title: Text('${m.opponent} · ${homeAwayLabels[m.homeAway]}'),
-          subtitle: Text('${m.dayLabel} · ${m.time} · ${competitions[m.competition]}'
+          subtitle: Text('${m.dayLabel} · ${m.time} · ${m.competitionLabel}'
               '${days > 0 ? ' · dans $days jour${days > 1 ? 's' : ''}' : ''}'),
           trailing: const Icon(Icons.chevron_right),
           onTap: () => context.go(m.status == 'planned' && days == 0 ? '/matches/${m.id}/squad' : '/matches/${m.id}'),

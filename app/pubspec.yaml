@@ -1,15 +1,17 @@
 name: perffoot
 description: "A new Flutter project."
 publish_to: 'none'
-version: 0.1.0+1
+version: 0.2.0+2
 
 environment:
   sdk: ^3.13.4
 
 dependencies:
+  archive: ^4.5.2
   connectivity_plus: ^7.3.2
   drift: ^2.35.2
   drift_flutter: ^0.3.1
+  file_picker: ^13.1.0
   flutter:
     sdk: flutter
   flutter_localizations:
@@ -22,6 +24,7 @@ dependencies:
   sqlite3: 3.5.2
   supabase_flutter: ^2.18.2
   uuid: ^4.6.0
+  xml: ^7.1.0
 
 dev_dependencies:
   flutter_test:

@@ -14,6 +14,18 @@ const positions = {'GK': 'Gardien', 'DEF': 'Défenseur', 'MID': 'Milieu', 'FWD':
 const positionShort = {'GK': 'GB', 'DEF': 'DEF', 'MID': 'MIL', 'FWD': 'ATT'};
 const positionPlural = {'GK': 'Gardiens', 'DEF': 'Défenseurs', 'MID': 'Milieux', 'FWD': 'Attaquants'};
 const feet = {'R': 'Droit', 'L': 'Gauche', 'B': 'Les deux'};
+// Poste précis : libellé, abréviation des feuilles du club, et poste large correspondant.
+const detailedPositions = {
+  'GK': 'Gardien', 'CB': 'Défenseur central', 'RB': 'Arrière droit', 'LB': 'Arrière gauche',
+  'DM': 'Milieu défensif', 'CM': 'Milieu central', 'AM': 'Milieu offensif',
+  'RW': 'Ailier droit', 'LW': 'Ailier gauche', 'ST': 'Avant-centre',
+};
+const detailedPositionShort = {
+  'GK': 'GB', 'CB': 'DC', 'RB': 'DD', 'LB': 'DG', 'DM': 'MD', 'CM': 'MC', 'AM': 'MO', 'RW': 'AD', 'LW': 'AG', 'ST': 'AC',
+};
+const positionGroup = {
+  'GK': 'GK', 'CB': 'DEF', 'RB': 'DEF', 'LB': 'DEF', 'DM': 'MID', 'CM': 'MID', 'AM': 'MID', 'RW': 'FWD', 'LW': 'FWD', 'ST': 'FWD',
+};
 
 /// Saison en cours (bascule au 1er juillet), précédente et suivante, ex. « 2026-2027 ».
 List<String> seasonChoices([DateTime? now]) {
@@ -119,12 +131,15 @@ class TeamRepository {
     String? birthDate,
     String? dominantFoot,
     int? heightCm,
+    String? detailedPosition,
+    String? secondaryPosition,
   }) async {
     final now = nowIso();
     final fields = PlayersCompanion(
       teamId: Value(teamId), firstName: Value(firstName), lastName: Value(lastName),
       shirtNumber: Value(shirtNumber), position: Value(position), birthDate: Value(birthDate),
       dominantFoot: Value(dominantFoot), heightCm: Value(heightCm),
+      detailedPosition: Value(detailedPosition), secondaryPosition: Value(secondaryPosition),
       updatedAt: Value(now), isDirty: const Value(true),
     );
     if (id == null) {
@@ -148,6 +163,12 @@ class TeamRepository {
 extension PlayerLabels on Player {
   String get fullName => '$firstName $lastName';
   String get initials => '${firstName.substring(0, 1)}${lastName.substring(0, 1)}'.toUpperCase();
+
+  /// « Arrière droit », ou le poste large si le poste précis n'est pas renseigné.
+  String get positionLabel => detailedPositions[detailedPosition] ?? positions[position]!;
+
+  /// « DD » (abréviation des feuilles du club), sinon l'abréviation du poste large.
+  String get positionCode => detailedPositionShort[detailedPosition] ?? positionShort[position]!;
 
   int? get age {
     if (birthDate == null) return null;

@@ -79,6 +79,8 @@ class SessionScreen extends ConsumerWidget {
               const SizedBox(height: 4),
               Text([
                 '${s.plannedDurationMin} min prévues',
+                if (s.plannedLoad != null) 'charge prévue ${s.plannedLoad} UA (RPE ${s.plannedRpe})',
+                if (completed && meanObservedLoad(rows) != null) 'réalisée ${meanObservedLoad(rows)} UA en moyenne',
                 if (rows.isNotEmpty) '${present.length} présents · ${absent.length} absents',
                 if (completed) 'Bien-être ${wellness.length}/${present.length}',
               ].join(' · ')),

@@ -56,6 +56,7 @@ SharePoint / OneDrive for Business folder ──► Power BI (scheduled refresh)
 | IDs | `uuid` | v4 for entities, v5 for deterministic IDs (§5.3). |
 | Background sync | `workmanager` (later) | v1: sync on app start, on network back, and on button press. |
 | Connectivity | `connectivity_plus` | |
+| Excel import | `file_picker`, `archive`, `xml` | Pick a file on the phone; read `.xlsx` (a zip of XML) — values and cell fills, which the club's sheets use as statuses. All pure Dart or Android + iOS. |
 
 Keep the dependency list short. Adding a package requires a reason written in the PR.
 
@@ -131,6 +132,7 @@ UI is in French; database names stay in English snake_case. Functional specs:
 | dominant_foot | text | `L`, `R`, `B`, nullable |
 | height_cm | int | nullable |
 | photo_path | text | nullable |
+| detailed_position, secondary_position | text | `GK`, `CB`, `RB`, `LB`, `DM`, `CM`, `AM`, `RW`, `LW`, `ST`, nullable (labels: the club's GB, DC, DD, DG, MD, MC, MO, AD, AG, AC) |
 
 Deleting a player = soft delete (`deleted = true`): the player disappears from the app, the
 history stays available to Power BI.
@@ -146,6 +148,7 @@ history stays available to Power BI.
 | start_time | time | required |
 | type | text | `technical`, `tactical`, `physical`, `mixed`, `recovery`, `gym`, `other` |
 | planned_duration_min | int | default 90 |
+| planned_rpe | int | 0–10, nullable — planned load = duration × RPE, computed |
 | objective | text | nullable |
 | remarks | text | remarks on the whole session, nullable |
 | status | text | `planned` → `in_progress` (attendance confirmed) → `completed` |
@@ -156,7 +159,7 @@ history stays available to Power BI.
 | id | uuid | deterministic (§5.5) |
 | session_id, player_id | uuid | |
 | present | boolean | default `true` |
-| absence_reason | text | `injured`, `sick`, `national_team`, `personal`, `other`, nullable |
+| absence_reason | text | `injured`, `sick`, `national_team`, `personal`, `rest`, `other_team`, `other`, nullable |
 | duration_min | int | actual minutes, default = planned duration |
 | rpe | int | 0–10 (CR-10), nullable |
 | remark | text | remark on this player for this session, nullable |
@@ -183,6 +186,8 @@ history stays available to Power BI.
 | home_away | text | `H`, `A`, `N` |
 | competition | text | `league`, `cup`, `friendly`, `tournament` |
 | duration_min | int | default 90 |
+| phase | text | `first_leg`, `second_leg`, nullable (league only) |
+| matchday | int | 1–60, nullable (league only) |
 | goals_for, goals_against | int | final score, nullable until the match ends |
 | remarks | text | nullable |
 | status | text | `planned` → `in_progress` → `completed` |
@@ -240,6 +245,9 @@ produce the same ID and the second write becomes an update, not a duplicate:
 | `session_players` | `session_id + player_id` |
 | `match_players` | `match_id + player_id` |
 | `wellness` | `session_id + player_id` |
+| `test_results` | `player_id + test_type_id + date + attempt` |
+| `player_profiles`, `player_medical` | the id **is** the `player_id` (one row per player) |
+| sessions / matches created by the Excel import | `'import-session' + team_id + date + index` / `'import-match' + team_id + date + opponent` (re-import updates) |
 
 A `unique` constraint on the natural key is also added in Postgres as a safety net.
 
@@ -260,9 +268,28 @@ Name = the two UUIDs joined with `:`, e.g. `uuidv5(NS, '<session_id>:<player_id>
   except players) as the read-only role `powerbi_reader`.
 - Photos: private bucket `photos`, paths `teams/<team_id>/…` and `profiles/<user_id>.jpg`, 512 KB max.
 
-### 5.7 Later (v2, not built in v1)
+### 5.7 Physical tests and body measurements (v2)
 
-`test_types` / `test_results` (physical tests, long format), `body_measurements` (weight, body fat),
+**`test_types`** — catalogue. `team_id` null = common test, written by migration, read-only for the app;
+`team_id` set = test added by a team. Columns: `code` (common tests), `name`, `unit`, `category`
+(`anthropometry`, `endurance`, `speed`, `agility`, `power`, `strength`, `other`), `better` (`higher`, `lower`,
+`none`), `attempts` (1–5), `sort_order`. Common ids are `uuidv5(NS, 'test_type:<code>')`.
+
+**`test_results`** — long format (§4 rule 7): `team_id`, `player_id`, `test_type_id`, `date`, `attempt`,
+`value` numeric(8,2), `remark`. Body measurements (height, weight, lean and fat mass) are test types, not a
+separate table. The best attempt is computed (lowest for `lower`, highest otherwise), never stored.
+
+### 5.8 Player file (v2)
+
+**`player_profiles`** — administrative and family details from the club's form (nationality, birth place,
+contact, school, parents, previous club, years of training, preferred role, remarks). Team RLS.
+
+**`player_medical`** — health questionnaire (allergies, conditions, low blood pressure / anxiety, surgeries,
+injuries of the last 12 months, remarks) with **mandatory consent** (`consent_date`, `consent_by` =
+`player` / `guardian`). RLS: **team owner only** (`is_team_owner`), see §7. Neither file is in `reporting`.
+
+### 5.9 Later
+
 GPS summary columns on `session_players` and `match_players` (`distance_m`, `hsr_m`, `sprints`,
 `accelerations`, `decelerations`, `max_speed_kmh`).
 
@@ -274,7 +301,8 @@ GPS summary columns on `session_players` and `match_players` (`distance_m`, `hsr
 - **Write**: the app writes locally, sets `updated_at = now()` and `is_dirty = true`. The UI never
   waits for the network.
 - **Push**: upsert all dirty rows to Supabase, in dependency order (`staff_profiles`, `teams`,
-  `players`, `sessions`, `matches`, then the other tables), then set `is_dirty = false`.
+  `players`, `sessions`, `matches`, then the other tables; `test_types` before `test_results`), then set
+  `is_dirty = false`.
 - **Pull**: for each table, fetch rows with `server_updated_at > last_pull_cursor`, upsert them
   locally, store the new cursor.
 - **Conflicts**: last write wins (the last push received by the server). Acceptable for a small
@@ -294,6 +322,9 @@ GPS summary columns on `session_players` and `match_players` (`distance_m`, `hsr
 - **Never put the `service_role` key in the app** or in the repository.
 - Wellness, injury and body data are **sensitive health data**: access limited to staff, a player's
   data must be deletable on request (hard delete by the admin, outside the app).
+- The **medical file** (`player_medical`) is readable and writable by the **team owner only**, and only
+  after consent is recorded. When staff invitations exist, a dedicated medical role is added to
+  `is_team_owner`'s policy — never an opening to every member.
 - **Forgotten password**: no email. The user asks an admin, who resets it in the app (§7.1).
 - Lost phone: an admin disables the staff member's account in the app (§7.1).
 - Secrets (`SUPABASE_URL`, `SUPABASE_ANON_KEY`) passed with `--dart-define`, never committed.
@@ -374,6 +405,7 @@ Computed in DAX, never stored:
 
 | Date | Decision |
 |---|---|
+| 2026-10-14 | v2 from the club's Excel files: planned RPE, absence reasons `rest` / `other_team`, detailed and secondary positions, league phase and matchday; physical tests in long format with a common catalogue (body measurements are test types, not a `body_measurements` table); player file split into `player_profiles` (team) and `player_medical` (team owner only, consent required). In-app Excel import for the four club formats (weekly load, playing time, tests, form export): names matched to the squad then confirmed, colour-coded statuses read from the sheet's legend, deterministic ids so a re-import updates. Imported sessions get 18:00 and type *mixed*, matches 15:00; minutes = 0 means *not selected*. Local schema v4 re-pulls players, sessions and matches to fill the new columns. |
 | 2026-10-07 | Initial decisions D1–D9 (brainstorm). |
 | 2026-10-09 | Photos (players, team logo, profile) are uploaded directly to Supabase Storage (512 px, network required, initials shown when offline); they do not go through the local database. Device settings (theme, default durations) are kept at logout. Every create button ignores a second tap for 600 ms (a double tap created two teams in testing). Analyzer runs with strict-inference / strict-raw-types (an untyped list made an extension call fail at runtime). |
 | 2026-10-09 | Matches: E23 « Match en cours » and E26 « Détail » are one screen adapting to the status. Default playing time at the end of the match: starter = match duration, sub = 0, sent off = red-card minute, injured starter = injury minute; exact minutes can be typed by tapping the value. |

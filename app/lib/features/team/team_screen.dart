@@ -62,6 +62,8 @@ class _TeamScreenState extends ConsumerState<TeamScreen> {
               'edit' => context.go('/team/edit'),
               'switch' => _switchTeam(context),
               'injuries' => context.go('/team/injuries'),
+              'tests' => context.go('/team/tests'),
+              'import' => context.go('/team/import'),
               _ => context.go('/team/new'),
             },
             itemBuilder: (_) => const [
@@ -69,6 +71,8 @@ class _TeamScreenState extends ConsumerState<TeamScreen> {
               PopupMenuItem(value: 'switch', child: Text('Changer d\'équipe')),
               PopupMenuItem(value: 'new', child: Text('Créer une autre équipe')),
               PopupMenuItem(value: 'injuries', child: Text('Infirmerie')),
+              PopupMenuItem(value: 'tests', child: Text('Tests physiques')),
+              PopupMenuItem(value: 'import', child: Text('Importer un fichier Excel')),
             ],
           ),
         ],
@@ -145,7 +149,7 @@ class _PlayerTile extends ConsumerWidget {
     return ListTile(
       leading: PhotoAvatar(path: p.photoPath, initials: p.initials),
       title: Text('${p.shirtNumber != null ? '${p.shirtNumber}  ' : ''}${p.fullName}'),
-      subtitle: Text(positions[p.position]!),
+      subtitle: Text(p.positionLabel),
       onTap: () => context.go('/team/players/${p.id}'),
       trailing: Row(mainAxisSize: MainAxisSize.min, children: [
         if (injured) const InjuredBadge(),

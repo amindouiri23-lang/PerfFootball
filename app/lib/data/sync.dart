@@ -35,6 +35,10 @@ const _tables = [
   _SyncTable('match_players', booleans: {'present'}),
   _SyncTable('match_events'),
   _SyncTable('injuries'), // après sessions et matches, qu'elle référence
+  _SyncTable('test_types'), // les tests communs (team_id null) ne sont jamais modifiés localement
+  _SyncTable('test_results'),
+  _SyncTable('player_profiles'),
+  _SyncTable('player_medical'), // vide pour qui n'est pas propriétaire de l'équipe (RLS)
 ];
 
 /// Synchronisation hors ligne d'abord (docs/01 §6) :

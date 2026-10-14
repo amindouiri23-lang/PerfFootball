@@ -129,7 +129,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
         controlAffinity: ListTileControlAffinity.leading,
         title: Text('${p.shirtNumber ?? ''}  ${p.fullName}', style: c.present ? null : TextStyle(color: muted)),
         subtitle: c.present ? null : Text(absenceReasons[c.reason] ?? 'Absent'),
-        secondary: injured ? const InjuredBadge() : Text(positionShort[p.position]!),
+        secondary: injured ? const InjuredBadge() : Text(p.positionCode),
       ),
       if (!c.present) _reasons(p, c),
     ]);

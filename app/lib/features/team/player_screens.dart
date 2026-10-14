@@ -14,6 +14,8 @@ import '../matches/match_repository.dart';
 import '../matches/matches_list_screen.dart' show ScoreChip;
 import '../sessions/session_repository.dart';
 import '../sessions/wellness_screens.dart' show wellnessTotal;
+import '../tests/test_screens.dart' show PlayerTestsTab;
+import 'player_files.dart';
 import 'player_history.dart';
 import 'team_screen.dart';
 
@@ -42,7 +44,8 @@ class PlayerScreen extends ConsumerWidget {
         final stats = PlayerStats(sessions, matches, events, id);
         final openInjury = injuries.where((i) => i.returnDate == null).firstOrNull;
         final details = [
-          positions[p.position],
+          p.positionLabel,
+          if (p.secondaryPosition != null) 'aussi ${detailedPositions[p.secondaryPosition]!.toLowerCase()}',
           if (p.age != null) '${p.age} ans',
           if (p.dominantFoot != null) 'Pied ${feet[p.dominantFoot]!.toLowerCase()}',
           if (p.heightCm != null) '${p.heightCm} cm',
@@ -56,7 +59,7 @@ class PlayerScreen extends ConsumerWidget {
             );
 
         return DefaultTabController(
-          length: 4,
+          length: 7,
           child: Scaffold(
             appBar: AppBar(title: const Text('Fiche joueur'), actions: [
               IconButton(
@@ -128,11 +131,14 @@ class PlayerScreen extends ConsumerWidget {
                   ),
                 ),
                 const SliverToBoxAdapter(
-                  child: TabBar(tabs: [
+                  child: TabBar(isScrollable: true, tabAlignment: TabAlignment.start, tabs: [
                     Tab(text: 'Séances'),
                     Tab(text: 'Matchs'),
                     Tab(text: 'Blessures'),
                     Tab(text: 'Bien-être'),
+                    Tab(text: 'Tests'),
+                    Tab(text: 'Dossier'),
+                    Tab(text: 'Médical'),
                   ]),
                 ),
               ],
@@ -191,6 +197,9 @@ class PlayerScreen extends ConsumerWidget {
                       trailing: Text('${wellnessTotal(w.entry)}/25', style: theme.textTheme.titleMedium),
                     ),
                 ]),
+                PlayerTestsTab(player: p),
+                PlayerProfileTab(player: p),
+                PlayerMedicalTab(player: p),
               ]),
             ),
           ),
@@ -238,6 +247,8 @@ class _PlayerFormScreenState extends ConsumerState<PlayerFormScreen> {
   final _number = TextEditingController();
   final _height = TextEditingController();
   String? _position;
+  String? _detailed;
+  String? _secondary;
   String? _foot;
   DateTime? _birth;
   bool _dirty = false;
@@ -254,6 +265,8 @@ class _PlayerFormScreenState extends ConsumerState<PlayerFormScreen> {
     _number.text = p.shirtNumber?.toString() ?? '';
     _height.text = p.heightCm?.toString() ?? '';
     _position = p.position;
+    _detailed = p.detailedPosition;
+    _secondary = p.secondaryPosition;
     _foot = p.dominantFoot;
     _birth = p.birthDate == null ? null : DateTime.parse(p.birthDate!);
   }
@@ -267,6 +280,8 @@ class _PlayerFormScreenState extends ConsumerState<PlayerFormScreen> {
     _height.clear();
     setState(() {
       _position = null;
+      _detailed = null;
+      _secondary = null;
       _foot = null;
       _birth = null;
       _dirty = false;
@@ -302,6 +317,8 @@ class _PlayerFormScreenState extends ConsumerState<PlayerFormScreen> {
           birthDate: _birth == null ? null : DateFormat('yyyy-MM-dd').format(_birth!),
           dominantFoot: _foot,
           heightCm: int.tryParse(_height.text),
+          detailedPosition: _detailed,
+          secondaryPosition: _secondary,
         );
     if (!mounted) return;
     showMessage(context, '${_first.text.trim()} ${_last.text.trim()} enregistré');
@@ -463,6 +480,7 @@ class _PlayerFormScreenState extends ConsumerState<PlayerFormScreen> {
                           selected: _position == e.key,
                           onSelected: (_) => setState(() {
                             _position = e.key;
+                            if (positionGroup[_detailed] != e.key) _detailed = null;
                             _dirty = true;
                           }),
                         ),
@@ -473,6 +491,37 @@ class _PlayerFormScreenState extends ConsumerState<PlayerFormScreen> {
                 ],
               ),
             ),
+            if (_position != null) ...[
+              const SizedBox(height: 16),
+              Text('Poste précis', style: Theme.of(context).textTheme.labelLarge),
+              const SizedBox(height: 8),
+              Wrap(spacing: 8, runSpacing: 8, children: [
+                for (final e in detailedPositions.entries.where((e) => positionGroup[e.key] == _position))
+                  ChoiceChip(
+                    label: Text('${e.value} (${detailedPositionShort[e.key]})'),
+                    selected: _detailed == e.key,
+                    onSelected: (s) => setState(() {
+                      _detailed = s ? e.key : null;
+                      _dirty = true;
+                    }),
+                  ),
+              ]),
+            ],
+            const SizedBox(height: 16),
+            Text('Poste secondaire', style: Theme.of(context).textTheme.labelLarge),
+            const SizedBox(height: 8),
+            Wrap(spacing: 8, runSpacing: 8, children: [
+              for (final e in detailedPositionShort.entries)
+                ChoiceChip(
+                  label: Text(e.value),
+                  tooltip: detailedPositions[e.key],
+                  selected: _secondary == e.key,
+                  onSelected: (s) => setState(() {
+                    _secondary = s ? e.key : null;
+                    _dirty = true;
+                  }),
+                ),
+            ]),
             const SizedBox(height: 16),
             Text('Pied fort', style: Theme.of(context).textTheme.labelLarge),
             const SizedBox(height: 8),

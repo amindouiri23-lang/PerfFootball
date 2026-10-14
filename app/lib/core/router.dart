@@ -20,7 +20,10 @@ import '../features/sessions/session_form_screen.dart';
 import '../features/sessions/session_screen.dart';
 import '../features/sessions/sessions_list_screen.dart';
 import '../features/sessions/wellness_screens.dart';
+import '../features/import/import_screen.dart';
+import '../features/team/player_files.dart';
 import '../features/team/player_screens.dart';
+import '../features/tests/test_screens.dart';
 import '../features/team/team_form_screen.dart';
 import '../features/team/team_screen.dart';
 import 'widgets/app_shell.dart';
@@ -120,6 +123,12 @@ final routerProvider = Provider<GoRouter>((ref) {
                 GoRoute(path: 'new', builder: (_, _) => const TeamFormScreen()),
                 GoRoute(path: 'edit', builder: (_, _) => const TeamFormScreen(editActive: true)),
                 GoRoute(path: 'players/new', builder: (_, _) => const PlayerFormScreen()),
+                GoRoute(path: 'import', builder: (_, _) => const ImportScreen()),
+                GoRoute(
+                  path: 'tests',
+                  builder: (_, _) => const TestDaysScreen(),
+                  routes: [GoRoute(path: ':date', builder: (_, s) => TestDayScreen(date: s.pathParameters['date']!))],
+                ),
                 GoRoute(
                   path: 'injuries',
                   builder: (_, _) => const InjuriesScreen(),
@@ -130,6 +139,8 @@ final routerProvider = Provider<GoRouter>((ref) {
                   builder: (_, s) => PlayerScreen(id: s.pathParameters['id']!),
                   routes: [
                     GoRoute(path: 'edit', builder: (_, s) => PlayerFormScreen(id: s.pathParameters['id'])),
+                    GoRoute(path: 'profile', builder: (_, s) => PlayerProfileFormScreen(playerId: s.pathParameters['id']!)),
+                    GoRoute(path: 'medical', builder: (_, s) => PlayerMedicalFormScreen(playerId: s.pathParameters['id']!)),
                   ],
                 ),
               ],

@@ -108,7 +108,7 @@ class _MatchTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return ListTile(
       title: Text('${m.dayLabel} · ${m.time}'),
-      subtitle: Text('${m.opponent} · ${homeAwayLabels[m.homeAway]} · ${competitions[m.competition]}'),
+      subtitle: Text('${m.opponent} · ${homeAwayLabels[m.homeAway]} · ${m.competitionLabel}'),
       onTap: () => context.go('/matches/${m.id}'),
       trailing: Row(mainAxisSize: MainAxisSize.min, children: [
         if (m.result != null) ScoreChip(m) else StatusChip(m.status, labels: matchStatuses),

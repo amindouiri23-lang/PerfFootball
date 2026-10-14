@@ -55,10 +55,14 @@ questionnaire de bien-être. Ces données alimentent ensuite des **tableaux de b
 | F9 | Infirmerie : blessures en cours, retour de blessure |
 | F10 | Synchronisation et paramètres |
 | F11 | Administration des comptes : créer, réinitialiser le mot de passe, désactiver (administrateurs) |
+| F12 | *(v2)* Tests physiques et mesures corporelles : journées de tests, essais, meilleur résultat, classement, évolution par joueur |
+| F13 | *(v2)* Dossier du joueur : renseignements administratifs et familiaux ; dossier médical avec consentement, réservé au responsable de l'équipe |
+| F14 | *(v2)* Import des fichiers Excel du club : suivi d'entraînement, temps de jeu, tests, fiches de renseignements |
+| F15 | *(v2)* Charge prévue (RPE prévu), postes précis, phase et journée de championnat, motifs d'absence *Repos* et *Autre équipe* |
 
 ### 2.2 Hors v1 (évolutions prévues)
 
-1. Tests physiques (CMJ, sprints, VMA, Yo-Yo…) et mesures corporelles (poids, masse grasse).
+1. ~~Tests physiques (CMJ, sprints, VMA, Yo-Yo…) et mesures corporelles (poids, masse grasse).~~ Livré en v2 (F12).
 2. Import des données GPS (Catapult, STATSports…).
 3. Remplacements en tant qu'événements de match (calcul automatique du temps de jeu).
 4. Graphiques dans l'application (charge hebdomadaire, évolution du bien-être).
@@ -92,7 +96,10 @@ Application (barre de navigation)
  │    └── Détail d'un match (E26)
  ├── Équipe (E07)
  │    ├── Fiche joueur (E08) → Modifier le joueur (E09)
- │    └── Ajouter un joueur (E09) · Modifier l'équipe (E06)
+ │    │        Fiche joueur → Dossier (E35 → E36) · Médical (E37 → E38) · Tests
+ │    ├── Ajouter un joueur (E09) · Modifier l'équipe (E06)
+ │    ├── Tests physiques (E32) → Journée de tests (E33) · Nouveau test (E34)
+ │    └── Importer un fichier Excel (E39)
  └── Profil (E04)
       ├── Changer le mot de passe (E05)
       ├── Synchronisation et paramètres (E28)
@@ -433,6 +440,8 @@ votre premier joueur. »
 | Nom | Texte | Oui | |
 | Numéro de maillot | Nombre | Non | 1 à 99 ; avertissement si déjà pris dans l'équipe |
 | Poste | Puces : Gardien · Défenseur · Milieu · Attaquant | Oui | |
+| Poste précis | Puces du poste choisi : Défenseur central (DC) · Arrière droit (DD) · Arrière gauche (DG) · Milieu défensif (MD) · central (MC) · offensif (MO) · Ailier droit (AD) · gauche (AG) · Avant-centre (AC) | Non | Abréviations des feuilles du club ; effacé si le poste change de groupe |
+| Poste secondaire | Puces GB · DC · DD · DG · MD · MC · MO · AD · AG · AC | Non | Ex. « DG/DC » d'une feuille de charge |
 | Date de naissance | Sélecteur de date | Non | Âge affiché à côté |
 | Pied fort | Puces : Droit · Gauche · Les deux | Non | |
 | Taille (cm) | Nombre | Non | 140 à 220 |
@@ -529,6 +538,7 @@ confirmé) → **Terminée** (clôture validée). Elle reste modifiable à tous 
 | Heure de début | Sélecteur d'heure | Oui | Quart d'heure suivant par défaut |
 | Type de séance | Puces : Technique · Tactique · Physique · Mixte · Récupération · Musculation · Autre | Oui | |
 | Durée prévue | Compteur +/− 5 min | Oui | 90 min par défaut, de 10 à 240 |
+| RPE prévu | Puces 1 à 10 | Non | Affiche la **charge prévue** = durée × RPE (UA) ; sur E14/E19, comparée à la charge réalisée moyenne des présents |
 | Objectif | Texte court | Non | Ex. « Travail de pressing haut » |
 | Démarrer l'appel | Bouton principal | — | Enregistre et ouvre E13 |
 | Enregistrer pour plus tard | Bouton secondaire | — | Enregistre la séance à l'état *Planifiée* |
@@ -560,7 +570,8 @@ avertissement « Une séance existe déjà le 7 octobre à 10:00. Continuer ? »
 - **Liste de tous les joueurs de l'effectif, tous cochés par défaut** : case à cocher, photo, numéro,
   nom, poste ; pastille *Blessé* si une blessure est en cours.
 - Quand on **décoche** un joueur, une rangée de puces apparaît pour le **motif d'absence**
-  (facultatif) : Blessé · Malade · Sélection · Personnel · Autre.
+  (facultatif) : Blessé · Malade · Sélection · Personnel · Repos · Autre équipe · Autre.
+  *Repos* : repos prescrit ; *Autre équipe* : le joueur s'entraîne avec une autre équipe du club (ex. les seniors).
 - Bouton **Tout cocher / Tout décocher**.
 - Bouton principal **Confirmer les présents (22)**.
 
@@ -800,6 +811,7 @@ Un match suit les mêmes états qu'une séance : **Planifié** → **En cours** 
 | Adversaire | Texte avec suggestions | Oui | Suggère les adversaires déjà saisis |
 | Lieu | Puces : Domicile · Extérieur · Neutre | Oui | |
 | Compétition | Puces : Championnat · Coupe · Amical · Tournoi | Oui | |
+| Phase et journée | Puces Aller · Retour, liste J1 à J40 | Non | Championnat uniquement ; affichées « Championnat · J5 aller » |
 | Durée du match | Compteur | Oui | 90 min par défaut |
 | Choisir les joueurs présents | Bouton principal | — | Enregistre et ouvre E22 |
 | Enregistrer pour plus tard | Bouton secondaire | — | État *Planifié* |
@@ -1092,6 +1104,112 @@ création d'un compte (E30).
 2. L'administrateur ouvre E29, menu ⋮ de Walid → **Réinitialiser le mot de passe** → confirme.
 3. Le mot de passe temporaire s'affiche ; il appuie sur **Partager** et l'envoie par WhatsApp.
 4. Walid se connecte avec ce mot de passe et en choisit un nouveau (E03).
+
+### 5.10 Tests, dossier du joueur et import (v2)
+
+### E32 — Tests physiques
+
+**Objectif** : retrouver les journées de tests de l'équipe.
+
+**Accès** : menu ⋮ de E07 → *Tests physiques*.
+
+**Contenu** : les journées de tests, de la plus récente à la plus ancienne, avec le nombre de joueurs
+et les tests passés ; bouton flottant **+ Nouvelle journée de tests** (choix de la date → E33).
+
+### E33 — Journée de tests
+
+**Objectif** : saisir les résultats d'un test, joueur par joueur, au bord du terrain.
+
+**Contenu**
+
+- En haut, les tests du catalogue en puces défilantes (✓ = déjà saisi ce jour-là).
+- Pour le test choisi : unité, famille, nombre d'essais, sens du classement, « 12/24 joueurs ».
+- Une ligne par joueur : un champ par essai (E1, E2…), puis le **meilleur essai** calculé.
+- Puce **Classement** : trie les joueurs du meilleur au moins bon.
+
+**Règles de gestion**
+
+- Le meilleur essai est le plus bas pour un chrono (*plus bas = mieux*), le plus haut sinon ; les
+  mesures (taille, poids) n'ont pas de classement.
+- Chaque champ est enregistré dès qu'il est valide (virgule ou point acceptés) ; vider un champ
+  efface l'essai.
+- Un résultat par joueur, test, jour et essai : deux appareils qui saisissent le même essai ne
+  créent pas de doublon.
+
+**Catalogue commun** (fichier de tests du club) : taille, poids, masse maigre, masse grasse ; Yo-Yo
+(distance), VMA ; sprints 5, 20 et 30 m ; Mujika sans ballon, avec ballon, et but marqué (0/1) ;
+CMJ ; 5 bonds (5JT) ; force lombaire (unité à confirmer avec le club).
+
+**Scénario**
+
+1. Le préparateur ouvre *Tests physiques*, appuie sur **+ Nouvelle journée de tests**, garde la date du jour.
+2. Il choisit *Sprint 5 m* et saisit les deux essais de chaque joueur ; le meilleur s'affiche.
+3. Il active **Classement** pour voir les plus rapides en tête.
+
+### E34 — Nouveau test
+
+Fenêtre depuis E33 : nom, unité, famille, sens du classement, nombre d'essais (1 à 3). Le test est
+propre à l'équipe ; le catalogue commun ne se modifie pas dans l'application.
+
+### E35 / E36 — Dossier du joueur (onglet « Dossier » de E08)
+
+Renseignements du formulaire du club : nationalité, lieu de naissance, téléphone, e-mail, adresse,
+établissement et année scolaires, père et mère (nom, nationalité, profession du père, situation
+familiale), club précédent et sa ville, années de formation, rôle préféré, remarques. Tous les champs
+sont facultatifs ; E36 est le formulaire de saisie.
+
+L'onglet **Tests** de E08 montre, par test, le dernier meilleur résultat, une flèche d'évolution par
+rapport à la journée précédente, et l'historique au toucher.
+
+### E37 / E38 — Dossier médical (onglet « Médical » de E08)
+
+**Règles de gestion**
+
+- Visible et modifiable **par le seul responsable (propriétaire) de l'équipe** ; les autres membres
+  du staff voient « Le dossier médical n'est visible que du responsable de l'équipe. » La base
+  applique la même règle.
+- **Consentement obligatoire** avant toute saisie : donné par le joueur ou par un parent ou tuteur
+  (joueur mineur), date, et case « J'atteste avoir recueilli ce consentement ».
+- Contenu : allergies ; maladie ou condition connue ; tension basse, malaises, anxiété ; interventions
+  chirurgicales ; blessures des 12 derniers mois ; remarques.
+- Jamais exporté vers les rapports.
+
+### E39 — Importer un fichier Excel
+
+**Objectif** : reprendre les fichiers déjà tenus par le club, sans ressaisie.
+
+**Accès** : menu ⋮ de E07 → *Importer un fichier Excel*. Les données vont dans l'**équipe active**.
+
+**Formats reconnus** (à leurs en-têtes)
+
+| Fichier | Ce qui est créé |
+|---|---|
+| Suivi d'entraînement de la semaine | Une séance par jour prévu (durée et RPE prévus), la présence et la charge de chaque joueur. Les statuts codés en couleur (légende du bas : blessé, absent, stage avec l'équipe nationale, séance avec les seniors) deviennent des motifs d'absence ; « Repos » aussi. |
+| Temps de jeu | Un match par colonne datée : adversaire, amical ou championnat (phase et journée), score et domicile/extérieur déduits du résultat « V 3/0 ». 0 minute = non retenu. Les matchs sans date sont signalés et ignorés. |
+| Tests physiques | Les résultats de chaque essai ; la date des tests est demandée (absente du fichier). |
+| Fiches de renseignements (export du formulaire) | Les dossiers des joueurs ; les réponses médicales seulement si l'option est activée **et** le consentement attesté. La date de naissance complète la fiche si elle est vide. |
+
+**Rapprochement des noms** : chaque nom du fichier est comparé à l'effectif — même nom (ordre des
+mots, accents et « Med » = « Mohamed » sans importance), nom proche à vérifier (ex. « Durand » /
+« Duran »), ou nouveau joueur (nom, prénom et poste proposés, modifiables). Filtres *À vérifier* ·
+*Nouveaux* · *Tous* ; pour chaque nom : choisir un joueur, créer, ou ignorer.
+
+**Règles de gestion**
+
+- Rien n'est écrit avant **Importer**. Réimporter le même fichier met à jour, sans doublon.
+- Un champ vide dans le fichier n'efface pas une valeur déjà saisie dans un dossier.
+- Les heures (séances 18:00, matchs 15:00) et le type de séance (*Mixte*) sont des valeurs par défaut,
+  signalées dans la remarque de la séance ou du match.
+- Les remarques sur le fichier (valeurs illisibles comme « 3,,28 », cases sans donnée) sont listées
+  avant l'import.
+
+**Scénario**
+
+1. Le préparateur passe sur l'équipe *Seniors B*, ouvre *Importer un fichier Excel* et choisit le
+   suivi de la semaine 12.
+2. L'écran annonce « 5 séances du 28 sept. au 2 oct. » et 2 noms proches à vérifier.
+3. Il confirme « Duran Kevin → Durand Kevin », crée les deux nouveaux joueurs, puis appuie sur
+   **Importer** : les séances apparaissent, terminées, avec RPE et présences.
 
 ---
 

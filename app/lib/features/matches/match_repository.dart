@@ -16,8 +16,9 @@ const homeAwayLabels = {'H': 'Domicile', 'A': 'Extérieur', 'N': 'Neutre'};
 const matchStatuses = {'planned': 'Planifié', 'in_progress': 'En cours', 'completed': 'Terminé'};
 const matchAbsenceReasons = {
   'not_selected': 'Non retenu', 'injured': 'Blessé', 'sick': 'Malade', 'suspended': 'Suspendu',
-  'national_team': 'Sélection', 'other': 'Autre',
+  'national_team': 'Sélection', 'rest': 'Repos', 'other_team': 'Autre équipe', 'other': 'Autre',
 };
+const phases = {'first_leg': 'Aller', 'second_leg': 'Retour'};
 const matchRoles = {'starter': 'Titulaire', 'sub': 'Remplaçant'};
 const eventTypes = {'goal': 'But', 'yellow_card': 'Carton jaune', 'red_card': 'Carton rouge'};
 const eventIcons = {'goal': Icons.sports_soccer, 'yellow_card': Icons.style, 'red_card': Icons.style};
@@ -30,6 +31,12 @@ extension FootballMatchLabels on FootballMatch {
     final s = DateFormat('EEE d MMM', 'fr_FR').format(day);
     return s[0].toUpperCase() + s.substring(1);
   }
+
+  /// « Championnat · J5 aller » : compétition, journée et phase.
+  String get competitionLabel => [
+        competitions[competition]!,
+        [if (matchday != null) 'J$matchday', if (phase != null) phases[phase]!.toLowerCase()].join(' '),
+      ].where((s) => s.isNotEmpty).join(' · ');
 
   /// 'W', 'D', 'L' ou null si le score n'est pas saisi.
   String? get result => goalsFor == null || goalsAgainst == null
@@ -100,11 +107,14 @@ class MatchRepository {
     required String homeAway,
     required String competition,
     required int durationMin,
+    String? phase,
+    int? matchday,
   }) async {
     final now = nowIso();
     final fields = MatchesCompanion(
       teamId: Value(teamId), date: Value(date), kickOffTime: Value(kickOffTime), opponent: Value(opponent),
       homeAway: Value(homeAway), competition: Value(competition), durationMin: Value(durationMin),
+      phase: Value(phase), matchday: Value(matchday),
       updatedAt: Value(now), isDirty: const Value(true),
     );
     if (id == null) {

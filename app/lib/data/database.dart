@@ -47,6 +47,8 @@ class Players extends Table with SyncColumns {
   TextColumn get dominantFoot => text().nullable()();
   IntColumn get heightCm => integer().nullable()();
   TextColumn get photoPath => text().nullable()();
+  TextColumn get detailedPosition => text().nullable()();
+  TextColumn get secondaryPosition => text().nullable()();
 }
 
 /// Séance d'entraînement. Nom de classe distinct de `Session` (Supabase Auth).
@@ -60,6 +62,8 @@ class Sessions extends Table with SyncColumns {
   TextColumn get objective => text().nullable()();
   TextColumn get remarks => text().nullable()();
   TextColumn get status => text().withDefault(const Constant('planned'))();
+  /// RPE visé : charge prévue = durée prévue × RPE prévu.
+  IntColumn get plannedRpe => integer().nullable()();
 }
 
 /// Présence et charge d'un joueur pour une séance (id déterministe : séance + joueur).
@@ -102,6 +106,9 @@ class Matches extends Table with SyncColumns {
   IntColumn get goalsAgainst => integer().nullable()();
   TextColumn get remarks => text().nullable()();
   TextColumn get status => text().withDefault(const Constant('planned'))();
+  /// Phase de championnat (first_leg / second_leg) et numéro de journée.
+  TextColumn get phase => text().nullable()();
+  IntColumn get matchday => integer().nullable()();
 }
 
 /// Feuille de match d'un joueur (id déterministe : match + joueur).
@@ -145,6 +152,71 @@ class Injuries extends Table with SyncColumns {
   TextColumn get returnDate => text().nullable()();
 }
 
+/// Catalogue des tests : team_id null = test commun (lecture seule), sinon test ajouté par l'équipe.
+class TestTypes extends Table with SyncColumns {
+  TextColumn get teamId => text().nullable()();
+  TextColumn get code => text().nullable()();
+  TextColumn get name => text()();
+  TextColumn get unit => text().nullable()();
+  TextColumn get category => text()();
+  /// higher / lower / none : sens du meilleur résultat.
+  TextColumn get better => text()();
+  IntColumn get attempts => integer().withDefault(const Constant(1))();
+  IntColumn get sortOrder => integer().withDefault(const Constant(100))();
+}
+
+/// Un résultat par joueur, test, jour et essai (id déterministe).
+class TestResults extends Table with SyncColumns {
+  TextColumn get teamId => text()();
+  TextColumn get playerId => text()();
+  TextColumn get testTypeId => text()();
+  TextColumn get date => text()();
+  IntColumn get attempt => integer().withDefault(const Constant(1))();
+  RealColumn get value => real()();
+  TextColumn get remark => text().nullable()();
+}
+
+/// Dossier administratif du joueur (id = player_id).
+class PlayerProfiles extends Table with SyncColumns {
+  TextColumn get teamId => text()();
+  TextColumn get playerId => text()();
+  TextColumn get nationality => text().nullable()();
+  TextColumn get birthPlace => text().nullable()();
+  TextColumn get phone => text().nullable()();
+  TextColumn get email => text().nullable()();
+  TextColumn get address => text().nullable()();
+  TextColumn get school => text().nullable()();
+  TextColumn get schoolYear => text().nullable()();
+  TextColumn get fatherName => text().nullable()();
+  TextColumn get fatherNationality => text().nullable()();
+  TextColumn get fatherOccupation => text().nullable()();
+  TextColumn get fatherMaritalStatus => text().nullable()();
+  TextColumn get motherName => text().nullable()();
+  TextColumn get motherNationality => text().nullable()();
+  TextColumn get motherMaritalStatus => text().nullable()();
+  TextColumn get previousClub => text().nullable()();
+  TextColumn get previousClubCity => text().nullable()();
+  IntColumn get yearsTraining => integer().nullable()();
+  TextColumn get preferredRole => text().nullable()();
+  TextColumn get remarks => text().nullable()();
+}
+
+/// Dossier médical (id = player_id) : données de santé, visibles du seul propriétaire de l'équipe.
+@DataClassName('MedicalRecord')
+class PlayerMedical extends Table with SyncColumns {
+  TextColumn get teamId => text()();
+  TextColumn get playerId => text()();
+  TextColumn get consentDate => text()();
+  /// player / guardian
+  TextColumn get consentBy => text()();
+  TextColumn get allergies => text().nullable()();
+  TextColumn get conditions => text().nullable()();
+  TextColumn get lowBpAnxiety => text().nullable()();
+  TextColumn get surgeries => text().nullable()();
+  TextColumn get recentInjuries => text().nullable()();
+  TextColumn get remarks => text().nullable()();
+}
+
 /// Curseur de synchronisation par table : plus grand server_updated_at reçu.
 class SyncState extends Table {
   TextColumn get tableName_ => text().named('table_name')();
@@ -165,13 +237,14 @@ class LocalSettings extends Table {
 
 @DriftDatabase(tables: [
   Teams, TeamMembers, Players, Sessions, SessionPlayers, Wellness, Matches, MatchPlayers, MatchEvents, Injuries,
+  TestTypes, TestResults, PlayerProfiles, PlayerMedical,
   SyncState, LocalSettings,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? openConnection());
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -186,6 +259,21 @@ class AppDatabase extends _$AppDatabase {
             // v3 : matchs, feuilles de match, événements.
             for (final TableInfo<Table, dynamic> t in [matches, matchPlayers, matchEvents]) {
               await m.createTable(t);
+            }
+          }
+          if (from < 4) {
+            // v4 : charge prévue, postes détaillés, phase et journée, tests, dossiers du joueur.
+            await m.addColumn(players, players.detailedPosition);
+            await m.addColumn(players, players.secondaryPosition);
+            await m.addColumn(sessions, sessions.plannedRpe);
+            await m.addColumn(matches, matches.phase);
+            await m.addColumn(matches, matches.matchday);
+            for (final TableInfo<Table, dynamic> t in [testTypes, testResults, playerProfiles, playerMedical]) {
+              await m.createTable(t);
+            }
+            // Les lignes existantes doivent être relues pour recevoir les nouvelles colonnes.
+            for (final name in ['players', 'sessions', 'matches']) {
+              await (delete(syncState)..where((s) => s.tableName_.equals(name))).go();
             }
           }
         },

@@ -127,7 +127,7 @@ class MatchScreen extends ConsumerWidget {
                   ),
                 ]),
               const SizedBox(height: 4),
-              Text('${m.dayLabel} · ${m.time} · ${homeAwayLabels[m.homeAway]} · ${competitions[m.competition]}',
+              Text('${m.dayLabel} · ${m.time} · ${homeAwayLabels[m.homeAway]} · ${m.competitionLabel}',
                   style: TextStyle(color: theme.colorScheme.onPrimary)),
               const SizedBox(height: 8),
               StatusChip(m.status, labels: matchStatuses),

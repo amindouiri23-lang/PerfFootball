@@ -31,6 +31,8 @@ class _MatchFormScreenState extends ConsumerState<MatchFormScreen> {
   String? _homeAway;
   String? _competition;
   int _duration = 90;
+  String? _phase;
+  int? _matchday;
   bool _loaded = false;
   bool _submitted = false;
 
@@ -43,6 +45,8 @@ class _MatchFormScreenState extends ConsumerState<MatchFormScreen> {
     _homeAway = m.homeAway;
     _competition = m.competition;
     _duration = m.durationMin;
+    _phase = m.phase;
+    _matchday = m.matchday;
   }
 
   Future<void> _save({required bool squad}) async {
@@ -65,6 +69,9 @@ class _MatchFormScreenState extends ConsumerState<MatchFormScreen> {
     final id = await ref.read(matchRepositoryProvider).saveMatch(
           id: widget.id, teamId: team.id, date: isoDate(_date), kickOffTime: time, opponent: _opponent.text.trim(),
           homeAway: _homeAway!, competition: _competition!, durationMin: _duration,
+          // Phase et journée n'ont de sens qu'en championnat.
+          phase: _competition == 'league' ? _phase : null,
+          matchday: _competition == 'league' ? _matchday : null,
         );
     if (!mounted) return;
     if (widget.id != null) {
@@ -173,6 +180,33 @@ class _MatchFormScreenState extends ConsumerState<MatchFormScreen> {
       const SizedBox(height: 16),
       _chips('Lieu', homeAwayLabels, _homeAway, (v) => _homeAway = v),
       _chips('Compétition', competitions, _competition, (v) => _competition = v),
+      if (_competition == 'league') ...[
+        Row(children: [
+          Expanded(
+            child: Wrap(spacing: 8, children: [
+              for (final e in phases.entries)
+                ChoiceChip(
+                  label: Text(e.value),
+                  selected: _phase == e.key,
+                  onSelected: (s) => setState(() => _phase = s ? e.key : null),
+                ),
+            ]),
+          ),
+          SizedBox(
+            width: 130,
+            child: DropdownButtonFormField<int?>(
+              initialValue: _matchday,
+              decoration: const InputDecoration(labelText: 'Journée'),
+              items: [
+                const DropdownMenuItem(value: null, child: Text('—')),
+                for (var d = 1; d <= 40; d++) DropdownMenuItem(value: d, child: Text('J$d')),
+              ],
+              onChanged: (v) => setState(() => _matchday = v),
+            ),
+          ),
+        ]),
+        const SizedBox(height: 16),
+      ],
       Text('Durée du match *', style: Theme.of(context).textTheme.labelLarge),
       const SizedBox(height: 8),
       Align(

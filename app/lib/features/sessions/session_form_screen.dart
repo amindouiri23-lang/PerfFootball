@@ -29,6 +29,7 @@ class _SessionFormScreenState extends ConsumerState<SessionFormScreen> {
   late TimeOfDay _time = _nextQuarter();
   String? _type;
   int _duration = 90;
+  int? _plannedRpe;
   bool _loaded = false;
   bool _typeMissing = false;
 
@@ -44,6 +45,7 @@ class _SessionFormScreenState extends ConsumerState<SessionFormScreen> {
     _time = TimeOfDay(hour: int.parse(s.startTime.substring(0, 2)), minute: int.parse(s.startTime.substring(3, 5)));
     _type = s.type;
     _duration = s.plannedDurationMin;
+    _plannedRpe = s.plannedRpe;
     _objective.text = s.objective ?? '';
   }
 
@@ -87,7 +89,7 @@ class _SessionFormScreenState extends ConsumerState<SessionFormScreen> {
     final objective = _objective.text.trim();
     final id = await ref.read(sessionRepositoryProvider).saveSession(
           id: widget.id, teamId: team.id, date: date, startTime: _timeValue, type: _type!,
-          plannedDurationMin: _duration, objective: objective.isEmpty ? null : objective,
+          plannedDurationMin: _duration, plannedRpe: _plannedRpe, objective: objective.isEmpty ? null : objective,
         );
     if (!mounted) return;
     if (widget.id != null) {
@@ -178,6 +180,21 @@ class _SessionFormScreenState extends ConsumerState<SessionFormScreen> {
         alignment: Alignment.centerLeft,
         child: MinutesStepper(value: _duration, min: 10, max: 240, onChanged: (v) => setState(() => _duration = v)),
       ),
+      const SizedBox(height: 16),
+      Text(
+        _plannedRpe == null ? 'RPE prévu' : 'RPE prévu · charge prévue ${_duration * _plannedRpe!} UA',
+        style: theme.textTheme.labelLarge,
+      ),
+      const SizedBox(height: 8),
+      Wrap(spacing: 6, runSpacing: 6, children: [
+        for (var r = 1; r <= 10; r++)
+          ChoiceChip(
+            label: Text('$r'),
+            tooltip: rpeLabels[r],
+            selected: _plannedRpe == r,
+            onSelected: (s) => setState(() => _plannedRpe = s ? r : null),
+          ),
+      ]),
       const SizedBox(height: 16),
       TextField(
         controller: _objective,

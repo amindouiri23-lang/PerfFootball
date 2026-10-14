@@ -15,6 +15,9 @@ const _idNamespace = '71d5779a-5c07-404c-8757-26e95c0f8b4a';
 /// Même id sur tous les appareils pour un même couple : la seconde saisie met à jour la première.
 String pairId(String a, String b) => _uuid.v5(_idNamespace, '$a:$b');
 
+/// Id déterministe pour une clé naturelle de plus de deux parties (ex. joueur:test:date:essai).
+String naturalId(List<String> parts) => _uuid.v5(_idNamespace, parts.join(':'));
+
 // Valeurs en base → libellés affichés (specs E12, E13, E15).
 const sessionTypes = {
   'technical': 'Technique', 'tactical': 'Tactique', 'physical': 'Physique', 'mixed': 'Mixte',
@@ -26,7 +29,8 @@ const sessionTypeColors = {
 };
 const sessionStatuses = {'planned': 'Planifiée', 'in_progress': 'En cours', 'completed': 'Terminée'};
 const absenceReasons = {
-  'injured': 'Blessé', 'sick': 'Malade', 'national_team': 'Sélection', 'personal': 'Personnel', 'other': 'Autre',
+  'injured': 'Blessé', 'sick': 'Malade', 'national_team': 'Sélection', 'personal': 'Personnel', 'rest': 'Repos',
+  'other_team': 'Autre équipe', 'other': 'Autre',
 };
 const bodyAreas = {
   'head': 'Tête', 'neck': 'Cou', 'shoulder': 'Épaule', 'arm': 'Bras', 'back': 'Dos', 'hip_groin': 'Hanche/aine',
@@ -60,6 +64,12 @@ const rpeLabels = {
 
 String isoDate(DateTime d) => DateFormat('yyyy-MM-dd').format(d);
 
+/// Charge réalisée moyenne des présents notés (RPE × minutes), en UA ; null si aucun RPE.
+int? meanObservedLoad(Iterable<SessionPlayer> rows) {
+  final loads = [for (final r in rows) if (r.present && r.rpe != null && r.durationMin != null) r.rpe! * r.durationMin!];
+  return loads.isEmpty ? null : (loads.reduce((a, b) => a + b) / loads.length).round();
+}
+
 extension TrainingSessionLabels on TrainingSession {
   DateTime get day => DateTime.parse(date);
   String get time => startTime.substring(0, 5);
@@ -67,6 +77,9 @@ extension TrainingSessionLabels on TrainingSession {
     final s = DateFormat('EEE d MMM', 'fr_FR').format(day);
     return s[0].toUpperCase() + s.substring(1);
   }
+
+  /// Charge prévue (durée prévue × RPE prévu), en UA ; null sans RPE prévu.
+  int? get plannedLoad => plannedRpe == null ? null : plannedDurationMin * plannedRpe!;
 }
 
 // ---------------------------------------------------------------------------
@@ -143,12 +156,13 @@ class SessionRepository {
     required String startTime,
     required String type,
     required int plannedDurationMin,
+    int? plannedRpe,
     String? objective,
   }) async {
     final now = nowIso();
     final fields = SessionsCompanion(
       teamId: Value(teamId), date: Value(date), startTime: Value(startTime), type: Value(type),
-      plannedDurationMin: Value(plannedDurationMin), objective: Value(objective),
+      plannedDurationMin: Value(plannedDurationMin), plannedRpe: Value(plannedRpe), objective: Value(objective),
       updatedAt: Value(now), isDirty: const Value(true),
     );
     if (id == null) {
