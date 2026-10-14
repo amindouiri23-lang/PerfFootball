@@ -1075,6 +1075,13 @@ passe lui-même.
 
 *Cas particulier* : e-mail déjà utilisé → « Un compte existe déjà avec cette adresse. »
 
+**Équipes d'un compte (v2)** : à la création (E30) et par l'action *Équipes* du menu ⋮ de E29,
+l'administrateur coche les équipes du compte, regroupées par club ; cocher un club coche toutes ses
+équipes actuelles. Le compte devient membre (*staff*) de ces équipes : il en voit et modifie toutes les
+données, sauf le dossier médical (réservé au propriétaire). Les équipes dont il est propriétaire restent
+cochées et ne peuvent pas être retirées. Un retrait prend effet à la synchronisation suivante : l'équipe
+disparaît de l'application du compte. La liste des comptes affiche le nombre d'équipes de chacun.
+
 ### E31 — Mot de passe temporaire
 
 <!-- maquette:E31 -->

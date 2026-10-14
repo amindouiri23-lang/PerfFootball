@@ -80,31 +80,49 @@ class SyncEngine {
     }
   }
 
+  /// Équipes dont l'utilisateur connecté est membre, d'après la base locale.
+  Future<Set<String>> _myTeams() async => {
+        for (final r in await _db.customSelect('SELECT team_id FROM team_members WHERE deleted = 0 AND user_id = ?',
+            variables: [Variable(_client.auth.currentUser?.id ?? '')]).get())
+          r.read<String>('team_id'),
+      };
+
   Future<void> _pull() async {
-    for (final t in _tables) {
-      final state = await (_db.select(_db.syncState)..where((s) => s.tableName_.equals(t.name))).getSingleOrNull();
-      final since = state == null
-          ? null
-          : DateTime.parse(state.cursor).subtract(_overlap).toUtc().toIso8601String();
-      var cursor = state?.cursor;
-      for (var offset = 0;; offset += _page) {
-        var query = _client.from(t.name).select();
-        if (since != null) query = query.gte('server_updated_at', since);
-        final rows = await query.order('server_updated_at').range(offset, offset + _page - 1);
-        if (rows.isNotEmpty) {
-          await _db.transaction(() async {
-            for (final row in rows) {
-              await _upsertLocal(t, row);
-            }
-          });
-          final last = rows.last['server_updated_at'] as String;
-          if (cursor == null || DateTime.parse(last).isAfter(DateTime.parse(cursor))) cursor = last;
-        }
-        if (rows.length < _page) break;
+    // Les appartenances d'abord : une équipe rejointe (affectée par l'administrateur) a des lignes plus
+    // anciennes que les curseurs ; on relit alors toutes les tables depuis le début.
+    final before = await _myTeams();
+    await _pullTable(_tables.firstWhere((t) => t.name == 'team_members'));
+    if ((await _myTeams()).difference(before).isNotEmpty) {
+      await (_db.delete(_db.syncState)..where((s) => s.tableName_.equals('team_members').not())).go();
+    }
+    for (final t in _tables.where((t) => t.name != 'team_members')) {
+      await _pullTable(t);
+    }
+  }
+
+  Future<void> _pullTable(_SyncTable t) async {
+    final state = await (_db.select(_db.syncState)..where((s) => s.tableName_.equals(t.name))).getSingleOrNull();
+    final since = state == null
+        ? null
+        : DateTime.parse(state.cursor).subtract(_overlap).toUtc().toIso8601String();
+    var cursor = state?.cursor;
+    for (var offset = 0;; offset += _page) {
+      var query = _client.from(t.name).select();
+      if (since != null) query = query.gte('server_updated_at', since);
+      final rows = await query.order('server_updated_at').range(offset, offset + _page - 1);
+      if (rows.isNotEmpty) {
+        await _db.transaction(() async {
+          for (final row in rows) {
+            await _upsertLocal(t, row);
+          }
+        });
+        final last = rows.last['server_updated_at'] as String;
+        if (cursor == null || DateTime.parse(last).isAfter(DateTime.parse(cursor))) cursor = last;
       }
-      if (cursor != null) {
-        await _db.into(_db.syncState).insertOnConflictUpdate(SyncStateCompanion.insert(tableName_: t.name, cursor: cursor));
-      }
+      if (rows.length < _page) break;
+    }
+    if (cursor != null) {
+      await _db.into(_db.syncState).insertOnConflictUpdate(SyncStateCompanion.insert(tableName_: t.name, cursor: cursor));
     }
   }
 

@@ -36,10 +36,16 @@ List<String> seasonChoices([DateTime? now]) {
 
 String currentSeason() => seasonChoices()[1];
 
+/// Équipes visibles : créées par l'utilisateur, ou dont il est membre (une équipe retirée par
+/// l'administrateur disparaît à la synchronisation suivante).
 final teamsProvider = StreamProvider<List<Team>>((ref) {
   final db = ref.watch(databaseProvider);
+  final me = ref.watch(supabaseProvider).auth.currentUser?.id ?? '';
+  final mine = db.selectOnly(db.teamMembers)
+    ..addColumns([db.teamMembers.teamId])
+    ..where(db.teamMembers.userId.equals(me) & db.teamMembers.deleted.equals(false));
   return (db.select(db.teams)
-        ..where((t) => t.deleted.equals(false))
+        ..where((t) => t.deleted.equals(false) & (t.createdBy.equals(me) | t.id.isInQuery(mine)))
         ..orderBy([(t) => OrderingTerm(expression: t.name)]))
       .watch();
 });

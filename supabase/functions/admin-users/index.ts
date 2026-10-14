@@ -1,7 +1,10 @@
 // Administration des comptes du staff, sans e-mail — docs/01-architecture-and-rules.md §7.1.
 //
-// POST { action: "list" }
-// POST { action: "create", email, first_name, last_name, job_title, is_admin? }  -> { id, temporary_password }
+// POST { action: "list" }                                                     -> comptes + team_ids
+// POST { action: "list_teams" }                                               -> toutes les équipes du projet
+// POST { action: "create", email, first_name, last_name, job_title, is_admin?, team_ids? }
+//                                                                             -> { id, temporary_password }
+// POST { action: "set_teams", user_id, team_ids }                             -> équipes où il est « staff »
 // POST { action: "reset_password", user_id }                                  -> { temporary_password }
 // POST { action: "disable" | "enable", user_id }
 //
@@ -73,7 +76,10 @@ async function list() {
   const { data: profiles, error: pErr } = await admin.from("staff_profiles").select("id, first_name, last_name, job_title");
   if (pErr) throw pErr;
   const byId = new Map(profiles.map((p) => [p.id, p]));
+  const { data: members, error: mErr } = await admin.from("team_members").select("team_id, user_id").eq("deleted", false);
+  if (mErr) throw mErr;
   return data.users.map((u) => ({
+    team_ids: members.filter((m) => m.user_id === u.id).map((m) => m.team_id),
     id: u.id,
     email: u.email,
     first_name: byId.get(u.id)?.first_name ?? null,
@@ -114,7 +120,45 @@ async function create(body: Record<string, unknown>) {
     await admin.auth.admin.deleteUser(data.user.id); // pas de compte sans profil
     throw pErr;
   }
+  if (Array.isArray(body.team_ids) && body.team_ids.length > 0) await setTeams(data.user.id, body.team_ids);
   return { id: data.user.id, temporary_password: password };
+}
+
+// Toutes les équipes du projet (l'administrateur n'en est pas forcément membre), avec leur propriétaire.
+async function listTeams() {
+  const { data, error } = await admin.from("teams")
+    .select("id, name, club_name, category, season, created_by").eq("deleted", false).order("club_name").order("name");
+  if (error) throw error;
+  return data;
+}
+
+// Rend l'utilisateur « staff » exactement des équipes données. Les équipes dont il est propriétaire ne
+// sont jamais touchées ; un retrait est une suppression logique (l'appareil l'apprend à la synchronisation).
+async function setTeams(userId: string, rawIds: unknown) {
+  if (!Array.isArray(rawIds) || rawIds.some((x) => typeof x !== "string")) throw new HttpError(400, "team_ids invalide.");
+  const wanted = new Set(rawIds as string[]);
+  if (wanted.size > 0) {
+    const { data: teams, error } = await admin.from("teams").select("id").in("id", [...wanted]).eq("deleted", false);
+    if (error) throw error;
+    if (teams.length !== wanted.size) throw new HttpError(400, "Équipe introuvable.");
+  }
+  const { data: current, error: cErr } = await admin.from("team_members").select("id, team_id, role, deleted").eq("user_id", userId);
+  if (cErr) throw cErr;
+  const now = new Date().toISOString();
+  for (const m of current) {
+    if (m.role === "owner") continue;
+    const keep = wanted.has(m.team_id);
+    if (keep === !m.deleted) continue;
+    const { error } = await admin.from("team_members").update({ deleted: !keep, updated_at: now }).eq("id", m.id);
+    if (error) throw error;
+  }
+  const known = new Set(current.map((m) => m.team_id));
+  const added = [...wanted].filter((t) => !known.has(t)).map((t) => ({ team_id: t, user_id: userId, role: "staff" }));
+  if (added.length > 0) {
+    const { error } = await admin.from("team_members").insert(added);
+    if (error) throw error;
+  }
+  return { ok: true };
 }
 
 async function resetPassword(userId: string) {
@@ -148,6 +192,8 @@ Deno.serve(async (req) => {
     switch (body.action) {
       case "list": result = await list(); break;
       case "create": result = await create(body); break;
+      case "list_teams": result = await listTeams(); break;
+      case "set_teams": result = await setTeams(targetId(body, me), body.team_ids); break;
       case "reset_password": result = await resetPassword(targetId(body, me)); break;
       case "disable": result = await setDisabled(targetId(body, me), true); break;
       case "enable": result = await setDisabled(targetId(body, me), false); break;
