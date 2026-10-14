@@ -1154,8 +1154,10 @@ propre à l'équipe ; le catalogue commun ne se modifie pas dans l'application.
 ### E35 / E36 — Dossier du joueur (onglet « Dossier » de E08)
 
 Renseignements du formulaire du club : nationalité, lieu de naissance, téléphone, e-mail, adresse,
-établissement et année scolaires, père et mère (nom, nationalité, profession du père, situation
-familiale), club précédent et sa ville, années de formation, rôle préféré, remarques. Tous les champs
+établissement scolaire (et son adresse) et année scolaire, père et mère (nom, nationalité, profession
+du père, situation familiale), club précédent et sa ville, années de formation, rôle préféré, autre
+poste, entraîneur, responsable / manager, remarques. Les réponses écrites en arabe sont conservées
+telles quelles. Tous les champs
 sont facultatifs ; E36 est le formulaire de saisie.
 
 L'onglet **Tests** de E08 montre, par test, le dernier meilleur résultat, une flèche d'évolution par

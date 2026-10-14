@@ -199,6 +199,10 @@ class PlayerProfiles extends Table with SyncColumns {
   IntColumn get yearsTraining => integer().nullable()();
   TextColumn get preferredRole => text().nullable()();
   TextColumn get remarks => text().nullable()();
+  TextColumn get otherPosition => text().nullable()();
+  TextColumn get schoolAddress => text().nullable()();
+  TextColumn get coachName => text().nullable()();
+  TextColumn get managerName => text().nullable()();
 }
 
 /// Dossier médical (id = player_id) : données de santé, visibles du seul propriétaire de l'équipe.
@@ -244,7 +248,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? openConnection());
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -275,6 +279,15 @@ class AppDatabase extends _$AppDatabase {
             for (final name in ['players', 'sessions', 'matches']) {
               await (delete(syncState)..where((s) => s.tableName_.equals(name))).go();
             }
+          }
+          // v5 : champs du formulaire du club dans le dossier. Venant de v3, la table vient d'être créée
+          // complète : les colonnes ne s'ajoutent qu'à une base déjà en v4.
+          if (from == 4) {
+            for (final c in [playerProfiles.otherPosition, playerProfiles.schoolAddress, playerProfiles.coachName,
+              playerProfiles.managerName]) {
+              await m.addColumn(playerProfiles, c);
+            }
+            await (delete(syncState)..where((s) => s.tableName_.equals('player_profiles'))).go();
           }
         },
       );

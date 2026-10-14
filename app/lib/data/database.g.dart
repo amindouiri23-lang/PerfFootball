@@ -10531,6 +10531,50 @@ class $PlayerProfilesTable extends PlayerProfiles
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _otherPositionMeta = const VerificationMeta(
+    'otherPosition',
+  );
+  @override
+  late final GeneratedColumn<String> otherPosition = GeneratedColumn<String>(
+    'other_position',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _schoolAddressMeta = const VerificationMeta(
+    'schoolAddress',
+  );
+  @override
+  late final GeneratedColumn<String> schoolAddress = GeneratedColumn<String>(
+    'school_address',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _coachNameMeta = const VerificationMeta(
+    'coachName',
+  );
+  @override
+  late final GeneratedColumn<String> coachName = GeneratedColumn<String>(
+    'coach_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _managerNameMeta = const VerificationMeta(
+    'managerName',
+  );
+  @override
+  late final GeneratedColumn<String> managerName = GeneratedColumn<String>(
+    'manager_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -10560,6 +10604,10 @@ class $PlayerProfilesTable extends PlayerProfiles
     yearsTraining,
     preferredRole,
     remarks,
+    otherPosition,
+    schoolAddress,
+    coachName,
+    managerName,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -10775,6 +10823,39 @@ class $PlayerProfilesTable extends PlayerProfiles
         remarks.isAcceptableOrUnknown(data['remarks']!, _remarksMeta),
       );
     }
+    if (data.containsKey('other_position')) {
+      context.handle(
+        _otherPositionMeta,
+        otherPosition.isAcceptableOrUnknown(
+          data['other_position']!,
+          _otherPositionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('school_address')) {
+      context.handle(
+        _schoolAddressMeta,
+        schoolAddress.isAcceptableOrUnknown(
+          data['school_address']!,
+          _schoolAddressMeta,
+        ),
+      );
+    }
+    if (data.containsKey('coach_name')) {
+      context.handle(
+        _coachNameMeta,
+        coachName.isAcceptableOrUnknown(data['coach_name']!, _coachNameMeta),
+      );
+    }
+    if (data.containsKey('manager_name')) {
+      context.handle(
+        _managerNameMeta,
+        managerName.isAcceptableOrUnknown(
+          data['manager_name']!,
+          _managerNameMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -10892,6 +10973,22 @@ class $PlayerProfilesTable extends PlayerProfiles
         DriftSqlType.string,
         data['${effectivePrefix}remarks'],
       ),
+      otherPosition: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}other_position'],
+      ),
+      schoolAddress: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}school_address'],
+      ),
+      coachName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}coach_name'],
+      ),
+      managerName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}manager_name'],
+      ),
     );
   }
 
@@ -10931,6 +11028,10 @@ class PlayerProfile extends DataClass implements Insertable<PlayerProfile> {
   final int? yearsTraining;
   final String? preferredRole;
   final String? remarks;
+  final String? otherPosition;
+  final String? schoolAddress;
+  final String? coachName;
+  final String? managerName;
   const PlayerProfile({
     required this.id,
     required this.createdAt,
@@ -10959,6 +11060,10 @@ class PlayerProfile extends DataClass implements Insertable<PlayerProfile> {
     this.yearsTraining,
     this.preferredRole,
     this.remarks,
+    this.otherPosition,
+    this.schoolAddress,
+    this.coachName,
+    this.managerName,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -11029,6 +11134,18 @@ class PlayerProfile extends DataClass implements Insertable<PlayerProfile> {
     }
     if (!nullToAbsent || remarks != null) {
       map['remarks'] = Variable<String>(remarks);
+    }
+    if (!nullToAbsent || otherPosition != null) {
+      map['other_position'] = Variable<String>(otherPosition);
+    }
+    if (!nullToAbsent || schoolAddress != null) {
+      map['school_address'] = Variable<String>(schoolAddress);
+    }
+    if (!nullToAbsent || coachName != null) {
+      map['coach_name'] = Variable<String>(coachName);
+    }
+    if (!nullToAbsent || managerName != null) {
+      map['manager_name'] = Variable<String>(managerName);
     }
     return map;
   }
@@ -11102,6 +11219,18 @@ class PlayerProfile extends DataClass implements Insertable<PlayerProfile> {
       remarks: remarks == null && nullToAbsent
           ? const Value.absent()
           : Value(remarks),
+      otherPosition: otherPosition == null && nullToAbsent
+          ? const Value.absent()
+          : Value(otherPosition),
+      schoolAddress: schoolAddress == null && nullToAbsent
+          ? const Value.absent()
+          : Value(schoolAddress),
+      coachName: coachName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(coachName),
+      managerName: managerName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(managerName),
     );
   }
 
@@ -11146,6 +11275,10 @@ class PlayerProfile extends DataClass implements Insertable<PlayerProfile> {
       yearsTraining: serializer.fromJson<int?>(json['yearsTraining']),
       preferredRole: serializer.fromJson<String?>(json['preferredRole']),
       remarks: serializer.fromJson<String?>(json['remarks']),
+      otherPosition: serializer.fromJson<String?>(json['otherPosition']),
+      schoolAddress: serializer.fromJson<String?>(json['schoolAddress']),
+      coachName: serializer.fromJson<String?>(json['coachName']),
+      managerName: serializer.fromJson<String?>(json['managerName']),
     );
   }
   @override
@@ -11179,6 +11312,10 @@ class PlayerProfile extends DataClass implements Insertable<PlayerProfile> {
       'yearsTraining': serializer.toJson<int?>(yearsTraining),
       'preferredRole': serializer.toJson<String?>(preferredRole),
       'remarks': serializer.toJson<String?>(remarks),
+      'otherPosition': serializer.toJson<String?>(otherPosition),
+      'schoolAddress': serializer.toJson<String?>(schoolAddress),
+      'coachName': serializer.toJson<String?>(coachName),
+      'managerName': serializer.toJson<String?>(managerName),
     };
   }
 
@@ -11210,6 +11347,10 @@ class PlayerProfile extends DataClass implements Insertable<PlayerProfile> {
     Value<int?> yearsTraining = const Value.absent(),
     Value<String?> preferredRole = const Value.absent(),
     Value<String?> remarks = const Value.absent(),
+    Value<String?> otherPosition = const Value.absent(),
+    Value<String?> schoolAddress = const Value.absent(),
+    Value<String?> coachName = const Value.absent(),
+    Value<String?> managerName = const Value.absent(),
   }) => PlayerProfile(
     id: id ?? this.id,
     createdAt: createdAt ?? this.createdAt,
@@ -11256,6 +11397,14 @@ class PlayerProfile extends DataClass implements Insertable<PlayerProfile> {
         ? preferredRole.value
         : this.preferredRole,
     remarks: remarks.present ? remarks.value : this.remarks,
+    otherPosition: otherPosition.present
+        ? otherPosition.value
+        : this.otherPosition,
+    schoolAddress: schoolAddress.present
+        ? schoolAddress.value
+        : this.schoolAddress,
+    coachName: coachName.present ? coachName.value : this.coachName,
+    managerName: managerName.present ? managerName.value : this.managerName,
   );
   PlayerProfile copyWithCompanion(PlayerProfilesCompanion data) {
     return PlayerProfile(
@@ -11316,6 +11465,16 @@ class PlayerProfile extends DataClass implements Insertable<PlayerProfile> {
           ? data.preferredRole.value
           : this.preferredRole,
       remarks: data.remarks.present ? data.remarks.value : this.remarks,
+      otherPosition: data.otherPosition.present
+          ? data.otherPosition.value
+          : this.otherPosition,
+      schoolAddress: data.schoolAddress.present
+          ? data.schoolAddress.value
+          : this.schoolAddress,
+      coachName: data.coachName.present ? data.coachName.value : this.coachName,
+      managerName: data.managerName.present
+          ? data.managerName.value
+          : this.managerName,
     );
   }
 
@@ -11348,7 +11507,11 @@ class PlayerProfile extends DataClass implements Insertable<PlayerProfile> {
           ..write('previousClubCity: $previousClubCity, ')
           ..write('yearsTraining: $yearsTraining, ')
           ..write('preferredRole: $preferredRole, ')
-          ..write('remarks: $remarks')
+          ..write('remarks: $remarks, ')
+          ..write('otherPosition: $otherPosition, ')
+          ..write('schoolAddress: $schoolAddress, ')
+          ..write('coachName: $coachName, ')
+          ..write('managerName: $managerName')
           ..write(')'))
         .toString();
   }
@@ -11382,6 +11545,10 @@ class PlayerProfile extends DataClass implements Insertable<PlayerProfile> {
     yearsTraining,
     preferredRole,
     remarks,
+    otherPosition,
+    schoolAddress,
+    coachName,
+    managerName,
   ]);
   @override
   bool operator ==(Object other) =>
@@ -11413,7 +11580,11 @@ class PlayerProfile extends DataClass implements Insertable<PlayerProfile> {
           other.previousClubCity == this.previousClubCity &&
           other.yearsTraining == this.yearsTraining &&
           other.preferredRole == this.preferredRole &&
-          other.remarks == this.remarks);
+          other.remarks == this.remarks &&
+          other.otherPosition == this.otherPosition &&
+          other.schoolAddress == this.schoolAddress &&
+          other.coachName == this.coachName &&
+          other.managerName == this.managerName);
 }
 
 class PlayerProfilesCompanion extends UpdateCompanion<PlayerProfile> {
@@ -11444,6 +11615,10 @@ class PlayerProfilesCompanion extends UpdateCompanion<PlayerProfile> {
   final Value<int?> yearsTraining;
   final Value<String?> preferredRole;
   final Value<String?> remarks;
+  final Value<String?> otherPosition;
+  final Value<String?> schoolAddress;
+  final Value<String?> coachName;
+  final Value<String?> managerName;
   final Value<int> rowid;
   const PlayerProfilesCompanion({
     this.id = const Value.absent(),
@@ -11473,6 +11648,10 @@ class PlayerProfilesCompanion extends UpdateCompanion<PlayerProfile> {
     this.yearsTraining = const Value.absent(),
     this.preferredRole = const Value.absent(),
     this.remarks = const Value.absent(),
+    this.otherPosition = const Value.absent(),
+    this.schoolAddress = const Value.absent(),
+    this.coachName = const Value.absent(),
+    this.managerName = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   PlayerProfilesCompanion.insert({
@@ -11503,6 +11682,10 @@ class PlayerProfilesCompanion extends UpdateCompanion<PlayerProfile> {
     this.yearsTraining = const Value.absent(),
     this.preferredRole = const Value.absent(),
     this.remarks = const Value.absent(),
+    this.otherPosition = const Value.absent(),
+    this.schoolAddress = const Value.absent(),
+    this.coachName = const Value.absent(),
+    this.managerName = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        createdAt = Value(createdAt),
@@ -11537,6 +11720,10 @@ class PlayerProfilesCompanion extends UpdateCompanion<PlayerProfile> {
     Expression<int>? yearsTraining,
     Expression<String>? preferredRole,
     Expression<String>? remarks,
+    Expression<String>? otherPosition,
+    Expression<String>? schoolAddress,
+    Expression<String>? coachName,
+    Expression<String>? managerName,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -11569,6 +11756,10 @@ class PlayerProfilesCompanion extends UpdateCompanion<PlayerProfile> {
       if (yearsTraining != null) 'years_training': yearsTraining,
       if (preferredRole != null) 'preferred_role': preferredRole,
       if (remarks != null) 'remarks': remarks,
+      if (otherPosition != null) 'other_position': otherPosition,
+      if (schoolAddress != null) 'school_address': schoolAddress,
+      if (coachName != null) 'coach_name': coachName,
+      if (managerName != null) 'manager_name': managerName,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -11601,6 +11792,10 @@ class PlayerProfilesCompanion extends UpdateCompanion<PlayerProfile> {
     Value<int?>? yearsTraining,
     Value<String?>? preferredRole,
     Value<String?>? remarks,
+    Value<String?>? otherPosition,
+    Value<String?>? schoolAddress,
+    Value<String?>? coachName,
+    Value<String?>? managerName,
     Value<int>? rowid,
   }) {
     return PlayerProfilesCompanion(
@@ -11631,6 +11826,10 @@ class PlayerProfilesCompanion extends UpdateCompanion<PlayerProfile> {
       yearsTraining: yearsTraining ?? this.yearsTraining,
       preferredRole: preferredRole ?? this.preferredRole,
       remarks: remarks ?? this.remarks,
+      otherPosition: otherPosition ?? this.otherPosition,
+      schoolAddress: schoolAddress ?? this.schoolAddress,
+      coachName: coachName ?? this.coachName,
+      managerName: managerName ?? this.managerName,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -11723,6 +11922,18 @@ class PlayerProfilesCompanion extends UpdateCompanion<PlayerProfile> {
     if (remarks.present) {
       map['remarks'] = Variable<String>(remarks.value);
     }
+    if (otherPosition.present) {
+      map['other_position'] = Variable<String>(otherPosition.value);
+    }
+    if (schoolAddress.present) {
+      map['school_address'] = Variable<String>(schoolAddress.value);
+    }
+    if (coachName.present) {
+      map['coach_name'] = Variable<String>(coachName.value);
+    }
+    if (managerName.present) {
+      map['manager_name'] = Variable<String>(managerName.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -11759,6 +11970,10 @@ class PlayerProfilesCompanion extends UpdateCompanion<PlayerProfile> {
           ..write('yearsTraining: $yearsTraining, ')
           ..write('preferredRole: $preferredRole, ')
           ..write('remarks: $remarks, ')
+          ..write('otherPosition: $otherPosition, ')
+          ..write('schoolAddress: $schoolAddress, ')
+          ..write('coachName: $coachName, ')
+          ..write('managerName: $managerName, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -17955,6 +18170,10 @@ typedef $$PlayerProfilesTableCreateCompanionBuilder =
       Value<int?> yearsTraining,
       Value<String?> preferredRole,
       Value<String?> remarks,
+      Value<String?> otherPosition,
+      Value<String?> schoolAddress,
+      Value<String?> coachName,
+      Value<String?> managerName,
       Value<int> rowid,
     });
 typedef $$PlayerProfilesTableUpdateCompanionBuilder =
@@ -17986,6 +18205,10 @@ typedef $$PlayerProfilesTableUpdateCompanionBuilder =
       Value<int?> yearsTraining,
       Value<String?> preferredRole,
       Value<String?> remarks,
+      Value<String?> otherPosition,
+      Value<String?> schoolAddress,
+      Value<String?> coachName,
+      Value<String?> managerName,
       Value<int> rowid,
     });
 
@@ -18130,6 +18353,26 @@ class $$PlayerProfilesTableFilterComposer
 
   ColumnFilters<String> get remarks => $composableBuilder(
     column: $table.remarks,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get otherPosition => $composableBuilder(
+    column: $table.otherPosition,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get schoolAddress => $composableBuilder(
+    column: $table.schoolAddress,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get coachName => $composableBuilder(
+    column: $table.coachName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get managerName => $composableBuilder(
+    column: $table.managerName,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -18277,6 +18520,26 @@ class $$PlayerProfilesTableOrderingComposer
     column: $table.remarks,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get otherPosition => $composableBuilder(
+    column: $table.otherPosition,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get schoolAddress => $composableBuilder(
+    column: $table.schoolAddress,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get coachName => $composableBuilder(
+    column: $table.coachName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get managerName => $composableBuilder(
+    column: $table.managerName,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$PlayerProfilesTableAnnotationComposer
@@ -18398,6 +18661,24 @@ class $$PlayerProfilesTableAnnotationComposer
 
   GeneratedColumn<String> get remarks =>
       $composableBuilder(column: $table.remarks, builder: (column) => column);
+
+  GeneratedColumn<String> get otherPosition => $composableBuilder(
+    column: $table.otherPosition,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get schoolAddress => $composableBuilder(
+    column: $table.schoolAddress,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get coachName =>
+      $composableBuilder(column: $table.coachName, builder: (column) => column);
+
+  GeneratedColumn<String> get managerName => $composableBuilder(
+    column: $table.managerName,
+    builder: (column) => column,
+  );
 }
 
 class $$PlayerProfilesTableTableManager
@@ -18460,6 +18741,10 @@ class $$PlayerProfilesTableTableManager
                 Value<int?> yearsTraining = const Value.absent(),
                 Value<String?> preferredRole = const Value.absent(),
                 Value<String?> remarks = const Value.absent(),
+                Value<String?> otherPosition = const Value.absent(),
+                Value<String?> schoolAddress = const Value.absent(),
+                Value<String?> coachName = const Value.absent(),
+                Value<String?> managerName = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => PlayerProfilesCompanion(
                 id: id,
@@ -18489,6 +18774,10 @@ class $$PlayerProfilesTableTableManager
                 yearsTraining: yearsTraining,
                 preferredRole: preferredRole,
                 remarks: remarks,
+                otherPosition: otherPosition,
+                schoolAddress: schoolAddress,
+                coachName: coachName,
+                managerName: managerName,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -18520,6 +18809,10 @@ class $$PlayerProfilesTableTableManager
                 Value<int?> yearsTraining = const Value.absent(),
                 Value<String?> preferredRole = const Value.absent(),
                 Value<String?> remarks = const Value.absent(),
+                Value<String?> otherPosition = const Value.absent(),
+                Value<String?> schoolAddress = const Value.absent(),
+                Value<String?> coachName = const Value.absent(),
+                Value<String?> managerName = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => PlayerProfilesCompanion.insert(
                 id: id,
@@ -18549,6 +18842,10 @@ class $$PlayerProfilesTableTableManager
                 yearsTraining: yearsTraining,
                 preferredRole: preferredRole,
                 remarks: remarks,
+                otherPosition: otherPosition,
+                schoolAddress: schoolAddress,
+                coachName: coachName,
+                managerName: managerName,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

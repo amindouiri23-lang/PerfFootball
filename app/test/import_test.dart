@@ -39,6 +39,21 @@ void main() {
     expect(m[normalizeName('Duran Kevin')]!.confidence, lessThan(1));
   });
 
+  group('cleanFormValue', () {
+    test('retire la traduction arabe d\'un libellé du formulaire', () {
+      expect(cleanFormValue('Marié(e) (متزوج/متزوجة)'), 'Marié(e)');
+      expect(cleanFormValue('Nom (الاسم)'), 'Nom');
+    });
+    test('garde une réponse écrite en arabe', () {
+      expect(cleanFormValue('تونس'), 'تونس');
+      expect(cleanFormValue('معهد (المنزه)'), 'معهد (المنزه)');
+    });
+    test('réponses vides', () {
+      expect(cleanFormValue(' . '), isNull);
+      expect(cleanFormValue('anonymous'), isNull);
+    });
+  });
+
   group('splitName', () {
     test('« Nom Prénom » des feuilles de charge', () {
       final n = splitName('Ben Salem Lucas', lastFirst: true);

@@ -22,7 +22,7 @@ const profileMaxLength = {
   'nationality': 60, 'birthPlace': 80, 'phone': 30, 'email': 120, 'address': 200, 'school': 120, 'schoolYear': 80,
   'fatherName': 80, 'fatherNationality': 60, 'fatherOccupation': 80, 'fatherMaritalStatus': 40, 'motherName': 80,
   'motherNationality': 60, 'motherMaritalStatus': 40, 'previousClub': 80, 'previousClubCity': 80,
-  'preferredRole': 80, 'remarks': 1000,
+  'preferredRole': 80, 'remarks': 1000, 'otherPosition': 80, 'schoolAddress': 200, 'coachName': 80, 'managerName': 160,
 };
 
 /// Coupe un texte à la longueur acceptée par la base.
@@ -125,12 +125,16 @@ class PlayerProfileTab extends ConsumerWidget {
           ('E-mail', p.email),
           ('Adresse', p.address),
           ('Établissement scolaire', p.school),
+          ("Adresse de l'établissement", p.schoolAddress),
           ('Année scolaire', p.schoolYear),
           ('Père', [p.fatherName, p.fatherNationality, p.fatherOccupation, p.fatherMaritalStatus].whereType<String>().join(' · ')),
           ('Mère', [p.motherName, p.motherNationality, p.motherMaritalStatus].whereType<String>().join(' · ')),
           ('Club précédent', [p.previousClub, p.previousClubCity].whereType<String>().join(' · ')),
           ('Années de formation', p.yearsTraining?.toString()),
           ('Rôle préféré', p.preferredRole),
+          ('Autre poste', p.otherPosition),
+          ('Entraîneur', p.coachName),
+          ('Responsable / manager', p.managerName),
           ('Remarques', p.remarks),
         ]),
     ]);
@@ -210,7 +214,7 @@ class _PlayerProfileFormScreenState extends ConsumerState<PlayerProfileFormScree
     'nationality', 'birthPlace', 'phone', 'email', 'address', 'school', 'schoolYear',
     'fatherName', 'fatherNationality', 'fatherOccupation', 'fatherMaritalStatus',
     'motherName', 'motherNationality', 'motherMaritalStatus', 'previousClub', 'previousClubCity',
-    'yearsTraining', 'preferredRole', 'remarks',
+    'yearsTraining', 'preferredRole', 'remarks', 'otherPosition', 'schoolAddress', 'coachName', 'managerName',
   ];
   final _c = {for (final k in _keys) k: TextEditingController()};
   bool _loaded = false;
@@ -228,6 +232,8 @@ class _PlayerProfileFormScreenState extends ConsumerState<PlayerProfileFormScree
       'motherNationality': p.motherNationality, 'motherMaritalStatus': p.motherMaritalStatus,
       'previousClub': p.previousClub, 'previousClubCity': p.previousClubCity,
       'yearsTraining': p.yearsTraining?.toString(), 'preferredRole': p.preferredRole, 'remarks': p.remarks,
+      'otherPosition': p.otherPosition, 'schoolAddress': p.schoolAddress, 'coachName': p.coachName,
+      'managerName': p.managerName,
     };
     for (final k in _keys) {
       _c[k]!.text = v[k] ?? '';
@@ -257,7 +263,9 @@ class _PlayerProfileFormScreenState extends ConsumerState<PlayerProfileFormScree
               motherNationality: Value(v('motherNationality')), motherMaritalStatus: Value(v('motherMaritalStatus')),
               previousClub: Value(v('previousClub')), previousClubCity: Value(v('previousClubCity')),
               yearsTraining: Value(int.tryParse(_c['yearsTraining']!.text)), preferredRole: Value(v('preferredRole')),
-              remarks: Value(v('remarks')),
+              remarks: Value(v('remarks')), otherPosition: Value(v('otherPosition')),
+              schoolAddress: Value(v('schoolAddress')), coachName: Value(v('coachName')),
+              managerName: Value(v('managerName')),
             ),
             teamId: player.teamId,
             playerId: player.id,
@@ -304,6 +312,7 @@ class _PlayerProfileFormScreenState extends ConsumerState<PlayerProfileFormScree
       section('Scolarité'),
       _field('school', 'Établissement scolaire'),
       _field('schoolYear', 'Année scolaire'),
+      _field('schoolAddress', "Adresse de l'établissement", lines: 2),
       section('Parents'),
       _field('fatherName', 'Nom du père'),
       _field('fatherNationality', 'Nationalité du père'),
@@ -316,7 +325,10 @@ class _PlayerProfileFormScreenState extends ConsumerState<PlayerProfileFormScree
       _field('previousClub', 'Club précédent'),
       _field('previousClubCity', 'Ville du club précédent'),
       _field('yearsTraining', 'Années de formation', keyboard: TextInputType.number),
-      _field('preferredRole', 'Rôle préféré', ),
+      _field('preferredRole', 'Rôle préféré'),
+      _field('otherPosition', 'Autre poste'),
+      _field('coachName', 'Entraîneur'),
+      _field('managerName', 'Responsable / manager'),
       _field('remarks', 'Remarques', lines: 3),
       const SizedBox(height: 12),
       FilledButton(onPressed: () => _save(player), child: const Text('Enregistrer')),

@@ -225,7 +225,8 @@ class ImportRepository {
           motherNationality: v('motherNationality'), motherMaritalStatus: v('motherMaritalStatus'),
           previousClub: v('previousClub'), previousClubCity: v('previousClubCity'),
           yearsTraining: Value(years != null && years <= 40 ? years : existing?.yearsTraining),
-          preferredRole: v('preferredRole'), remarks: v('remarks'),
+          preferredRole: v('preferredRole'), remarks: v('remarks'), otherPosition: v('otherPosition'),
+          schoolAddress: v('schoolAddress'), coachName: v('coachName'), managerName: v('managerName'),
           deleted: const Value(false), updatedAt: Value(now), isDirty: const Value(true),
         );
         await _db.into(_db.playerProfiles).insert(row.copyWith(id: Value(playerId), createdAt: Value(now)),

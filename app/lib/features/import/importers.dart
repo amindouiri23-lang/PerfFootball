@@ -475,15 +475,15 @@ ImportPlan _tests(XlsxSheet s) {
 // ---------------------------------------------------------------------------
 // 4. Fiches de renseignements (export Microsoft Forms)
 // ---------------------------------------------------------------------------
-final _arabic = RegExp(r'[؀-ۿ]');
-
-/// Retire les traductions arabes des libellés du formulaire : « Marié(e) (متزوج/متزوجة) » → « Marié(e) ».
-String? _clean(String? v) {
+/// Retire la traduction arabe des libellés du formulaire (« Marié(e) (متزوج/متزوجة) » → « Marié(e) »),
+/// mais garde une réponse écrite en arabe : seule la parenthèse de traduction accolée à un texte en
+/// lettres latines est retirée.
+String? cleanFormValue(String? v) {
   if (v == null) return null;
-  var s = v.replaceAll(RegExp(r'\s*\([^()]*[؀-ۿ][^()]*\)'), '').trim();
-  if (_arabic.hasMatch(s) && !RegExp(r'[A-Za-z]').hasMatch(s)) return null;
-  s = s.replaceAll(_arabic, '').trim();
-  return s.isEmpty || s == '.' || s.toLowerCase() == 'anonymous' ? null : s;
+  final t = v.trim();
+  final stripped = t.replaceAll(RegExp(r'\s*\([^()]*[؀-ۿ][^()]*\)'), '').trim();
+  final s = RegExp(r'[A-Za-z0-9]').hasMatch(stripped) ? stripped : t;
+  return s.isEmpty || s == '.' || s == '-' || s.toLowerCase() == 'anonymous' ? null : s;
 }
 
 ImportPlan _profiles(XlsxSheet s) {
@@ -493,12 +493,12 @@ ImportPlan _profiles(XlsxSheet s) {
   for (var c = 1; c <= s.maxCol; c++) {
     final h = s.text(1, c);
     if (h == null) continue;
-    final key = (_clean(h) ?? '').toLowerCase().replaceAll('’', "'");
+    final key = (cleanFormValue(h) ?? '').toLowerCase().replaceAll('’', "'");
     cols.putIfAbsent(key, () => c);
   }
   int? col(bool Function(String k) test) => cols.entries.where((e) => test(e.key)).map((e) => e.value).firstOrNull;
   // Deux colonnes « Nom » (avec et sans traduction) : la première remplie l'emporte.
-  final nameCols = [for (var c = 1; c <= s.maxCol; c++) if ((_clean(s.text(1, c)) ?? '').toLowerCase() == 'nom') c];
+  final nameCols = [for (var c = 1; c <= s.maxCol; c++) if ((cleanFormValue(s.text(1, c)) ?? '').toLowerCase() == 'nom') c];
   final fields = <String, int?>{
     'nationality': col((k) => k == 'nationalité'),
     'birthPlace': col((k) => k.startsWith('lieu de naissance')),
@@ -519,7 +519,12 @@ ImportPlan _profiles(XlsxSheet s) {
     'yearsTraining': col((k) => k.startsWith("nombre d'années")),
     'preferredRole': col((k) => k.startsWith('poste préf')),
     'remarks': col((k) => k.startsWith('remarques')),
+    'otherPosition': col((k) => k == 'autre poste'),
+    'schoolAddress': col((k) => k.startsWith("adresse de l'établissement")),
+    'coachName': col((k) => k.startsWith("nom de l'entraîneur")),
   };
+  // Deux colonnes « Nom du manager / responsable » : réunies en une seule valeur.
+  final managerCols = [for (final e in cols.entries) if (e.key.startsWith('nom du manager')) e.value]..sort();
   final positionCol = col((k) => k == 'poste');
   final birthCol = col((k) => k.startsWith('date de naissance'));
   final medical = <String, int?>{
@@ -535,21 +540,23 @@ ImportPlan _profiles(XlsxSheet s) {
     ..sort();
 
   for (var r = 2; r <= s.maxRow; r++) {
-    final name = nameCols.map((c) => _clean(s.text(r, c))).whereType<String>().firstOrNull;
+    final name = nameCols.map((c) => cleanFormValue(s.text(r, c))).whereType<String>().firstOrNull;
     if (name == null) continue;
-    plan.addName(name, position: positionCol == null ? null : _clean(s.text(r, positionCol)));
+    plan.addName(name, position: positionCol == null ? null : cleanFormValue(s.text(r, positionCol)));
     final p = PlannedProfile(name.trim());
     for (final e in fields.entries) {
-      if (e.value != null) p.profile[e.key] = _clean(s.text(r, e.value!));
+      if (e.value != null) p.profile[e.key] = cleanFormValue(s.text(r, e.value!));
     }
+    final managers = managerCols.map((c) => cleanFormValue(s.text(r, c))).whereType<String>().toSet();
+    p.profile['managerName'] = managers.isEmpty ? null : managers.join(' / ');
     final years = RegExp(r'\d+').firstMatch(p.profile['yearsTraining'] ?? '');
     p.profile['yearsTraining'] = years?.group(0);
     final birth = birthCol == null ? null : s.number(r, birthCol);
     if (birth != null && birth > 10000) p.birthDate = _iso(excelDate(birth));
     for (final e in medical.entries) {
-      if (e.value != null) p.medical[e.key] = _clean(s.text(r, e.value!));
+      if (e.value != null) p.medical[e.key] = cleanFormValue(s.text(r, e.value!));
     }
-    final injuries = injuryCols.map((c) => _clean(s.text(r, c))).whereType<String>().toList();
+    final injuries = injuryCols.map((c) => cleanFormValue(s.text(r, c))).whereType<String>().toList();
     p.medical['recentInjuries'] = injuries.isEmpty ? null : injuries.join(' — ');
     plan.profiles.add(p);
   }

@@ -282,7 +282,8 @@ separate table. The best attempt is computed (lowest for `lower`, highest otherw
 ### 5.8 Player file (v2)
 
 **`player_profiles`** — administrative and family details from the club's form (nationality, birth place,
-contact, school, parents, previous club, years of training, preferred role, remarks). Team RLS.
+contact, school and its address, parents, previous club, years of training, preferred role, other position,
+coach, manager / responsible person, remarks). Team RLS.
 
 **`player_medical`** — health questionnaire (allergies, conditions, low blood pressure / anxiety, surgeries,
 injuries of the last 12 months, remarks) with **mandatory consent** (`consent_date`, `consent_by` =
@@ -405,6 +406,7 @@ Computed in DAX, never stored:
 
 | Date | Decision |
 |---|---|
+| 2026-10-14 | Player file completed with the form's remaining columns (`other_position`, `school_address`, `coach_name`, `manager_name` — the form's two manager columns joined). The import keeps answers written in Arabic; it only removes the Arabic translation in parentheses that the form adds to its own choice labels. Local schema v5 (columns added only to a v4 database; a v3 database creates the table complete). Name matching assigns each squad member to at most one name of the file. |
 | 2026-10-14 | v2 from the club's Excel files: planned RPE, absence reasons `rest` / `other_team`, detailed and secondary positions, league phase and matchday; physical tests in long format with a common catalogue (body measurements are test types, not a `body_measurements` table); player file split into `player_profiles` (team) and `player_medical` (team owner only, consent required). In-app Excel import for the four club formats (weekly load, playing time, tests, form export): names matched to the squad then confirmed, colour-coded statuses read from the sheet's legend, deterministic ids so a re-import updates. Imported sessions get 18:00 and type *mixed*, matches 15:00; minutes = 0 means *not selected*. Local schema v4 re-pulls players, sessions and matches to fill the new columns. |
 | 2026-10-07 | Initial decisions D1–D9 (brainstorm). |
 | 2026-10-09 | Photos (players, team logo, profile) are uploaded directly to Supabase Storage (512 px, network required, initials shown when offline); they do not go through the local database. Device settings (theme, default durations) are kept at logout. Every create button ignores a second tap for 600 ms (a double tap created two teams in testing). Analyzer runs with strict-inference / strict-raw-types (an untyped list made an extension call fail at runtime). |
