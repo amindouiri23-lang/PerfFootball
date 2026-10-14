@@ -34,18 +34,32 @@ class NameMapping {
 /// Rapproche chaque nom du fichier des joueurs de l'équipe (même nom, sinon nom proche).
 Map<String, NameMapping> matchNames(ImportPlan plan, List<Player> players) {
   final keys = {for (final p in players) p.id: normalizeName(p.fullName)};
+  // Un joueur ne reçoit qu'un seul nom du fichier : d'abord les noms identiques, puis les noms proches,
+  // du plus ressemblant au moins ressemblant (« Mnasri Hamza » ne doit pas prendre « Maali Hamza »,
+  // déjà reconnu sous son propre nom).
+  final matches = <String, ({String? id, double score})>{};
+  final taken = <String>{};
+  for (final name in plan.names.keys) {
+    final exact = keys.entries.where((k) => k.value == name && !taken.contains(k.key)).firstOrNull;
+    if (exact != null) {
+      matches[name] = (id: exact.key, score: 1.0);
+      taken.add(exact.key);
+    }
+  }
+  final candidates = [
+    for (final name in plan.names.keys.where((n) => !matches.containsKey(n)))
+      for (final k in keys.entries.where((k) => !taken.contains(k.key)))
+        (name: name, id: k.key, score: nameSimilarity(k.value, name)),
+  ]..sort((a, b) => b.score.compareTo(a.score));
+  for (final c in candidates.where((c) => c.score >= 0.75)) {
+    if (matches.containsKey(c.name) || taken.contains(c.id)) continue;
+    matches[c.name] = (id: c.id, score: c.score);
+    taken.add(c.id);
+  }
   return {
     for (final e in plan.names.entries)
       e.key: () {
-        final exact = keys.entries.where((k) => k.value == e.key).firstOrNull;
-        var best = (id: exact?.key, score: exact == null ? 0.0 : 1.0);
-        if (exact == null) {
-          for (final k in keys.entries) {
-            final s = nameSimilarity(k.value, e.key);
-            if (s > best.score) best = (id: k.key, score: s);
-          }
-          if (best.score < 0.75) best = (id: null, score: 0);
-        }
+        final best = matches[e.key] ?? (id: null, score: 0.0);
         final split = splitName(e.value.name,
             lastFirst: plan.kind == ImportKind.training || plan.kind == ImportKind.playingTime);
         final pos = parsePosition(e.value.positionText);
