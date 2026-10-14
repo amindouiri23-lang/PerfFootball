@@ -134622,7 +134622,7 @@ s=p==null?r:new A.E5(p)
 return A.auG(r,A.D(this.f,r,r,r,r,A.cT(r,r,r,r,r,r,r,r,r,r,r,q*0.7,r,r,r,r,r,!0,r,r,r,r,r,r,r,r),r,r,r),s,q)}}
 A.bp3.prototype={
 $1(a){var s=null
-return A.hy(!0,A.bv(A.b([A.cH(!1,s,s,s,!0,s,s,s,!0,s,B.a7V,s,s,s,s,new A.bp1(a),!1,s,s,s,s,s,s,s,B.awu,s,s,s),A.cH(!1,s,s,s,!0,s,s,s,!0,s,B.a83,s,s,s,s,new A.bp2(a),!1,s,s,s,s,s,s,s,B.avZ,s,s,s)],t.p),B.v,B.o,B.ar,0,B.E),!0,!1,B.V,!0,!0)},
+return A.hy(!0,A.bv(A.b([A.cH(!1,s,s,s,!0,s,s,s,!0,s,B.a7V,s,s,s,s,new A.bp1(a),!1,s,s,s,s,s,s,s,B.awu,s,s,s),A.cH(!1,s,s,s,!0,s,s,s,!0,s,B.a83,s,s,s,s,new A.bp2(a),!1,s,s,s,s,s,s,s,B.aw_,s,s,s)],t.p),B.v,B.o,B.ar,0,B.E),!0,!1,B.V,!0,!0)},
 $S:93}
 A.bp1.prototype={
 $0(){return A.c4(this.a,!1).dn(B.E2)},
@@ -135053,7 +135053,7 @@ for(f=B.aiy.ge_(),f=f.gZ(f),e=t.gu;f.q();){d=f.gG()
 c=A.D(d.b,a,a,a,a,a,a,a,a)
 b=a2.ak($.bMC(),e).gn()
 if(b==null)b="system"
-g.push(A.eX(a,c,new A.aVS(a2,d),b===d.a,a))}return A.eF(o,A.fo(A.b([p,B.a8,new A.D9(B.ZY,!0,q,a,a,a,a,B.M,a,!1,a,!0,a,new A.Tg(B.awb,B.a82,a,a,a),a),B.zu,i,B.bQ,k,B.ah,A.fJ(g,B.bH,0,8),B.a8,A.bFj("Dur\xe9e de s\xe9ance par d\xe9faut",240,10,"session_duration"),A.bFj("Dur\xe9e de match par d\xe9faut",130,20,"match_duration"),B.cz,A.D("\xc0 propos",a,a,a,a,j,a,a,a),B.ff,B.awj],h),a,B.bC,a,B.a5,!1),a,a)}}
+g.push(A.eX(a,c,new A.aVS(a2,d),b===d.a,a))}return A.eF(o,A.fo(A.b([p,B.a8,new A.D9(B.ZY,!0,q,a,a,a,a,B.M,a,!1,a,!0,a,new A.Tg(B.awc,B.a82,a,a,a),a),B.zu,i,B.bQ,k,B.ah,A.fJ(g,B.bH,0,8),B.a8,A.bFj("Dur\xe9e de s\xe9ance par d\xe9faut",240,10,"session_duration"),A.bFj("Dur\xe9e de match par d\xe9faut",130,20,"match_duration"),B.cz,A.D("\xc0 propos",a,a,a,a,j,a,a,a),B.ff,B.avP],h),a,B.bC,a,B.a5,!1),a,a)}}
 A.aVR.prototype={
 $0(){return this.a.U($.dH().gf6(),t.F).pb()},
 $S:0}
@@ -139786,7 +139786,7 @@ s=A.lg(!1,m.z,B.a8U,!1,l,l,B.mb,1,!1,l,l,l,l,l,l,B.aa,B.bb,l,new A.b2f())
 r=m.Q
 q=A.b([],t.FG)
 for(p=B.tQ.ge_(),p=p.gZ(p),o=t.b7;p.q();){n=p.gG()
-q.push(new A.jv(n.a,A.D(n.b,l,l,l,l,l,l,l,l),B.cS,l,o))}return A.yd(l,new A.j_("Cr\xe9er un compte",A.b([j,B.a8,k,B.a8,s,B.a8,A.L6(B.E4,r,q,new A.b2g(m),new A.b2h(),t.N),B.ah,A.bDZ(B.V,new A.b2i(m),B.avP,B.avj,m.as),B.a8,A.D("\xc9quipes",l,l,l,l,A.A(a).ok.x,l,l,l),B.awE,A.bE4(new A.b2j(m),B.dk,m.ax),B.ah,B.awy,B.cz,new A.oG("Cr\xe9er le compte",m.at,m.gaxE(),l)],t.p),!0,l),m.w,l)}}
+q.push(new A.jv(n.a,A.D(n.b,l,l,l,l,l,l,l,l),B.cS,l,o))}return A.yd(l,new A.j_("Cr\xe9er un compte",A.b([j,B.a8,k,B.a8,s,B.a8,A.L6(B.E4,r,q,new A.b2g(m),new A.b2h(),t.N),B.ah,A.bDZ(B.V,new A.b2i(m),B.avQ,B.avj,m.as),B.a8,A.D("\xc9quipes",l,l,l,l,A.A(a).ok.x,l,l,l),B.awE,A.bE4(new A.b2j(m),B.dk,m.ax),B.ah,B.awy,B.cz,new A.oG("Cr\xe9er le compte",m.at,m.gaxE(),l)],t.p),!0,l),m.w,l)}}
 A.b2a.prototype={
 $0(){return this.a.at=!0},
 $S:0}
@@ -139962,7 +139962,7 @@ $2(a,b){var s=this
 return A.bAD(new A.bqM(s.a,s.b,s.c,b,s.d),!1,0.8)},
 $S:861}
 A.bqM.prototype={
-$2(a,b){var s=this,r=null,q=s.b,p=A.cH(!1,r,r,r,!0,r,r,r,!0,r,r,r,r,r,r,r,!1,r,r,r,r,r,B.aw9,r,A.D("\xc9quipes de "+q.gwR(),r,r,r,r,r,r,r,r),r,r,r),o=s.a,n=s.d,m=t.p,l=A.c6(A.fo(A.b([A.bE4(new A.bqK(o,n),s.c,o.a)],m),b,B.dE,r,B.a5,!1),1),k=o.b
+$2(a,b){var s=this,r=null,q=s.b,p=A.cH(!1,r,r,r,!0,r,r,r,!0,r,r,r,r,r,r,r,!1,r,r,r,r,r,B.awa,r,A.D("\xc9quipes de "+q.gwR(),r,r,r,r,r,r,r,r),r,r,r),o=s.a,n=s.d,m=t.p,l=A.c6(A.fo(A.b([A.bE4(new A.bqK(o,n),s.c,o.a)],m),b,B.dE,r,B.a5,!1),1),k=o.b
 q=k?r:new A.bqL(o,n,s.e,q,a)
 return A.bv(A.b([p,l,A.hy(!0,new A.ad(B.bC,A.da(A.D(k?"Enregistrement\u2026":"Enregistrer",r,r,r,r,r,r,r,r),q),r),!0,!1,B.V,!0,!0)],m),B.v,B.o,B.w,0,B.E)},
 $S:862}
@@ -140279,7 +140279,7 @@ h=l.Q
 if(h!=null)i.push(h)
 i=A.D(B.b.aS(i," \xb7 "),g,g,g,g,g,g,g,g)
 A:{if("planned"===k){k=A.da(B.zM,new A.aDf(a,l))
-break A}if("in_progress"===k){k=A.da(B.aw5,new A.aDg(a,l))
+break A}if("in_progress"===k){k=A.da(B.aw6,new A.aDg(a,l))
 break A}k=A.pm(B.avg,new A.aDh(a,l),g)
 break A}f.push(A.i4(new A.ad(B.ep,A.bv(A.b([j,i,B.ah,k],p),B.c5,B.o,B.w,0,B.E),g),g,g,g))}B.b.R(f,this.aJk(a,b,c))
 f.push(B.ah)
@@ -140950,7 +140950,7 @@ B.b.R(o,n)}return new A.j_("Importer un fichier Excel",o,!0,e)},
 aKJ(a){var s,r,q,p=this,o=null,n=t.p,m=A.b([A.bDZ(B.V,new A.b7q(p),B.avi,B.awG,p.ax)],n)
 if(p.ax){s=A.b([],n)
 for(r=B.yw.ge_(),r=r.gZ(r);r.q();){q=r.gG()
-s.push(A.eX(o,A.D(q.b,o,o,o,o,o,o,o,o),new A.b7r(p,q),p.ay===q.a,o))}B.b.R(m,A.b([A.fJ(s,B.bH,0,8),A.K_(B.V,o,o,new A.b7s(p),o,o,B.avQ,!1,p.ch)],n))}return A.i4(new A.ad(B.ep,A.bv(m,B.aE,B.o,B.w,0,B.E),o),o,o,o)},
+s.push(A.eX(o,A.D(q.b,o,o,o,o,o,o,o,o),new A.b7r(p,q),p.ay===q.a,o))}B.b.R(m,A.b([A.fJ(s,B.bH,0,8),A.K_(B.V,o,o,new A.b7s(p),o,o,B.avR,!1,p.ch)],n))}return A.i4(new A.ad(B.ep,A.bv(m,B.aE,B.o,B.w,0,B.E),o),o,o,o)},
 aL1(a2,a3,a4){var s,r,q,p,o,n,m,l,k,j,i,h,g,f,e,d,c,b,a=this,a0=null,a1=A.w(t.N,t.Uo)
 for(s=J.ao(a4);s.q();){r=s.gG()
 a1.j(0,r.a,r)}q=new A.b7C()
@@ -141052,7 +141052,7 @@ s.z=null},
 $S:0}
 A.b7k.prototype={
 $1(a){var s=null,r=A.D(this.a.k(0)+".\n\nLes donn\xe9es sont enregistr\xe9es sur l'appareil et seront synchronis\xe9es.",s,s,s,s,s,s,s,s)
-return A.kI(A.b([A.da(B.zN,new A.b7g(a))],t.p),r,B.avT)},
+return A.kI(A.b([A.da(B.zN,new A.b7g(a))],t.p),r,B.avU)},
 $S:41}
 A.b7g.prototype={
 $0(){return A.c4(this.a,!1).hz()},
@@ -141110,7 +141110,10 @@ A.b7n.prototype={
 $0(){return this.a.ch=this.b===!0},
 $S:0}
 A.b7C.prototype={
-$1(a){return a.b!=null&&a.c<1&&!a.d},
+$1(a){var s
+if(a.b!=null){s=a.c
+s=s>0&&s<1&&!a.d}else s=!1
+return s},
 $S:120}
 A.b7w.prototype={
 $1(a){return a.b==null&&!a.d},
@@ -141158,7 +141161,7 @@ A.b7e.prototype={
 $1(a){return A.bAD(new A.b7c(this.a,this.b),!1,0.6)},
 $S:899}
 A.b7c.prototype={
-$2(a,b){var s,r,q,p,o,n,m,l=null,k=this.a,j=A.b([A.cH(!1,l,l,l,!0,l,l,l,!0,l,l,l,l,l,l,l,!1,l,l,l,l,l,l,l,A.D(k.a.a,l,l,l,l,A.A(a).ok.w,l,l,l),l,l,l),A.cH(!1,l,l,l,!0,l,l,l,!0,l,B.xx,l,l,l,l,new A.b79(a),!1,l,l,l,l,l,l,l,B.awc,l,l,l),A.cH(!1,l,l,l,!0,l,l,l,!0,l,B.a7Y,l,l,l,l,new A.b7a(a),!1,l,l,l,l,l,l,l,B.avx,l,l,l),B.n4],t.p)
+$2(a,b){var s,r,q,p,o,n,m,l=null,k=this.a,j=A.b([A.cH(!1,l,l,l,!0,l,l,l,!0,l,l,l,l,l,l,l,!1,l,l,l,l,l,l,l,A.D(k.a.a,l,l,l,l,A.A(a).ok.w,l,l,l),l,l,l),A.cH(!1,l,l,l,!0,l,l,l,!0,l,B.xx,l,l,l,l,new A.b79(a),!1,l,l,l,l,l,l,l,B.awd,l,l,l),A.cH(!1,l,l,l,!0,l,l,l,!0,l,B.a7Y,l,l,l,l,new A.b7a(a),!1,l,l,l,l,l,l,l,B.avx,l,l,l),B.n4],t.p)
 for(s=this.b,r=s.length,q=0;q<s.length;s.length===r||(0,A.C)(s),++q){p=s[q]
 o=A.dL(p.a===k.b?B.xu:B.xv,l,l,l)
 n=A.D(p.w+" "+p.x,l,l,l,l,l,l,l,l)
@@ -142693,7 +142696,7 @@ i=j.x
 o.push(A.eX(g,A.D(l.$1(i),g,g,g,g,g,g,g,g),new A.brb(p,a4,j),p.b===i,g))}e=A.b([a1,B.bQ,r,B.bQ,e,B.bQ,q,B.io,A.fJ(o,B.bH,6,6)],s)
 if(p.e&&p.b==null)e.push(A.D("Obligatoire",g,g,g,g,A.cT(g,g,f.ax.fy,g,g,g,g,g,g,g,g,12,g,g,g,g,g,!0,g,g,g,g,g,g,g,g),g,g,g))
 if(p.a==="goal"){a1=A.D("Passeur d\xe9cisif",g,g,g,g,a2,g,g,g)
-a2=A.b([A.eX(g,B.awi,new A.brc(p,a4),p.c==null,g)],s)
+a2=A.b([A.eX(g,B.awj,new A.brc(p,a4),p.c==null,g)],s)
 for(r=B.b.gZ(n),q=new A.ft(r,new A.brd(p));q.q();){o=r.gG()
 n=o.x
 a2.push(A.eX(g,A.D(l.$1(n),g,g,g,g,g,g,g,g),new A.bre(p,a4,o),p.c===n,g))}B.b.R(e,A.b([B.bQ,a1,B.io,A.fJ(a2,B.bH,6,6)],s))}e.push(B.bQ)
@@ -142819,7 +142822,7 @@ k=A.a4(new A.c5(b.fj(s,new A.b9F(),r),o),o.i("z.E"))
 j=A.A(a0)
 i=new A.b9M(j)
 b=A.fl(B.lj,!0,B.av1)
-o=A.Lu(B.ja,B.avY,new A.b9G(a0))
+o=A.Lu(B.ja,B.avZ,new A.b9G(a0))
 n=A.a6(k).i("ak<1>")
 h=t.p
 n=A.i4(new A.ad(B.wG,A.bH(A.b([i.$2("Jou\xe9s",k.length),i.$3("Victoires",new A.ak(k,new A.b9H(),n).gC(0),B.kJ),i.$2("Nuls",new A.ak(k,new A.b9I(),n).gC(0)),i.$3("D\xe9faites",new A.ak(k,new A.b9J(),n).gC(0),j.ax.fy)],h),B.v,B.o,B.w,0,c),c),c,B.fx,c)
@@ -142915,7 +142918,7 @@ break A}r=A.h3(12)
 return A.fQ(q,A.D(A.i(o.at)+" - "+A.i(o.ax),q,q,q,q,A.cT(q,q,s.b,q,q,q,q,q,q,q,q,q,q,q,B.c6,q,q,!0,q,q,q,q,q,q,q,q),q,q,q),B.M,q,q,new A.e5(s.a,q,q,r,q,q,B.bw),q,q,q,B.a5V,q,q,q)}}
 A.bnq.prototype={
 $1(a){var s=null,r=A.D("Supprimer le match contre "+this.a.y+" ?",s,s,s,s,s,s,s,s)
-return A.kI(A.b([A.fX(B.eP,s,s,new A.bno(a),s,s),A.da(B.ka,new A.bnp(a))],t.p),B.avU,r)},
+return A.kI(A.b([A.fX(B.eP,s,s,new A.bno(a),s,s),A.da(B.ka,new A.bnp(a))],t.p),B.avV,r)},
 $S:41}
 A.bno.prototype={
 $0(){return A.c4(this.a,!1).dn(!1)},
@@ -143124,7 +143127,7 @@ return A.q($async$$1,r)},
 $S:946}
 A.EG.prototype={
 hr(a,b){var s=null,r=b.ak($.bsv(),t.ux).gn(),q=b.ak($.Zj(),t.GQ),p=A.A(a),o=t.p,n=A.fl(A.b([B.k6,A.ha(s,s,s,B.nq,s,s,new A.aMX(a),s,s,s,"Modifier")],o),!0,B.awq),m=A.ZU(q,new A.aMY(r,a,b,p),new A.aMZ(),new A.aN_()),l=r==null,k=l?s:r.z
-o=A.b([m,A.cH(!1,s,s,s,!0,s,s,s,!0,s,B.a7J,s,s,s,s,s,!1,s,s,s,s,s,B.av_,s,A.D(k==null?"":k,s,s,s,s,s,s,s,s),s,s,s),B.n4,A.cH(!1,s,s,s,!0,s,s,s,!0,s,B.a8b,s,s,s,s,new A.aN0(a),!1,s,s,s,s,s,s,s,B.awh,s,B.l5,s),A.cH(!1,s,s,s,!0,s,s,s,!0,s,B.a81,s,s,s,s,new A.aN1(a),!1,s,s,s,s,s,s,s,B.Y0,s,B.l5,s)],o)
+o=A.b([m,A.cH(!1,s,s,s,!0,s,s,s,!0,s,B.a7J,s,s,s,s,s,!1,s,s,s,s,s,B.av_,s,A.D(k==null?"":k,s,s,s,s,s,s,s,s),s,s,s),B.n4,A.cH(!1,s,s,s,!0,s,s,s,!0,s,B.a8b,s,s,s,s,new A.aN0(a),!1,s,s,s,s,s,s,s,B.awi,s,B.l5,s),A.cH(!1,s,s,s,!0,s,s,s,!0,s,B.a81,s,s,s,s,new A.aN1(a),!1,s,s,s,s,s,s,s,B.Y0,s,B.l5,s)],o)
 m=l?s:J.e(r.b.h(0,"role"),"admin")
 if(m===!0)o.push(A.cH(!1,s,s,s,!0,s,s,s,!0,s,B.a7T,s,s,s,s,new A.aN2(a),!1,s,s,s,s,s,s,s,B.Y2,s,B.l5,s))
 o.push(B.cz)
@@ -143186,7 +143189,7 @@ $0(){return A.Ix(this.a,this.b)},
 $S:0}
 A.blX.prototype={
 $1(a){var s=null,r=A.D(""+this.a+" donn\xe9e(s) pas encore envoy\xe9e(s). Synchronisez avant de vous d\xe9connecter, sinon elles seront perdues.",s,s,s,s,s,s,s,s)
-return A.kI(A.b([A.fX(B.eP,s,s,new A.blV(a),s,s),A.da(B.avC,new A.blW(a))],t.p),r,B.aw3)},
+return A.kI(A.b([A.fX(B.eP,s,s,new A.blV(a),s,s),A.da(B.avC,new A.blW(a))],t.p),r,B.aw4)},
 $S:41}
 A.blV.prototype={
 $0(){return A.c4(this.a,!1).dn(!1)},
@@ -143633,7 +143636,7 @@ if(c==null)c="\u2014"
 c=A.b([A.bH(A.b([new A.k3(1,B.dr,A.D(b+"  "+c,a1,a1,a1,a1,p,a1,a1,a1),a1),new A.DZ(n.$1(e),0,240,new A.b2_(d,a0,k),a1)],o),B.v,B.o,B.w,0,a1),B.ah,new A.OT(m.$1(d.a),new A.b20(d,a0,k,n),a1)],o)
 a=m.$1(d.a)
 if(a!=null)c.push(new A.ad(B.hR,A.D("RPE "+A.i(a)+" \u2014 "+A.i(B.yp.h(0,a)),a1,a1,a1,a1,q,a1,a1,a1),a1))
-i.push(A.i4(new A.ad(B.ep,A.bv(c,B.aE,B.o,B.w,0,B.E),a1),a1,a1,a1))}}return A.eF(a2,A.fo(i,a1,B.D6,a1,B.a5,!1),A.hy(!0,new A.ad(B.bC,A.da(B.aw2,new A.b21(a0,a3)),a1),!0,!1,B.V,!0,!0),a1)}}
+i.push(A.i4(new A.ad(B.ep,A.bv(c,B.aE,B.o,B.w,0,B.E),a1),a1,a1,a1))}}return A.eF(a2,A.fo(i,a1,B.D6,a1,B.a5,!1),A.hy(!0,new A.ad(B.bC,A.da(B.aw3,new A.b21(a0,a3)),a1),!0,!1,B.V,!0,!0),a1)}}
 A.b1S.prototype={
 $1(a){var s=null
 return A.kI(A.b([A.fX(B.ava,s,s,new A.b1Q(a),s,s),A.da(B.avG,new A.b1R(a))],t.p),B.awQ,B.awA)},
@@ -144611,7 +144614,7 @@ a0=A.D(a0==null?"\u2014":a0,a2,a2,a2,a2,a2,a2,a2,a2)
 a1=B.jF.h(0,a.z)
 f.push(A.cH(!1,a2,!0,a2,!0,a2,a2,a2,!0,a2,a2,a2,a2,a2,a2,a2,!1,a2,a2,a2,a2,a2,a2,a2,a0,a2,A.D(a1==null?"Sans motif":a1,a2,a2,a2,a2,a2,a2,a2,a2),a2))}e.push(A.azJ(f,a2,a2,a2,d,a2))}B.b.R(p,e)}q=A.fo(p,a2,B.D1,a2,B.a5,!1)
 A:{if("planned"===o){p=A.da(B.zM,new A.aTR(a4,a3))
-break A}if("in_progress"===o){p=A.da(B.aw4,new A.aTS(a4,a3))
+break A}if("in_progress"===o){p=A.da(B.aw5,new A.aTS(a4,a3))
 break A}p=A.E9(B.a7O,A.D("Bien-\xeatre ("+J.bQ(l)+"/"+i.length+")",a2,a2,a2,a2,a2,a2,a2,a2),new A.aTT(a4,a3),a2)
 break A}return A.eF(r,q,A.hy(!0,new A.ad(B.bC,p,a2),!0,!1,B.V,!0,!0),a2)}}
 A.aTK.prototype={
@@ -145053,7 +145056,7 @@ h.push(new A.k3(1,B.dr,new A.ad(B.a64,A.eD(!1,new A.d2(f,f,f,f),!0,A.fQ(a1,A.dL(
 n.push(A.hT(a1,B.bl,!1,a1,!0,B.P,a1,A.im(),a0.y,a1,a1,a1,a1,a1,2,B.a8S,B.a1,!0,a1,!0,a1,!1,a1,B.bc,a1,a1,a1,a1,a1,a1,1000,a1,1,a1,a1,!1,"\u2022",a1,a1,a1,a1,a1,!1,a1,a1,!1,a1,!0,a1,B.bT,a1,a1,a1,a1,a1,a1,a1,a1,a1,a1,a1,a1,!0,B.aa,a1,B.bb,a1,a1,a1,a1))
 if(r)n.push(A.D("R\xe9pondez aux 5 questions pour valider.",a1,a1,a1,a1,A.cT(a1,a1,s.ax.fy,a1,a1,a1,a1,a1,a1,a1,a1,a1,a1,a1,a1,a1,a1,!0,a1,a1,a1,a1,a1,a1,a1,a1),a1,a1,a1))
 n.push(B.ah)
-n.push(A.da(B.awa,new A.bk9(a0)))
+n.push(A.da(B.awb,new A.bk9(a0)))
 n.push(B.bQ)
 n.push(A.pm(B.awW,new A.bka(a0),a1))
 return A.eF(a2,A.dC(new A.ef(B.vN,A.fo(n,a1,B.bC,a1,B.a5,!1),a1),a1,a1),a1,a1)}}
@@ -145429,7 +145432,7 @@ i=A.D("Consentement *",m,m,m,m,s.ok.x,m,m,m)
 h=t.p
 q=A.b([],h)
 for(p=B.yw.ge_(),p=p.gZ(p);p.q();){o=p.gG()
-q.push(A.eX(m,A.D(o.b,m,m,m,m,m,m,m,m),new A.bcl(n,o),n.at===o.a,m))}i=A.b([i,B.ff,B.awe,B.ah,A.fJ(q,B.bH,0,8),B.ah,A.eD(!1,m,!0,A.r9(m,A.D(A.cP("d MMMM y","fr_FR").cF(n.ax),m,m,m,m,m,m,m,m),B.a91,!1,!1,!1,!1,m,m),m,!0,m,m,m,m,m,m,m,m,m,m,m,new A.bcm(n,a),m,m,m,m,m,m,m),A.K_(B.V,m,m,new A.bcn(n),m,m,B.avh,!1,n.ay)],h)
+q.push(A.eX(m,A.D(o.b,m,m,m,m,m,m,m,m),new A.bcl(n,o),n.at===o.a,m))}i=A.b([i,B.ff,B.awf,B.ah,A.fJ(q,B.bH,0,8),B.ah,A.eD(!1,m,!0,A.r9(m,A.D(A.cP("d MMMM y","fr_FR").cF(n.ax),m,m,m,m,m,m,m,m),B.a91,!1,!1,!1,!1,m,m),m,!0,m,m,m,m,m,m,m,m,m,m,m,new A.bcm(n,a),m,m,m,m,m,m,m),A.K_(B.V,m,m,new A.bcn(n),m,m,B.avh,!1,n.ay)],h)
 if(r)i.push(A.D("Le consentement est obligatoire.",m,m,m,m,A.cT(m,m,s.ax.fy,m,m,m,m,m,m,m,m,12,m,m,m,m,m,!0,m,m,m,m,m,m,m,m),m,m,m))
 return new A.j_("Dossier m\xe9dical \u2014 "+(l+" "+j),A.b([A.i4(new A.ad(B.ep,A.bv(i,B.aE,B.o,B.w,0,B.E),m),m,m,m),B.a8,n.CT(n.w,"Allergies (aliments, insectes, m\xe9dicaments\u2026)"),n.CT(n.x,"Maladie ou condition connue (asthme, \xe9pilepsie, diab\xe8te\u2026)"),n.CT(n.y,"Tension basse, malaises, anxi\xe9t\xe9"),n.CT(n.z,"Interventions chirurgicales (et quand)"),new A.ad(B.n6,A.hT(m,B.bl,!1,m,!0,B.P,m,A.im(),n.Q,m,m,m,m,m,2,B.a8T,B.a1,!0,m,!0,m,!1,m,B.bc,m,m,m,m,m,m,1000,m,3,m,m,!1,"\u2022",m,m,m,m,m,!1,m,m,!1,m,!0,m,B.bT,m,m,m,m,m,m,m,m,m,m,m,m,!0,B.aa,m,B.k8,m,m,m,m),m),n.CT(n.as,"Remarques"),B.bQ,A.da(B.hh,new A.bco(n,k))],h),!0,m)}}
 A.bcg.prototype={
@@ -145634,7 +145637,7 @@ d=b5.at
 if(d!=null)e.push(A.i(d)+" cm")
 c=B.b.aS(e,b1)
 e=t.p
-d=A.fl(A.b([A.ha(b0,b0,b0,B.nq,b0,b0,new A.aLV(p,s),b0,b0,b0,"Modifier"),A.Ew(new A.aLW(),new A.aLX(s,q,b5),b0,t.N)],e),!0,B.aw1)
+d=A.fl(A.b([A.ha(b0,b0,b0,B.nq,b0,b0,new A.aLV(p,s),b0,b0,b0,"Modifier"),A.Ew(new A.aLW(),new A.aLX(s,q,b5),b0,t.N)],e),!0,B.aw2)
 b=J.ba(n)
 a=b.gaq(n)?"Aucune s\xe9ance.":b0
 a0=A.b([],e)
@@ -146537,7 +146540,7 @@ e=b.r
 q=t.p
 e=A.bH(A.b([A.NP(B.c.a_(e,0,1).toUpperCase(),b.z,16),B.app,A.c6(A.bv(A.b([A.D(e,f,f,f,f,f,f,f,f),A.D(A.i(B.tP.h(0,b.x))+" \xb7 "+b.y,f,f,f,f,A.A(a).ok.Q,f,f,f)],q),B.aE,B.o,B.w,0,B.E),1)],q),B.v,B.o,B.w,0,f)
 e=A.fl(A.b([B.k6,A.Ew(new A.bhR(),new A.bhS(g,a),f,s)],q),!0,e)
-o=A.Lu(B.xx,B.avS,new A.bhT(a))
+o=A.Lu(B.xx,B.avT,new A.bhT(a))
 if(d.gaq(c))d=B.aBJ
 else{d=A.hT(f,B.bl,!1,f,!0,B.P,f,A.im(),f,f,f,f,f,f,2,B.a8Q,B.a1,!0,f,!0,f,!1,f,B.bc,f,f,f,f,f,f,f,f,1,f,f,!1,"\u2022",f,new A.bhU(g),f,f,f,!1,f,f,!1,f,!0,f,B.bT,f,f,f,f,f,f,f,f,f,f,f,f,!0,B.aa,f,B.bb,f,f,f,f)
 n=A.b([],q)
@@ -146685,7 +146688,7 @@ J(a){var s=null
 return A.dC(new A.ad(B.j_,A.bv(A.b([A.dL(B.DT,A.A(a).ax.b,s,64),B.a8,B.awS],t.p),B.v,B.o,B.ar,0,B.E),s),s,s)}}
 A.a78.prototype={
 J(a){var s=null
-return A.eF(A.fl(B.lj,!0,B.aw0),A.dC(new A.ad(B.j_,A.bv(A.b([A.dL(B.a7A,A.A(a).ax.b,s,64),B.a8,B.aww,B.cz,A.da(B.XZ,new A.aKG(a))],t.p),B.v,B.o,B.ar,0,B.E),s),s,s),s,s)}}
+return A.eF(A.fl(B.lj,!0,B.aw1),A.dC(new A.ad(B.j_,A.bv(A.b([A.dL(B.a7A,A.A(a).ax.b,s,64),B.a8,B.aww,B.cz,A.da(B.XZ,new A.aKG(a))],t.p),B.v,B.o,B.ar,0,B.E),s),s,s),s,s)}}
 A.aKG.prototype={
 $0(){return A.bt(this.a).cg("/team/new",null)},
 $S:0}
@@ -146826,7 +146829,7 @@ J.fk(n.cf(r.y,new A.aWz()),r)}s=n.$ti.i("bj<1>")
 m=A.a4(new A.bj(n,s),s.i("z.E"))
 B.b.dX(m,new A.aWA())
 s=A.fl(B.lj,!0,B.Yd)
-r=A.Lu(B.ja,B.awg,new A.aWB(a))
+r=A.Lu(B.ja,B.awh,new A.aWB(a))
 if(m.length===0)p=B.a2D
 else{o=A.b([],t.p)
 for(l=m.length,k=0;k<m.length;m.length===l||(0,A.C)(m),++k){j=m[k]
@@ -158195,8 +158198,8 @@ B.akE=new A.ad(B.j_,B.av9,null)
 B.a2D=new A.fO(B.ab,null,null,B.akE,null)
 B.awo=new A.ap("R\xe9serv\xe9 au responsable de l'\xe9quipe.",null,null,null,null,null,null,null,null,null,null)
 B.a2E=new A.fO(B.ab,null,null,B.awo,null)
-B.aw8=new A.ap("Aucun joueur dans l'effectif.",null,null,null,null,null,null,null,null,null,null)
-B.a2F=new A.fO(B.ab,null,null,B.aw8,null)
+B.aw9=new A.ap("Aucun joueur dans l'effectif.",null,null,null,null,null,null,null,null,null,null)
+B.a2F=new A.fO(B.ab,null,null,B.aw9,null)
 B.avI=new A.ap("Le dossier m\xe9dical n'est visible que du responsable de l'\xe9quipe.",null,null,B.bo,null,null,null,null,null,null,null)
 B.akD=new A.ad(B.iZ,B.avI,null)
 B.a2G=new A.fO(B.ab,null,null,B.akD,null)
@@ -160213,8 +160216,8 @@ B.adi=s(["\u0da2\u0db1","\u0db4\u0dd9\u0db6","\u0db8\u0dcf\u0dbb\u0dca","\u0d85\
 B.adj=s(["s\xe1nz\xe1 m\xeds\xe1to ya yambo","s\xe1nz\xe1 m\xeds\xe1to ya m\xedbal\xe9","s\xe1nz\xe1 m\xeds\xe1to ya m\xeds\xe1to","s\xe1nz\xe1 m\xeds\xe1to ya m\xednei"],t.s)
 B.awR=new A.ap("Tit.",null,null,null,null,null,null,null,null,null,null)
 B.a0L=new A.mt("starter",B.awR,t.Zx)
-B.aw6=new A.ap("Remp.",null,null,null,null,null,null,null,null,null,null)
-B.a0M=new A.mt("sub",B.aw6,t.Zx)
+B.aw7=new A.ap("Remp.",null,null,null,null,null,null,null,null,null,null)
+B.a0M=new A.mt("sub",B.aw7,t.Zx)
 B.adk=s([B.a0L,B.a0M],A.ac("B<mt<c>>"))
 B.rH=s(["jan.","feb.","mars","apr.","maj","juni","juli","aug.","sep.","okt.","nov.","dec."],t.s)
 B.adm=s([47,47,47,47,72,97,122,147],t.t)
@@ -161880,22 +161883,22 @@ B.Sp=new A.a7s(1,"end")
 B.Sq=new A.a7t(0,"nearestOverlay")
 B.akB=new A.a7t(1,"rootOverlay")
 B.Sr=new A.ad(B.bC,B.kC,null)
-B.awd=new A.ap("Aucune s\xe9ance pour l'instant. Cr\xe9ez votre premi\xe8re s\xe9ance.",null,null,B.bo,null,null,null,null,null,null,null)
-B.akC=new A.ad(B.j_,B.awd,null)
-B.aw_=new A.ap("Aucun \xe9v\xe9nement.",null,null,null,null,null,null,null,null,null,null)
-B.akF=new A.ad(B.dE,B.aw_,null)
+B.awe=new A.ap("Aucune s\xe9ance pour l'instant. Cr\xe9ez votre premi\xe8re s\xe9ance.",null,null,B.bo,null,null,null,null,null,null,null)
+B.akC=new A.ad(B.j_,B.awe,null)
+B.aw0=new A.ap("Aucun \xe9v\xe9nement.",null,null,null,null,null,null,null,null,null,null)
+B.akF=new A.ad(B.dE,B.aw0,null)
 B.awO=new A.ap("La s\xe9ance n'a pas encore commenc\xe9 : faites l'appel pour enregistrer les pr\xe9sents.",null,null,null,null,null,null,null,null,null,null)
 B.akG=new A.ad(B.dE,B.awO,null)
-B.awf=new A.ap("Vous vous \xeates connect\xe9 avec un mot de passe temporaire. Pour votre s\xe9curit\xe9, choisissez votre propre mot de passe.",null,null,null,null,null,null,null,null,null,null)
-B.akH=new A.ad(B.bC,B.awf,null)
-B.avW=new A.ap("Dossier vide.",null,null,null,null,null,null,null,null,null,null)
-B.akI=new A.ad(B.bC,B.avW,null)
+B.awg=new A.ap("Vous vous \xeates connect\xe9 avec un mot de passe temporaire. Pour votre s\xe9curit\xe9, choisissez votre propre mot de passe.",null,null,null,null,null,null,null,null,null,null)
+B.akH=new A.ad(B.bC,B.awg,null)
+B.avX=new A.ap("Dossier vide.",null,null,null,null,null,null,null,null,null,null)
+B.akI=new A.ad(B.bC,B.avX,null)
 B.avy=new A.ap("Aucun match pour l'instant. Cr\xe9ez votre premier match.",null,null,B.bo,null,null,null,null,null,null,null)
 B.akK=new A.ad(B.j_,B.avy,null)
 B.awp=new A.ap("Aucun dossier m\xe9dical. Sa cr\xe9ation demande le consentement du joueur, ou d'un parent s'il est mineur.",null,null,null,null,null,null,null,null,null,null)
 B.akL=new A.ad(B.bC,B.awp,null)
-B.aw7=new A.ap("Le match n'a pas encore commenc\xe9 : choisissez les joueurs pr\xe9sents et les titulaires.",null,null,null,null,null,null,null,null,null,null)
-B.akM=new A.ad(B.dE,B.aw7,null)
+B.aw8=new A.ap("Le match n'a pas encore commenc\xe9 : choisissez les joueurs pr\xe9sents et les titulaires.",null,null,null,null,null,null,null,null,null,null)
+B.akM=new A.ad(B.dE,B.aw8,null)
 B.avd=new A.ap("Rien \xe0 v\xe9rifier ici.",null,null,null,null,null,null,null,null,null,null)
 B.akN=new A.ad(B.ep,B.avd,null)
 B.akO=new A.ad(B.j_,B.kC,null)
@@ -161948,18 +161951,18 @@ B.avl=new A.ap("Modifier la feuille de match",null,null,null,null,null,null,null
 B.alI=new A.fA("squad",B.avl,null,t.wI)
 B.awt=new A.ap("Supprimer le match",null,null,null,null,null,null,null,null,null,null)
 B.alJ=new A.fA("delete",B.awt,null,t.wI)
-B.avV=new A.ap("Modifier temps de jeu et RPE",null,null,null,null,null,null,null,null,null,null)
-B.alK=new A.fA("end",B.avV,null,t.wI)
+B.avW=new A.ap("Modifier temps de jeu et RPE",null,null,null,null,null,null,null,null,null,null)
+B.alK=new A.fA("end",B.avW,null,t.wI)
 B.awC=new A.ap("\xc9quipes",null,null,null,null,null,null,null,null,null,null)
 B.alL=new A.fA("teams",B.awC,null,t.wI)
 B.av3=new A.ap("Modifier les informations",null,null,null,null,null,null,null,null,null,null)
 B.W1=new A.fA("edit",B.av3,null,t.wI)
 B.avu=new A.ap("Modifier les dur\xe9es et RPE",null,null,null,null,null,null,null,null,null,null)
 B.alR=new A.fA("close",B.avu,null,t.wI)
-B.avR=new A.ap("Modifier l'appel",null,null,null,null,null,null,null,null,null,null)
-B.alS=new A.fA("call",B.avR,null,t.wI)
-B.avX=new A.ap("R\xe9initialiser le mot de passe",null,null,null,null,null,null,null,null,null,null)
-B.alU=new A.fA("reset",B.avX,null,t.wI)
+B.avS=new A.ap("Modifier l'appel",null,null,null,null,null,null,null,null,null,null)
+B.alS=new A.fA("call",B.avS,null,t.wI)
+B.avY=new A.ap("R\xe9initialiser le mot de passe",null,null,null,null,null,null,null,null,null,null)
+B.alU=new A.fA("reset",B.avY,null,t.wI)
 B.alV=new A.Ez(null,null,null,null,null,null,null,null,null,null,null,null,null)
 B.a79=new A.bi(58550,"MaterialIcons",null,!1)
 B.a7X=new A.cM(B.a79,14,null,null,null)
@@ -162828,35 +162831,35 @@ B.avL=new A.ap("Fin de match",null,null,null,null,null,null,null,null,null,null)
 B.avM=new A.ap("Fin du match",null,null,null,null,null,null,null,null,null,null)
 B.avN=new A.ap("Nouveau test",null,null,null,null,null,null,null,null,null,null)
 B.zN=new A.ap("OK",null,null,null,null,null,null,null,null,null,null)
-B.avP=new A.ap("Peut g\xe9rer les comptes du staff",null,null,null,null,null,null,null,null,null,null)
-B.avQ=new A.ap("J'atteste que chaque joueur (ou son parent s'il est mineur) a consenti \xe0 ce suivi m\xe9dical",null,null,null,null,null,null,null,null,null,null)
-B.avS=new A.ap("Ajouter un joueur",null,null,null,null,null,null,null,null,null,null)
+B.avP=new A.ap("PerfFoot \u2014 version 0.3.2 (7)",null,null,null,null,null,null,null,null,null,null)
+B.avQ=new A.ap("Peut g\xe9rer les comptes du staff",null,null,null,null,null,null,null,null,null,null)
+B.avR=new A.ap("J'atteste que chaque joueur (ou son parent s'il est mineur) a consenti \xe0 ce suivi m\xe9dical",null,null,null,null,null,null,null,null,null,null)
+B.avT=new A.ap("Ajouter un joueur",null,null,null,null,null,null,null,null,null,null)
 B.Y1=new A.ap("Se d\xe9connecter",null,null,null,null,null,null,null,null,null,null)
-B.avT=new A.ap("Import termin\xe9",null,null,null,null,null,null,null,null,null,null)
-B.avU=new A.ap("La feuille de match et les \xe9v\xe9nements seront supprim\xe9s. Les blessures d\xe9clar\xe9es sont conserv\xe9es.",null,null,null,null,null,null,null,null,null,null)
+B.avU=new A.ap("Import termin\xe9",null,null,null,null,null,null,null,null,null,null)
+B.avV=new A.ap("La feuille de match et les \xe9v\xe9nements seront supprim\xe9s. Les blessures d\xe9clar\xe9es sont conserv\xe9es.",null,null,null,null,null,null,null,null,null,null)
 B.Y2=new A.ap("Administration",null,null,null,null,null,null,null,null,null,null)
-B.avY=new A.ap("Nouveau match",null,null,null,null,null,null,null,null,null,null)
-B.avZ=new A.ap("Choisir dans la galerie",null,null,null,null,null,null,null,null,null,null)
+B.avZ=new A.ap("Nouveau match",null,null,null,null,null,null,null,null,null,null)
+B.aw_=new A.ap("Choisir dans la galerie",null,null,null,null,null,null,null,null,null,null)
 B.Y3=new A.ap("R\xe9essayer",null,null,null,null,null,null,null,null,null,null)
-B.aw0=new A.ap("Mon \xe9quipe",null,null,null,null,null,null,null,null,null,null)
-B.aw1=new A.ap("Fiche joueur",null,null,null,null,null,null,null,null,null,null)
-B.aw2=new A.ap("Valider la cl\xf4ture",null,null,null,null,null,null,null,null,null,null)
+B.aw1=new A.ap("Mon \xe9quipe",null,null,null,null,null,null,null,null,null,null)
+B.aw2=new A.ap("Fiche joueur",null,null,null,null,null,null,null,null,null,null)
+B.aw3=new A.ap("Valider la cl\xf4ture",null,null,null,null,null,null,null,null,null,null)
 B.eP=new A.ap("Annuler",null,null,null,null,null,null,null,null,null,null)
-B.aw3=new A.ap("Donn\xe9es non synchronis\xe9es",null,null,null,null,null,null,null,null,null,null)
-B.aw4=new A.ap("Terminer la s\xe9ance",null,null,null,null,null,null,null,null,null,null)
-B.aw5=new A.ap("Reprendre",null,null,null,null,null,null,null,null,null,null)
+B.aw4=new A.ap("Donn\xe9es non synchronis\xe9es",null,null,null,null,null,null,null,null,null,null)
+B.aw5=new A.ap("Terminer la s\xe9ance",null,null,null,null,null,null,null,null,null,null)
+B.aw6=new A.ap("Reprendre",null,null,null,null,null,null,null,null,null,null)
 B.Y4=new A.ap("Continuer",null,null,null,null,null,null,null,null,null,null)
-B.aw9=new A.ap("Il voit toutes les donn\xe9es de ces \xe9quipes, sauf le dossier m\xe9dical.",null,null,null,null,null,null,null,null,null,null)
-B.awa=new A.ap("Valider et joueur suivant",null,null,null,null,null,null,null,null,null,null)
-B.awb=new A.ap("Synchroniser maintenant",null,null,null,null,null,null,null,null,null,null)
-B.awc=new A.ap("Cr\xe9er un nouveau joueur",null,null,null,null,null,null,null,null,null,null)
+B.awa=new A.ap("Il voit toutes les donn\xe9es de ces \xe9quipes, sauf le dossier m\xe9dical.",null,null,null,null,null,null,null,null,null,null)
+B.awb=new A.ap("Valider et joueur suivant",null,null,null,null,null,null,null,null,null,null)
+B.awc=new A.ap("Synchroniser maintenant",null,null,null,null,null,null,null,null,null,null)
+B.awd=new A.ap("Cr\xe9er un nouveau joueur",null,null,null,null,null,null,null,null,null,null)
 B.Y6=new A.ap("S\xe9ance",null,null,null,null,null,null,null,null,null,null)
-B.awe=new A.ap("Donn\xe9es de sant\xe9 : \xe0 recueillir aupr\xe8s du joueur, ou d'un parent ou tuteur s'il est mineur.",null,null,null,null,null,null,null,null,null,null)
-B.awg=new A.ap("Nouvelle journ\xe9e de tests",null,null,null,null,null,null,null,null,null,null)
-B.awh=new A.ap("Changer le mot de passe",null,null,null,null,null,null,null,null,null,null)
+B.awf=new A.ap("Donn\xe9es de sant\xe9 : \xe0 recueillir aupr\xe8s du joueur, ou d'un parent ou tuteur s'il est mineur.",null,null,null,null,null,null,null,null,null,null)
+B.awh=new A.ap("Nouvelle journ\xe9e de tests",null,null,null,null,null,null,null,null,null,null)
+B.awi=new A.ap("Changer le mot de passe",null,null,null,null,null,null,null,null,null,null)
 B.Y7=new A.ap("Enregistrer pour plus tard",null,null,null,null,null,null,null,null,null,null)
-B.awi=new A.ap("Aucun",null,null,null,null,null,null,null,null,null,null)
-B.awj=new A.ap("PerfFoot \u2014 version 0.3.1 (6)",null,null,null,null,null,null,null,null,null,null)
+B.awj=new A.ap("Aucun",null,null,null,null,null,null,null,null,null,null)
 B.awk=new A.ap("Confirmer la feuille de match",null,null,null,null,null,null,null,null,null,null)
 B.awl=new A.ap("Go to home page",null,B.XV,null,null,null,null,null,null,null,null)
 B.Ya=new A.ap("8 caract\xe8res minimum, dont 1 chiffre",null,null,null,null,null,null,null,null,null,null)
