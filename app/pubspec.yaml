@@ -1,7 +1,7 @@
 name: perffoot
 description: "A new Flutter project."
 publish_to: 'none'
-version: 0.3.0+5
+version: 0.3.1+6
 
 environment:
   sdk: ^3.13.4
@@ -35,6 +35,8 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/images/club_crest.png
   # Titres « jeu de foot » : Barlow Condensed (licence OFL, assets/fonts/OFL.txt), embarquée pour le hors-ligne.
   fonts:
     - family: BarlowCondensed

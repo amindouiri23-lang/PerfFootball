@@ -54,7 +54,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final theme = Theme.of(context);
     return FormPage(children: [
       const SizedBox(height: 24),
-      Icon(Icons.sports_soccer, size: 64, color: theme.colorScheme.primary),
+      Center(child: Image.asset('assets/images/club_crest.png', height: 120, semanticLabel: 'Écusson du club')),
       const SizedBox(height: 8),
       Text('PerfFoot', textAlign: TextAlign.center,
           style: theme.textTheme.headlineMedium?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.bold)),
