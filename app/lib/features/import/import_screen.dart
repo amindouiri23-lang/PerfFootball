@@ -205,7 +205,8 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
 
   Widget _names(ThemeData theme, Map<String, NameMapping> mapping, List<Player> players) {
     final byId = {for (final p in players) p.id: p};
-    bool toCheck(NameMapping m) => m.playerId != null && m.confidence < 1 && !m.ignore;
+    // Nom proche (ressemblance entre 0,75 et 1) ; un joueur créé par l'import n'est pas « à vérifier ».
+    bool toCheck(NameMapping m) => m.playerId != null && m.confidence > 0 && m.confidence < 1 && !m.ignore;
     final check = mapping.values.where(toCheck).length;
     final create = mapping.values.where((m) => m.create).length;
     final shown = mapping.entries.where((e) => switch (_filter) {
