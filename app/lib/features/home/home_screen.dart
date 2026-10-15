@@ -230,7 +230,7 @@ class HomeScreen extends ConsumerWidget {
   List<Widget> _nextMatch(BuildContext context, WidgetRef ref, String teamId) {
     final today = isoDate(DateTime.now());
     final next = (ref.watch(matchesProvider(teamId)).value ?? const <FootballMatch>[])
-        .where((m) => m.date.compareTo(today) >= 0 && m.status != 'completed')
+        .where((m) => m.date.compareTo(today) >= 0 && (m.status == 'planned' || m.status == 'in_progress'))
         .toList()
       ..sort((a, b) => '${a.date} ${a.kickOffTime}'.compareTo('${b.date} ${b.kickOffTime}'));
     if (next.isEmpty) return const [];

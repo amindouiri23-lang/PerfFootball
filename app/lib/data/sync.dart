@@ -39,6 +39,8 @@ const _tables = [
   _SyncTable('test_results'),
   _SyncTable('player_profiles'),
   _SyncTable('player_medical'), // vide pour qui n'est pas propriétaire de l'équipe (RLS)
+  _SyncTable('tactics'),
+  _SyncTable('tactic_links'), // après tactics, sessions et matches, qu'elle référence
 ];
 
 /// Synchronisation hors ligne d'abord (docs/01 §6) :

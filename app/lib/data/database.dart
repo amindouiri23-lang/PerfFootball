@@ -109,6 +109,8 @@ class Matches extends Table with SyncColumns {
   /// Phase de championnat (first_leg / second_leg) et numéro de journée.
   TextColumn get phase => text().nullable()();
   IntColumn get matchday => integer().nullable()();
+  /// Forfait (status 'forfeit') : us = défaite 0-3, opponent = victoire 3-0.
+  TextColumn get forfeitBy => text().nullable()();
 }
 
 /// Feuille de match d'un joueur (id déterministe : match + joueur).
@@ -221,6 +223,25 @@ class PlayerMedical extends Table with SyncColumns {
   TextColumn get remarks => text().nullable()();
 }
 
+/// Tactique (coup de pied arrêté ou situation personnalisée) : `board` est le JSON des pions et flèches.
+class Tactics extends Table with SyncColumns {
+  TextColumn get teamId => text()();
+  TextColumn get name => text()();
+  TextColumn get kind => text()();
+  TextColumn get side => text()();
+  TextColumn get pitch => text().withDefault(const Constant('half'))();
+  TextColumn get board => text().withDefault(const Constant('{}'))();
+  TextColumn get notes => text().nullable()();
+}
+
+/// Tactique travaillée en séance ou prévue pour un match (id déterministe : tactique + séance ou match).
+class TacticLinks extends Table with SyncColumns {
+  TextColumn get teamId => text()();
+  TextColumn get tacticId => text()();
+  TextColumn get sessionId => text().nullable()();
+  TextColumn get matchId => text().nullable()();
+}
+
 /// Curseur de synchronisation par table : plus grand server_updated_at reçu.
 class SyncState extends Table {
   TextColumn get tableName_ => text().named('table_name')();
@@ -241,14 +262,14 @@ class LocalSettings extends Table {
 
 @DriftDatabase(tables: [
   Teams, TeamMembers, Players, Sessions, SessionPlayers, Wellness, Matches, MatchPlayers, MatchEvents, Injuries,
-  TestTypes, TestResults, PlayerProfiles, PlayerMedical,
+  TestTypes, TestResults, PlayerProfiles, PlayerMedical, Tactics, TacticLinks,
   SyncState, LocalSettings,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? openConnection());
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -288,6 +309,17 @@ class AppDatabase extends _$AppDatabase {
               await m.addColumn(playerProfiles, c);
             }
             await (delete(syncState)..where((s) => s.tableName_.equals('player_profiles'))).go();
+          }
+          if (from < 6) {
+            // v6 : issues de match (forfait…) et tactiques. Une base venant de v2 a reçu la table des matchs
+            // complète à l'étape v3 : la colonne n'est ajoutée que si elle manque.
+            final cols = await customSelect('PRAGMA table_info(matches)').get();
+            if (!cols.any((c) => c.read<String>('name') == 'forfeit_by')) {
+              await m.addColumn(matches, matches.forfeitBy);
+            }
+            for (final TableInfo<Table, dynamic> t in [tactics, tacticLinks]) {
+              await m.createTable(t);
+            }
           }
         },
       );

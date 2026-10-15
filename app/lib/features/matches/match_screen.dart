@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import '../../core/router.dart';
 import '../../core/widgets/sync_indicator.dart';
@@ -9,6 +10,7 @@ import '../../data/database.dart';
 import '../sessions/session_repository.dart' show bodyAreas, injurySides;
 import '../sessions/session_screen.dart' show showRemarkSheet;
 import '../sessions/sessions_list_screen.dart' show StatusChip;
+import '../tactics/tactic_screens.dart' show LinkedTactics;
 import '../team/team_repository.dart';
 import 'match_repository.dart';
 import 'matches_list_screen.dart';
@@ -30,8 +32,9 @@ class MatchScreen extends ConsumerWidget {
     final injuries = ref.watch(matchInjuriesProvider(m.id)).value ?? const <Injury>[];
     final repo = ref.read(matchRepositoryProvider);
     final theme = Theme.of(context);
-    final completed = m.status == 'completed';
-    final goalsFor = completed ? (m.goalsFor ?? 0) : events.where((e) => e.type == 'goal').length;
+    final completed = m.status == 'completed' || m.status == 'abandoned';
+    final goalsFor = completed || m.status == 'forfeit' ? (m.goalsFor ?? 0) : events.where((e) => e.type == 'goal').length;
+    final open = m.status == 'planned' || m.status == 'in_progress';
     final goalsAgainst = m.goalsAgainst ?? 0;
     final present = squadOrder(rows.where((r) => r.present).toList(), players);
     String name(String? id) => players[id]?.fullName ?? '—';
@@ -85,14 +88,38 @@ class MatchScreen extends ConsumerWidget {
                 context.go('/matches/${m.id}/squad');
               case 'end':
                 context.go('/matches/${m.id}/end');
+              case 'abandon':
+                context.go('/matches/${m.id}/end?abandoned=1');
+              case 'forfeit':
+                await _declareForfeit(context, ref, m);
+              case 'postpone':
+                await _postpone(context, ref, m);
+              case 'cancel':
+                if (await _confirm(context, 'Annuler le match contre ${m.opponent} ?',
+                    'Le match ne compte plus dans les statistiques. Vous pourrez le rétablir.', 'Annuler le match')) {
+                  await repo.cancel(m);
+                  if (context.mounted) showMessage(context, 'Match annulé');
+                }
+              case 'restore':
+                await repo.restore(m);
+                if (context.mounted) showMessage(context, 'Match rétabli : de nouveau planifié');
               case 'delete':
                 if (await confirmDeleteMatch(context, ref, m) && context.mounted) context.go('/matches');
             }
           },
           itemBuilder: (_) => [
             const PopupMenuItem(value: 'edit', child: Text('Modifier les informations')),
-            if (m.status != 'planned') const PopupMenuItem(value: 'squad', child: Text('Modifier la feuille de match')),
-            if (completed) const PopupMenuItem(value: 'end', child: Text('Modifier temps de jeu et RPE')),
+            if (m.status == 'in_progress' || completed)
+              const PopupMenuItem(value: 'squad', child: Text('Modifier la feuille de match')),
+            if (completed)
+              PopupMenuItem(value: m.status == 'abandoned' ? 'abandon' : 'end', child: const Text('Modifier temps de jeu et RPE')),
+            if (m.status == 'in_progress') const PopupMenuItem(value: 'abandon', child: Text('Match arrêté')),
+            if (open) ...const [
+              PopupMenuItem(value: 'forfeit', child: Text('Déclarer un forfait')),
+              PopupMenuItem(value: 'postpone', child: Text('Reporter le match')),
+              PopupMenuItem(value: 'cancel', child: Text('Annuler le match')),
+            ],
+            if (m.notPlayed) const PopupMenuItem(value: 'restore', child: Text('Rétablir le match')),
             const PopupMenuItem(value: 'delete', child: Text('Supprimer le match')),
           ],
         ),
@@ -106,7 +133,7 @@ class MatchScreen extends ConsumerWidget {
             child: Column(children: [
               Row(children: [
                 Expanded(child: Text(team?.name ?? '', textAlign: TextAlign.center, style: TextStyle(color: theme.colorScheme.onPrimary))),
-                Text('$goalsFor - $goalsAgainst',
+                Text(m.status == 'postponed' || m.status == 'cancelled' ? 'vs' : '$goalsFor - $goalsAgainst',
                     style: theme.textTheme.displaySmall?.copyWith(color: theme.colorScheme.onPrimary, fontWeight: FontWeight.bold)),
                 Expanded(child: Text(m.opponent, textAlign: TextAlign.center, style: TextStyle(color: theme.colorScheme.onPrimary))),
               ]),
@@ -134,12 +161,28 @@ class MatchScreen extends ConsumerWidget {
             ]),
           ),
         ),
-        if (m.status == 'planned')
+        if (m.notPlayed)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text(switch (m.status) {
+              'forfeit' => m.forfeitBy == 'opponent'
+                  ? 'Forfait de ${m.opponent} : victoire $forfeitGoals-0 sur tapis vert. Aucun temps de jeu n\'est compté.'
+                  : 'Forfait de notre équipe : défaite 0-$forfeitGoals sur tapis vert. Aucun temps de jeu n\'est compté.',
+              'postponed' => 'Match reporté, nouvelle date à fixer. Il ne compte pas dans les statistiques.',
+              _ => 'Match annulé. Il ne compte pas dans les statistiques.',
+            }),
+          )
+        else if (m.status == 'planned')
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 16),
             child: Text('Le match n\'a pas encore commencé : choisissez les joueurs présents et les titulaires.'),
           )
         else ...[
+          if (m.status == 'abandoned')
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: Text('Match arrêté : score et minutes jusqu\'à l\'arrêt. Il ne compte pas au bilan des résultats.'),
+            ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Row(children: [
@@ -168,6 +211,9 @@ class MatchScreen extends ConsumerWidget {
           for (final r in present)
             _PlayerRow(m: m, row: r, player: players[r.playerId], events: events, injured: injuries.any((i) => i.playerId == r.playerId)),
         ],
+        if (!m.notPlayed)
+          LinkedTactics(
+              teamId: m.teamId, matchId: m.id, title: 'Coups de pied arrêtés et tactiques', basePath: '/matches/${m.id}'),
         _title(context, 'Remarques sur le match'),
         ListTile(
           leading: const Icon(Icons.edit_note),
@@ -179,17 +225,115 @@ class MatchScreen extends ConsumerWidget {
           },
         ),
       ]),
-      bottomNavigationBar: m.status == 'completed'
+      bottomNavigationBar: !open && m.status != 'postponed'
           ? null
           : SafeArea(
               child: Padding(
                 padding: const EdgeInsets.all(16),
-                child: m.status == 'planned'
-                    ? FilledButton(onPressed: () => context.go('/matches/${m.id}/squad'), child: const Text('Choisir les joueurs présents'))
-                    : FilledButton(onPressed: () => context.go('/matches/${m.id}/end'), child: const Text('Fin du match')),
+                child: switch (m.status) {
+                  'planned' => FilledButton(
+                      onPressed: () => context.go('/matches/${m.id}/squad'), child: const Text('Choisir les joueurs présents')),
+                  'postponed' => FilledButton(onPressed: () => _postpone(context, ref, m), child: const Text('Fixer la nouvelle date')),
+                  _ => FilledButton(onPressed: () => context.go('/matches/${m.id}/end'), child: const Text('Fin du match')),
+                },
               ),
             ),
     );
+  }
+
+  Future<bool> _confirm(BuildContext context, String title, String body, String action) async =>
+      await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(title),
+          content: Text(body),
+          actions: [
+            TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Retour')),
+            FilledButton(onPressed: () => Navigator.of(context).pop(true), child: Text(action)),
+          ],
+        ),
+      ) ==
+      true;
+
+  /// Forfait : quelle équipe est déclarée forfait. Score 3-0 imposé.
+  Future<void> _declareForfeit(BuildContext context, WidgetRef ref, FootballMatch m) async {
+    final by = await showDialog<String>(
+      context: context,
+      builder: (context) => SimpleDialog(
+        title: const Text('Qui est déclaré forfait ?'),
+        children: [
+          SimpleDialogOption(
+            onPressed: () => Navigator.of(context).pop('opponent'),
+            child: ListTile(
+              leading: const Icon(Icons.emoji_events_outlined, color: Color(0xFF2E7D32)),
+              title: Text(m.opponent),
+              subtitle: const Text('Victoire $forfeitGoals-0 sur tapis vert'),
+            ),
+          ),
+          SimpleDialogOption(
+            onPressed: () => Navigator.of(context).pop('us'),
+            child: ListTile(
+              leading: Icon(Icons.flag_outlined, color: Theme.of(context).colorScheme.error),
+              title: const Text('Notre équipe'),
+              subtitle: const Text('Défaite 0-$forfeitGoals sur tapis vert'),
+            ),
+          ),
+          const Padding(
+            padding: EdgeInsets.fromLTRB(24, 8, 24, 0),
+            child: Text('Personne n\'a joué : les minutes, RPE et buts déjà saisis sont retirés. Les cartons restent.',
+                style: TextStyle(fontSize: 12)),
+          ),
+        ],
+      ),
+    );
+    if (by == null) return;
+    await ref.read(matchRepositoryProvider).declareForfeit(m, by: by);
+    if (context.mounted) {
+      showMessage(context, by == 'opponent' ? 'Victoire $forfeitGoals-0 par forfait' : 'Défaite 0-$forfeitGoals par forfait');
+    }
+  }
+
+  /// Report : nouvelle date tout de suite, ou plus tard (le match reste alors « Reporté »).
+  Future<void> _postpone(BuildContext context, WidgetRef ref, FootballMatch m) async {
+    final repo = ref.read(matchRepositoryProvider);
+    final known = m.status == 'postponed' ||
+        await showDialog<bool>(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text('Reporter le match'),
+                content: const Text('La nouvelle date est-elle déjà connue ?'),
+                actions: [
+                  TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Pas encore')),
+                  FilledButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Choisir la date')),
+                ],
+              ),
+            ) ==
+            true;
+    if (!context.mounted) return;
+    if (!known) {
+      await repo.postpone(m);
+      if (context.mounted) showMessage(context, 'Match reporté');
+      return;
+    }
+    final today = DateTime.now();
+    final date = await showDatePicker(
+      context: context,
+      initialDate: m.day.isAfter(today) ? m.day.add(const Duration(days: 7)) : today,
+      firstDate: today.subtract(const Duration(days: 30)),
+      lastDate: today.add(const Duration(days: 365)),
+      helpText: 'Nouvelle date du match',
+    );
+    if (date == null || !context.mounted) return;
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay(hour: int.parse(m.time.substring(0, 2)), minute: int.parse(m.time.substring(3, 5))),
+      helpText: 'Heure du coup d\'envoi',
+    );
+    String two(int n) => n.toString().padLeft(2, '0');
+    await repo.postpone(m,
+        newDate: '${date.year}-${two(date.month)}-${two(date.day)}',
+        newTime: time == null ? null : '${two(time.hour)}:${two(time.minute)}:00');
+    if (context.mounted) showMessage(context, 'Match reporté au ${DateFormat('d MMMM', 'fr_FR').format(date)}');
   }
 
   Widget _title(BuildContext context, String text) => Padding(
@@ -253,7 +397,7 @@ class _PlayerRow extends ConsumerWidget {
       if (yellows > 0) '$yellows jaune${yellows > 1 ? 's' : ''}',
       if (reds > 0) 'rouge',
       if (injured) 'blessé',
-      if (m.status == 'completed') "${row.minutesPlayed ?? '—'}' · RPE ${row.rpe ?? '—'}",
+      if (m.status == 'completed' || m.status == 'abandoned') "${row.minutesPlayed ?? '—'}' · RPE ${row.rpe ?? '—'}",
       if (row.remark != null) 'Remarque : ${row.remark}',
     ];
     return ListTile(

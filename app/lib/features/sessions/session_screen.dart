@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/widgets/sync_indicator.dart';
 import '../../data/database.dart';
+import '../tactics/tactic_screens.dart' show LinkedTactics;
 import '../team/team_repository.dart';
 import 'session_repository.dart';
 import 'sessions_list_screen.dart';
@@ -130,6 +131,7 @@ class SessionScreen extends ConsumerWidget {
               ],
             ),
         ],
+        LinkedTactics(teamId: s.teamId, sessionId: s.id, title: 'Tactiques travaillées', basePath: '/sessions/${s.id}'),
       ]),
       bottomNavigationBar: SafeArea(
         child: Padding(

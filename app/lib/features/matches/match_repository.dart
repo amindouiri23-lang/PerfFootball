@@ -13,7 +13,12 @@ const _uuid = Uuid();
 // Valeurs en base → libellés affichés (specs E20 à E25).
 const competitions = {'league': 'Championnat', 'cup': 'Coupe', 'friendly': 'Amical', 'tournament': 'Tournoi'};
 const homeAwayLabels = {'H': 'Domicile', 'A': 'Extérieur', 'N': 'Neutre'};
-const matchStatuses = {'planned': 'Planifié', 'in_progress': 'En cours', 'completed': 'Terminé'};
+const matchStatuses = {
+  'planned': 'Planifié', 'in_progress': 'En cours', 'completed': 'Terminé',
+  'forfeit': 'Forfait', 'postponed': 'Reporté', 'cancelled': 'Annulé', 'abandoned': 'Arrêté',
+};
+/// Score d'un match gagné ou perdu par forfait.
+const forfeitGoals = 3;
 const matchAbsenceReasons = {
   'not_selected': 'Non retenu', 'injured': 'Blessé', 'sick': 'Malade', 'suspended': 'Suspendu',
   'national_team': 'Sélection', 'rest': 'Repos', 'other_team': 'Autre équipe', 'other': 'Autre',
@@ -38,10 +43,14 @@ extension FootballMatchLabels on FootballMatch {
         [if (matchday != null) 'J$matchday', if (phase != null) phases[phase]!.toLowerCase()].join(' '),
       ].where((s) => s.isNotEmpty).join(' · ');
 
-  /// 'W', 'D', 'L' ou null si le score n'est pas saisi.
-  String? get result => goalsFor == null || goalsAgainst == null
+  /// 'W', 'D', 'L', ou null si le score n'est pas saisi ou si le match ne compte pas au bilan
+  /// (reporté, annulé, arrêté). Un forfait compte : victoire ou défaite 3-0.
+  String? get result => goalsFor == null || goalsAgainst == null || !{'completed', 'forfeit'}.contains(status)
       ? null
       : goalsFor! > goalsAgainst! ? 'W' : goalsFor! < goalsAgainst! ? 'L' : 'D';
+
+  /// Match qui ne se jouera pas ou plus : forfait, reporté, annulé.
+  bool get notPlayed => {'forfeit', 'postponed', 'cancelled'}.contains(status);
 }
 
 // ---------------------------------------------------------------------------
@@ -148,7 +157,7 @@ class MatchRepository {
 
   Future<void> setGoalsAgainst(String id, int goals) => _updateMatch(id, MatchesCompanion(goalsAgainst: Value(goals)));
 
-  /// Suppression : match, feuille et événements. Les blessures restent, détachées du match.
+  /// Suppression : match, feuille, événements et liens vers les tactiques. Les blessures restent, détachées du match.
   Future<void> deleteMatch(String id) async {
     final now = nowIso();
     const gone = Value(true);
@@ -161,6 +170,8 @@ class MatchRepository {
           .write(MatchEventsCompanion(deleted: gone, updatedAt: Value(now), isDirty: gone));
       await (_db.update(_db.injuries)..where((i) => i.matchId.equals(id))).write(
           InjuriesCompanion(matchId: const Value(null), minute: const Value(null), updatedAt: Value(now), isDirty: gone));
+      await (_db.update(_db.tacticLinks)..where((l) => l.matchId.equals(id)))
+          .write(TacticLinksCompanion(deleted: gone, updatedAt: Value(now), isDirty: gone));
     });
     _sync();
   }
@@ -248,9 +259,10 @@ class MatchRepository {
 
   Future<void> setRpe(String rowId, int? rpe) => _updatePlayerRow(rowId, MatchPlayersCompanion(rpe: Value(rpe)));
 
-  /// E25 — fin du match : score final, temps de jeu par défaut pour les présents non saisis, état « Terminé ».
+  /// E25 — fin du match : score final, temps de jeu par défaut pour les présents non saisis, état « Terminé »
+  /// (ou « Arrêté » pour un match interrompu : score et minutes jusqu'à l'arrêt).
   Future<void> complete(FootballMatch m, {required int goalsFor, required int goalsAgainst,
-      required Map<String, int> defaultMinutes}) async {
+      required Map<String, int> defaultMinutes, String status = 'completed'}) async {
     final now = nowIso();
     await _db.transaction(() async {
       for (final e in defaultMinutes.entries) {
@@ -258,10 +270,49 @@ class MatchRepository {
             .write(MatchPlayersCompanion(minutesPlayed: Value(e.value), updatedAt: Value(now), isDirty: const Value(true)));
       }
       await (_db.update(_db.matches)..where((x) => x.id.equals(m.id))).write(MatchesCompanion(
-            goalsFor: Value(goalsFor), goalsAgainst: Value(goalsAgainst), status: const Value('completed'),
+            goalsFor: Value(goalsFor), goalsAgainst: Value(goalsAgainst), status: Value(status),
             updatedAt: Value(now), isDirty: const Value(true),
           ));
     });
     _sync();
   }
+
+  /// Forfait : score 3-0 (ou 0-3), personne n'a joué. Les minutes, RPE et buts déjà saisis sont retirés ;
+  /// les cartons restent (ils comptent pour les suspensions).
+  Future<void> declareForfeit(FootballMatch m, {required String by}) async {
+    final now = nowIso();
+    const dirty = Value(true);
+    await _db.transaction(() async {
+      await (_db.update(_db.matchPlayers)..where((p) => p.matchId.equals(m.id)))
+          .write(MatchPlayersCompanion(minutesPlayed: const Value(null), rpe: const Value(null), updatedAt: Value(now), isDirty: dirty));
+      await (_db.update(_db.matchEvents)..where((e) => e.matchId.equals(m.id) & e.type.equals('goal')))
+          .write(MatchEventsCompanion(deleted: dirty, updatedAt: Value(now), isDirty: dirty));
+      await (_db.update(_db.matches)..where((x) => x.id.equals(m.id))).write(MatchesCompanion(
+            status: const Value('forfeit'), forfeitBy: Value(by),
+            goalsFor: Value(by == 'opponent' ? forfeitGoals : 0), goalsAgainst: Value(by == 'us' ? forfeitGoals : 0),
+            updatedAt: Value(now), isDirty: dirty,
+          ));
+    });
+    _sync();
+  }
+
+  /// Report : sans nouvelle date, le match reste « Reporté » ; avec une date, il redevient « Planifié »
+  /// à cette date, et la date d'origine est notée dans les remarques.
+  Future<void> postpone(FootballMatch m, {String? newDate, String? newTime}) {
+    if (newDate == null) return _updateMatch(m.id, const MatchesCompanion(status: Value('postponed')));
+    final note = 'Reporté (initialement le ${DateFormat('d MMMM y', 'fr_FR').format(m.day)})';
+    return _updateMatch(m.id, MatchesCompanion(
+      status: const Value('planned'), date: Value(newDate), kickOffTime: Value(newTime ?? m.kickOffTime),
+      remarks: Value(m.remarks == null ? note : '${m.remarks}\n$note'),
+    ));
+  }
+
+  Future<void> cancel(FootballMatch m) => _updateMatch(m.id, const MatchesCompanion(status: Value('cancelled')));
+
+  /// Annule un forfait, un report ou une annulation saisis par erreur : le match redevient « Planifié ».
+  Future<void> restore(FootballMatch m) => _updateMatch(m.id, MatchesCompanion(
+        status: const Value('planned'), forfeitBy: const Value(null),
+        goalsFor: m.status == 'forfeit' ? const Value(null) : Value(m.goalsFor),
+        goalsAgainst: m.status == 'forfeit' ? const Value(null) : Value(m.goalsAgainst),
+      ));
 }

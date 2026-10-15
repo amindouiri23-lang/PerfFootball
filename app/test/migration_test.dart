@@ -64,4 +64,27 @@ void main() {
     expect(await db.select(db.syncState).get(), isEmpty, reason: 'dossiers relus pour recevoir les nouveaux champs');
     await db.close();
   });
+
+  test('migration v5 → v6 (issues de match et tactiques)', () async {
+    final file = File('${Directory.systemTemp.createTempSync('perffoot').path}/v5.sqlite');
+    final v6 = AppDatabase(NativeDatabase(file));
+    await v6.customSelect('SELECT 1').get();
+    await v6.close();
+    final raw = sqlite3.open(file.path);
+    raw.execute('ALTER TABLE matches DROP COLUMN forfeit_by');
+    raw.execute('DROP TABLE tactics');
+    raw.execute('DROP TABLE tactic_links');
+    raw.execute("INSERT INTO matches (id, team_id, date, kick_off_time, opponent, home_away, competition, created_at, updated_at) "
+        "VALUES ('m1', 't1', '2026-10-18', '15:00:00', 'EST', 'H', 'league', 'x', 'x')");
+    raw.execute('PRAGMA user_version = 5');
+    raw.close();
+
+    final db = AppDatabase(NativeDatabase(file));
+    final m = await db.select(db.matches).getSingle();
+    expect(m.opponent, 'EST');
+    expect(m.forfeitBy, isNull);
+    expect(await db.select(db.tactics).get(), isEmpty);
+    expect(await db.select(db.tacticLinks).get(), isEmpty);
+    await db.close();
+  });
 }

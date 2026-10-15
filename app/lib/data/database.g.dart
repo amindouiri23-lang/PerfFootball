@@ -5073,6 +5073,17 @@ class $MatchesTable extends Matches
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _forfeitByMeta = const VerificationMeta(
+    'forfeitBy',
+  );
+  @override
+  late final GeneratedColumn<String> forfeitBy = GeneratedColumn<String>(
+    'forfeit_by',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -5094,6 +5105,7 @@ class $MatchesTable extends Matches
     status,
     phase,
     matchday,
+    forfeitBy,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -5251,6 +5263,12 @@ class $MatchesTable extends Matches
         matchday.isAcceptableOrUnknown(data['matchday']!, _matchdayMeta),
       );
     }
+    if (data.containsKey('forfeit_by')) {
+      context.handle(
+        _forfeitByMeta,
+        forfeitBy.isAcceptableOrUnknown(data['forfeit_by']!, _forfeitByMeta),
+      );
+    }
     return context;
   }
 
@@ -5336,6 +5354,10 @@ class $MatchesTable extends Matches
         DriftSqlType.int,
         data['${effectivePrefix}matchday'],
       ),
+      forfeitBy: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}forfeit_by'],
+      ),
     );
   }
 
@@ -5369,6 +5391,9 @@ class FootballMatch extends DataClass implements Insertable<FootballMatch> {
   /// Phase de championnat (first_leg / second_leg) et numéro de journée.
   final String? phase;
   final int? matchday;
+
+  /// Forfait (status 'forfeit') : us = défaite 0-3, opponent = victoire 3-0.
+  final String? forfeitBy;
   const FootballMatch({
     required this.id,
     required this.createdAt,
@@ -5389,6 +5414,7 @@ class FootballMatch extends DataClass implements Insertable<FootballMatch> {
     required this.status,
     this.phase,
     this.matchday,
+    this.forfeitBy,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -5423,6 +5449,9 @@ class FootballMatch extends DataClass implements Insertable<FootballMatch> {
     }
     if (!nullToAbsent || matchday != null) {
       map['matchday'] = Variable<int>(matchday);
+    }
+    if (!nullToAbsent || forfeitBy != null) {
+      map['forfeit_by'] = Variable<String>(forfeitBy);
     }
     return map;
   }
@@ -5460,6 +5489,9 @@ class FootballMatch extends DataClass implements Insertable<FootballMatch> {
       matchday: matchday == null && nullToAbsent
           ? const Value.absent()
           : Value(matchday),
+      forfeitBy: forfeitBy == null && nullToAbsent
+          ? const Value.absent()
+          : Value(forfeitBy),
     );
   }
 
@@ -5488,6 +5520,7 @@ class FootballMatch extends DataClass implements Insertable<FootballMatch> {
       status: serializer.fromJson<String>(json['status']),
       phase: serializer.fromJson<String?>(json['phase']),
       matchday: serializer.fromJson<int?>(json['matchday']),
+      forfeitBy: serializer.fromJson<String?>(json['forfeitBy']),
     );
   }
   @override
@@ -5513,6 +5546,7 @@ class FootballMatch extends DataClass implements Insertable<FootballMatch> {
       'status': serializer.toJson<String>(status),
       'phase': serializer.toJson<String?>(phase),
       'matchday': serializer.toJson<int?>(matchday),
+      'forfeitBy': serializer.toJson<String?>(forfeitBy),
     };
   }
 
@@ -5536,6 +5570,7 @@ class FootballMatch extends DataClass implements Insertable<FootballMatch> {
     String? status,
     Value<String?> phase = const Value.absent(),
     Value<int?> matchday = const Value.absent(),
+    Value<String?> forfeitBy = const Value.absent(),
   }) => FootballMatch(
     id: id ?? this.id,
     createdAt: createdAt ?? this.createdAt,
@@ -5558,6 +5593,7 @@ class FootballMatch extends DataClass implements Insertable<FootballMatch> {
     status: status ?? this.status,
     phase: phase.present ? phase.value : this.phase,
     matchday: matchday.present ? matchday.value : this.matchday,
+    forfeitBy: forfeitBy.present ? forfeitBy.value : this.forfeitBy,
   );
   FootballMatch copyWithCompanion(MatchesCompanion data) {
     return FootballMatch(
@@ -5590,6 +5626,7 @@ class FootballMatch extends DataClass implements Insertable<FootballMatch> {
       status: data.status.present ? data.status.value : this.status,
       phase: data.phase.present ? data.phase.value : this.phase,
       matchday: data.matchday.present ? data.matchday.value : this.matchday,
+      forfeitBy: data.forfeitBy.present ? data.forfeitBy.value : this.forfeitBy,
     );
   }
 
@@ -5614,7 +5651,8 @@ class FootballMatch extends DataClass implements Insertable<FootballMatch> {
           ..write('remarks: $remarks, ')
           ..write('status: $status, ')
           ..write('phase: $phase, ')
-          ..write('matchday: $matchday')
+          ..write('matchday: $matchday, ')
+          ..write('forfeitBy: $forfeitBy')
           ..write(')'))
         .toString();
   }
@@ -5640,6 +5678,7 @@ class FootballMatch extends DataClass implements Insertable<FootballMatch> {
     status,
     phase,
     matchday,
+    forfeitBy,
   );
   @override
   bool operator ==(Object other) =>
@@ -5663,7 +5702,8 @@ class FootballMatch extends DataClass implements Insertable<FootballMatch> {
           other.remarks == this.remarks &&
           other.status == this.status &&
           other.phase == this.phase &&
-          other.matchday == this.matchday);
+          other.matchday == this.matchday &&
+          other.forfeitBy == this.forfeitBy);
 }
 
 class MatchesCompanion extends UpdateCompanion<FootballMatch> {
@@ -5686,6 +5726,7 @@ class MatchesCompanion extends UpdateCompanion<FootballMatch> {
   final Value<String> status;
   final Value<String?> phase;
   final Value<int?> matchday;
+  final Value<String?> forfeitBy;
   final Value<int> rowid;
   const MatchesCompanion({
     this.id = const Value.absent(),
@@ -5707,6 +5748,7 @@ class MatchesCompanion extends UpdateCompanion<FootballMatch> {
     this.status = const Value.absent(),
     this.phase = const Value.absent(),
     this.matchday = const Value.absent(),
+    this.forfeitBy = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   MatchesCompanion.insert({
@@ -5729,6 +5771,7 @@ class MatchesCompanion extends UpdateCompanion<FootballMatch> {
     this.status = const Value.absent(),
     this.phase = const Value.absent(),
     this.matchday = const Value.absent(),
+    this.forfeitBy = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        createdAt = Value(createdAt),
@@ -5759,6 +5802,7 @@ class MatchesCompanion extends UpdateCompanion<FootballMatch> {
     Expression<String>? status,
     Expression<String>? phase,
     Expression<int>? matchday,
+    Expression<String>? forfeitBy,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -5781,6 +5825,7 @@ class MatchesCompanion extends UpdateCompanion<FootballMatch> {
       if (status != null) 'status': status,
       if (phase != null) 'phase': phase,
       if (matchday != null) 'matchday': matchday,
+      if (forfeitBy != null) 'forfeit_by': forfeitBy,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -5805,6 +5850,7 @@ class MatchesCompanion extends UpdateCompanion<FootballMatch> {
     Value<String>? status,
     Value<String?>? phase,
     Value<int?>? matchday,
+    Value<String?>? forfeitBy,
     Value<int>? rowid,
   }) {
     return MatchesCompanion(
@@ -5827,6 +5873,7 @@ class MatchesCompanion extends UpdateCompanion<FootballMatch> {
       status: status ?? this.status,
       phase: phase ?? this.phase,
       matchday: matchday ?? this.matchday,
+      forfeitBy: forfeitBy ?? this.forfeitBy,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -5891,6 +5938,9 @@ class MatchesCompanion extends UpdateCompanion<FootballMatch> {
     if (matchday.present) {
       map['matchday'] = Variable<int>(matchday.value);
     }
+    if (forfeitBy.present) {
+      map['forfeit_by'] = Variable<String>(forfeitBy.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -5919,6 +5969,7 @@ class MatchesCompanion extends UpdateCompanion<FootballMatch> {
           ..write('status: $status, ')
           ..write('phase: $phase, ')
           ..write('matchday: $matchday, ')
+          ..write('forfeitBy: $forfeitBy, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -12913,6 +12964,1372 @@ class PlayerMedicalCompanion extends UpdateCompanion<MedicalRecord> {
   }
 }
 
+class $TacticsTable extends Tactics with TableInfo<$TacticsTable, Tactic> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $TacticsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<String> createdAt = GeneratedColumn<String>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<String> updatedAt = GeneratedColumn<String>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _serverUpdatedAtMeta = const VerificationMeta(
+    'serverUpdatedAt',
+  );
+  @override
+  late final GeneratedColumn<String> serverUpdatedAt = GeneratedColumn<String>(
+    'server_updated_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deletedMeta = const VerificationMeta(
+    'deleted',
+  );
+  @override
+  late final GeneratedColumn<bool> deleted = GeneratedColumn<bool>(
+    'deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _isDirtyMeta = const VerificationMeta(
+    'isDirty',
+  );
+  @override
+  late final GeneratedColumn<bool> isDirty = GeneratedColumn<bool>(
+    'is_dirty',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_dirty" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _teamIdMeta = const VerificationMeta('teamId');
+  @override
+  late final GeneratedColumn<String> teamId = GeneratedColumn<String>(
+    'team_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _kindMeta = const VerificationMeta('kind');
+  @override
+  late final GeneratedColumn<String> kind = GeneratedColumn<String>(
+    'kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sideMeta = const VerificationMeta('side');
+  @override
+  late final GeneratedColumn<String> side = GeneratedColumn<String>(
+    'side',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _pitchMeta = const VerificationMeta('pitch');
+  @override
+  late final GeneratedColumn<String> pitch = GeneratedColumn<String>(
+    'pitch',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('half'),
+  );
+  static const VerificationMeta _boardMeta = const VerificationMeta('board');
+  @override
+  late final GeneratedColumn<String> board = GeneratedColumn<String>(
+    'board',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('{}'),
+  );
+  static const VerificationMeta _notesMeta = const VerificationMeta('notes');
+  @override
+  late final GeneratedColumn<String> notes = GeneratedColumn<String>(
+    'notes',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    createdAt,
+    updatedAt,
+    serverUpdatedAt,
+    deleted,
+    isDirty,
+    teamId,
+    name,
+    kind,
+    side,
+    pitch,
+    board,
+    notes,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'tactics';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<Tactic> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('server_updated_at')) {
+      context.handle(
+        _serverUpdatedAtMeta,
+        serverUpdatedAt.isAcceptableOrUnknown(
+          data['server_updated_at']!,
+          _serverUpdatedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('deleted')) {
+      context.handle(
+        _deletedMeta,
+        deleted.isAcceptableOrUnknown(data['deleted']!, _deletedMeta),
+      );
+    }
+    if (data.containsKey('is_dirty')) {
+      context.handle(
+        _isDirtyMeta,
+        isDirty.isAcceptableOrUnknown(data['is_dirty']!, _isDirtyMeta),
+      );
+    }
+    if (data.containsKey('team_id')) {
+      context.handle(
+        _teamIdMeta,
+        teamId.isAcceptableOrUnknown(data['team_id']!, _teamIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_teamIdMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('kind')) {
+      context.handle(
+        _kindMeta,
+        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_kindMeta);
+    }
+    if (data.containsKey('side')) {
+      context.handle(
+        _sideMeta,
+        side.isAcceptableOrUnknown(data['side']!, _sideMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_sideMeta);
+    }
+    if (data.containsKey('pitch')) {
+      context.handle(
+        _pitchMeta,
+        pitch.isAcceptableOrUnknown(data['pitch']!, _pitchMeta),
+      );
+    }
+    if (data.containsKey('board')) {
+      context.handle(
+        _boardMeta,
+        board.isAcceptableOrUnknown(data['board']!, _boardMeta),
+      );
+    }
+    if (data.containsKey('notes')) {
+      context.handle(
+        _notesMeta,
+        notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Tactic map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Tactic(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      serverUpdatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}server_updated_at'],
+      ),
+      deleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}deleted'],
+      )!,
+      isDirty: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_dirty'],
+      )!,
+      teamId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}team_id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      kind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}kind'],
+      )!,
+      side: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}side'],
+      )!,
+      pitch: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}pitch'],
+      )!,
+      board: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}board'],
+      )!,
+      notes: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}notes'],
+      ),
+    );
+  }
+
+  @override
+  $TacticsTable createAlias(String alias) {
+    return $TacticsTable(attachedDatabase, alias);
+  }
+}
+
+class Tactic extends DataClass implements Insertable<Tactic> {
+  final String id;
+  final String createdAt;
+  final String updatedAt;
+  final String? serverUpdatedAt;
+  final bool deleted;
+
+  /// Modifiée localement et pas encore envoyée. Jamais synchronisée.
+  final bool isDirty;
+  final String teamId;
+  final String name;
+  final String kind;
+  final String side;
+  final String pitch;
+  final String board;
+  final String? notes;
+  const Tactic({
+    required this.id,
+    required this.createdAt,
+    required this.updatedAt,
+    this.serverUpdatedAt,
+    required this.deleted,
+    required this.isDirty,
+    required this.teamId,
+    required this.name,
+    required this.kind,
+    required this.side,
+    required this.pitch,
+    required this.board,
+    this.notes,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['created_at'] = Variable<String>(createdAt);
+    map['updated_at'] = Variable<String>(updatedAt);
+    if (!nullToAbsent || serverUpdatedAt != null) {
+      map['server_updated_at'] = Variable<String>(serverUpdatedAt);
+    }
+    map['deleted'] = Variable<bool>(deleted);
+    map['is_dirty'] = Variable<bool>(isDirty);
+    map['team_id'] = Variable<String>(teamId);
+    map['name'] = Variable<String>(name);
+    map['kind'] = Variable<String>(kind);
+    map['side'] = Variable<String>(side);
+    map['pitch'] = Variable<String>(pitch);
+    map['board'] = Variable<String>(board);
+    if (!nullToAbsent || notes != null) {
+      map['notes'] = Variable<String>(notes);
+    }
+    return map;
+  }
+
+  TacticsCompanion toCompanion(bool nullToAbsent) {
+    return TacticsCompanion(
+      id: Value(id),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      serverUpdatedAt: serverUpdatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(serverUpdatedAt),
+      deleted: Value(deleted),
+      isDirty: Value(isDirty),
+      teamId: Value(teamId),
+      name: Value(name),
+      kind: Value(kind),
+      side: Value(side),
+      pitch: Value(pitch),
+      board: Value(board),
+      notes: notes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(notes),
+    );
+  }
+
+  factory Tactic.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Tactic(
+      id: serializer.fromJson<String>(json['id']),
+      createdAt: serializer.fromJson<String>(json['createdAt']),
+      updatedAt: serializer.fromJson<String>(json['updatedAt']),
+      serverUpdatedAt: serializer.fromJson<String?>(json['serverUpdatedAt']),
+      deleted: serializer.fromJson<bool>(json['deleted']),
+      isDirty: serializer.fromJson<bool>(json['isDirty']),
+      teamId: serializer.fromJson<String>(json['teamId']),
+      name: serializer.fromJson<String>(json['name']),
+      kind: serializer.fromJson<String>(json['kind']),
+      side: serializer.fromJson<String>(json['side']),
+      pitch: serializer.fromJson<String>(json['pitch']),
+      board: serializer.fromJson<String>(json['board']),
+      notes: serializer.fromJson<String?>(json['notes']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'createdAt': serializer.toJson<String>(createdAt),
+      'updatedAt': serializer.toJson<String>(updatedAt),
+      'serverUpdatedAt': serializer.toJson<String?>(serverUpdatedAt),
+      'deleted': serializer.toJson<bool>(deleted),
+      'isDirty': serializer.toJson<bool>(isDirty),
+      'teamId': serializer.toJson<String>(teamId),
+      'name': serializer.toJson<String>(name),
+      'kind': serializer.toJson<String>(kind),
+      'side': serializer.toJson<String>(side),
+      'pitch': serializer.toJson<String>(pitch),
+      'board': serializer.toJson<String>(board),
+      'notes': serializer.toJson<String?>(notes),
+    };
+  }
+
+  Tactic copyWith({
+    String? id,
+    String? createdAt,
+    String? updatedAt,
+    Value<String?> serverUpdatedAt = const Value.absent(),
+    bool? deleted,
+    bool? isDirty,
+    String? teamId,
+    String? name,
+    String? kind,
+    String? side,
+    String? pitch,
+    String? board,
+    Value<String?> notes = const Value.absent(),
+  }) => Tactic(
+    id: id ?? this.id,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    serverUpdatedAt: serverUpdatedAt.present
+        ? serverUpdatedAt.value
+        : this.serverUpdatedAt,
+    deleted: deleted ?? this.deleted,
+    isDirty: isDirty ?? this.isDirty,
+    teamId: teamId ?? this.teamId,
+    name: name ?? this.name,
+    kind: kind ?? this.kind,
+    side: side ?? this.side,
+    pitch: pitch ?? this.pitch,
+    board: board ?? this.board,
+    notes: notes.present ? notes.value : this.notes,
+  );
+  Tactic copyWithCompanion(TacticsCompanion data) {
+    return Tactic(
+      id: data.id.present ? data.id.value : this.id,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      serverUpdatedAt: data.serverUpdatedAt.present
+          ? data.serverUpdatedAt.value
+          : this.serverUpdatedAt,
+      deleted: data.deleted.present ? data.deleted.value : this.deleted,
+      isDirty: data.isDirty.present ? data.isDirty.value : this.isDirty,
+      teamId: data.teamId.present ? data.teamId.value : this.teamId,
+      name: data.name.present ? data.name.value : this.name,
+      kind: data.kind.present ? data.kind.value : this.kind,
+      side: data.side.present ? data.side.value : this.side,
+      pitch: data.pitch.present ? data.pitch.value : this.pitch,
+      board: data.board.present ? data.board.value : this.board,
+      notes: data.notes.present ? data.notes.value : this.notes,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Tactic(')
+          ..write('id: $id, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('serverUpdatedAt: $serverUpdatedAt, ')
+          ..write('deleted: $deleted, ')
+          ..write('isDirty: $isDirty, ')
+          ..write('teamId: $teamId, ')
+          ..write('name: $name, ')
+          ..write('kind: $kind, ')
+          ..write('side: $side, ')
+          ..write('pitch: $pitch, ')
+          ..write('board: $board, ')
+          ..write('notes: $notes')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    createdAt,
+    updatedAt,
+    serverUpdatedAt,
+    deleted,
+    isDirty,
+    teamId,
+    name,
+    kind,
+    side,
+    pitch,
+    board,
+    notes,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Tactic &&
+          other.id == this.id &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.serverUpdatedAt == this.serverUpdatedAt &&
+          other.deleted == this.deleted &&
+          other.isDirty == this.isDirty &&
+          other.teamId == this.teamId &&
+          other.name == this.name &&
+          other.kind == this.kind &&
+          other.side == this.side &&
+          other.pitch == this.pitch &&
+          other.board == this.board &&
+          other.notes == this.notes);
+}
+
+class TacticsCompanion extends UpdateCompanion<Tactic> {
+  final Value<String> id;
+  final Value<String> createdAt;
+  final Value<String> updatedAt;
+  final Value<String?> serverUpdatedAt;
+  final Value<bool> deleted;
+  final Value<bool> isDirty;
+  final Value<String> teamId;
+  final Value<String> name;
+  final Value<String> kind;
+  final Value<String> side;
+  final Value<String> pitch;
+  final Value<String> board;
+  final Value<String?> notes;
+  final Value<int> rowid;
+  const TacticsCompanion({
+    this.id = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.serverUpdatedAt = const Value.absent(),
+    this.deleted = const Value.absent(),
+    this.isDirty = const Value.absent(),
+    this.teamId = const Value.absent(),
+    this.name = const Value.absent(),
+    this.kind = const Value.absent(),
+    this.side = const Value.absent(),
+    this.pitch = const Value.absent(),
+    this.board = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  TacticsCompanion.insert({
+    required String id,
+    required String createdAt,
+    required String updatedAt,
+    this.serverUpdatedAt = const Value.absent(),
+    this.deleted = const Value.absent(),
+    this.isDirty = const Value.absent(),
+    required String teamId,
+    required String name,
+    required String kind,
+    required String side,
+    this.pitch = const Value.absent(),
+    this.board = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt),
+       teamId = Value(teamId),
+       name = Value(name),
+       kind = Value(kind),
+       side = Value(side);
+  static Insertable<Tactic> custom({
+    Expression<String>? id,
+    Expression<String>? createdAt,
+    Expression<String>? updatedAt,
+    Expression<String>? serverUpdatedAt,
+    Expression<bool>? deleted,
+    Expression<bool>? isDirty,
+    Expression<String>? teamId,
+    Expression<String>? name,
+    Expression<String>? kind,
+    Expression<String>? side,
+    Expression<String>? pitch,
+    Expression<String>? board,
+    Expression<String>? notes,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (serverUpdatedAt != null) 'server_updated_at': serverUpdatedAt,
+      if (deleted != null) 'deleted': deleted,
+      if (isDirty != null) 'is_dirty': isDirty,
+      if (teamId != null) 'team_id': teamId,
+      if (name != null) 'name': name,
+      if (kind != null) 'kind': kind,
+      if (side != null) 'side': side,
+      if (pitch != null) 'pitch': pitch,
+      if (board != null) 'board': board,
+      if (notes != null) 'notes': notes,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  TacticsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? createdAt,
+    Value<String>? updatedAt,
+    Value<String?>? serverUpdatedAt,
+    Value<bool>? deleted,
+    Value<bool>? isDirty,
+    Value<String>? teamId,
+    Value<String>? name,
+    Value<String>? kind,
+    Value<String>? side,
+    Value<String>? pitch,
+    Value<String>? board,
+    Value<String?>? notes,
+    Value<int>? rowid,
+  }) {
+    return TacticsCompanion(
+      id: id ?? this.id,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      serverUpdatedAt: serverUpdatedAt ?? this.serverUpdatedAt,
+      deleted: deleted ?? this.deleted,
+      isDirty: isDirty ?? this.isDirty,
+      teamId: teamId ?? this.teamId,
+      name: name ?? this.name,
+      kind: kind ?? this.kind,
+      side: side ?? this.side,
+      pitch: pitch ?? this.pitch,
+      board: board ?? this.board,
+      notes: notes ?? this.notes,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<String>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<String>(updatedAt.value);
+    }
+    if (serverUpdatedAt.present) {
+      map['server_updated_at'] = Variable<String>(serverUpdatedAt.value);
+    }
+    if (deleted.present) {
+      map['deleted'] = Variable<bool>(deleted.value);
+    }
+    if (isDirty.present) {
+      map['is_dirty'] = Variable<bool>(isDirty.value);
+    }
+    if (teamId.present) {
+      map['team_id'] = Variable<String>(teamId.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (kind.present) {
+      map['kind'] = Variable<String>(kind.value);
+    }
+    if (side.present) {
+      map['side'] = Variable<String>(side.value);
+    }
+    if (pitch.present) {
+      map['pitch'] = Variable<String>(pitch.value);
+    }
+    if (board.present) {
+      map['board'] = Variable<String>(board.value);
+    }
+    if (notes.present) {
+      map['notes'] = Variable<String>(notes.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TacticsCompanion(')
+          ..write('id: $id, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('serverUpdatedAt: $serverUpdatedAt, ')
+          ..write('deleted: $deleted, ')
+          ..write('isDirty: $isDirty, ')
+          ..write('teamId: $teamId, ')
+          ..write('name: $name, ')
+          ..write('kind: $kind, ')
+          ..write('side: $side, ')
+          ..write('pitch: $pitch, ')
+          ..write('board: $board, ')
+          ..write('notes: $notes, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $TacticLinksTable extends TacticLinks
+    with TableInfo<$TacticLinksTable, TacticLink> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $TacticLinksTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<String> createdAt = GeneratedColumn<String>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<String> updatedAt = GeneratedColumn<String>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _serverUpdatedAtMeta = const VerificationMeta(
+    'serverUpdatedAt',
+  );
+  @override
+  late final GeneratedColumn<String> serverUpdatedAt = GeneratedColumn<String>(
+    'server_updated_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deletedMeta = const VerificationMeta(
+    'deleted',
+  );
+  @override
+  late final GeneratedColumn<bool> deleted = GeneratedColumn<bool>(
+    'deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _isDirtyMeta = const VerificationMeta(
+    'isDirty',
+  );
+  @override
+  late final GeneratedColumn<bool> isDirty = GeneratedColumn<bool>(
+    'is_dirty',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_dirty" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _teamIdMeta = const VerificationMeta('teamId');
+  @override
+  late final GeneratedColumn<String> teamId = GeneratedColumn<String>(
+    'team_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _tacticIdMeta = const VerificationMeta(
+    'tacticId',
+  );
+  @override
+  late final GeneratedColumn<String> tacticId = GeneratedColumn<String>(
+    'tactic_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sessionIdMeta = const VerificationMeta(
+    'sessionId',
+  );
+  @override
+  late final GeneratedColumn<String> sessionId = GeneratedColumn<String>(
+    'session_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _matchIdMeta = const VerificationMeta(
+    'matchId',
+  );
+  @override
+  late final GeneratedColumn<String> matchId = GeneratedColumn<String>(
+    'match_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    createdAt,
+    updatedAt,
+    serverUpdatedAt,
+    deleted,
+    isDirty,
+    teamId,
+    tacticId,
+    sessionId,
+    matchId,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'tactic_links';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<TacticLink> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('server_updated_at')) {
+      context.handle(
+        _serverUpdatedAtMeta,
+        serverUpdatedAt.isAcceptableOrUnknown(
+          data['server_updated_at']!,
+          _serverUpdatedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('deleted')) {
+      context.handle(
+        _deletedMeta,
+        deleted.isAcceptableOrUnknown(data['deleted']!, _deletedMeta),
+      );
+    }
+    if (data.containsKey('is_dirty')) {
+      context.handle(
+        _isDirtyMeta,
+        isDirty.isAcceptableOrUnknown(data['is_dirty']!, _isDirtyMeta),
+      );
+    }
+    if (data.containsKey('team_id')) {
+      context.handle(
+        _teamIdMeta,
+        teamId.isAcceptableOrUnknown(data['team_id']!, _teamIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_teamIdMeta);
+    }
+    if (data.containsKey('tactic_id')) {
+      context.handle(
+        _tacticIdMeta,
+        tacticId.isAcceptableOrUnknown(data['tactic_id']!, _tacticIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_tacticIdMeta);
+    }
+    if (data.containsKey('session_id')) {
+      context.handle(
+        _sessionIdMeta,
+        sessionId.isAcceptableOrUnknown(data['session_id']!, _sessionIdMeta),
+      );
+    }
+    if (data.containsKey('match_id')) {
+      context.handle(
+        _matchIdMeta,
+        matchId.isAcceptableOrUnknown(data['match_id']!, _matchIdMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  TacticLink map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return TacticLink(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      serverUpdatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}server_updated_at'],
+      ),
+      deleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}deleted'],
+      )!,
+      isDirty: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_dirty'],
+      )!,
+      teamId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}team_id'],
+      )!,
+      tacticId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tactic_id'],
+      )!,
+      sessionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}session_id'],
+      ),
+      matchId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}match_id'],
+      ),
+    );
+  }
+
+  @override
+  $TacticLinksTable createAlias(String alias) {
+    return $TacticLinksTable(attachedDatabase, alias);
+  }
+}
+
+class TacticLink extends DataClass implements Insertable<TacticLink> {
+  final String id;
+  final String createdAt;
+  final String updatedAt;
+  final String? serverUpdatedAt;
+  final bool deleted;
+
+  /// Modifiée localement et pas encore envoyée. Jamais synchronisée.
+  final bool isDirty;
+  final String teamId;
+  final String tacticId;
+  final String? sessionId;
+  final String? matchId;
+  const TacticLink({
+    required this.id,
+    required this.createdAt,
+    required this.updatedAt,
+    this.serverUpdatedAt,
+    required this.deleted,
+    required this.isDirty,
+    required this.teamId,
+    required this.tacticId,
+    this.sessionId,
+    this.matchId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['created_at'] = Variable<String>(createdAt);
+    map['updated_at'] = Variable<String>(updatedAt);
+    if (!nullToAbsent || serverUpdatedAt != null) {
+      map['server_updated_at'] = Variable<String>(serverUpdatedAt);
+    }
+    map['deleted'] = Variable<bool>(deleted);
+    map['is_dirty'] = Variable<bool>(isDirty);
+    map['team_id'] = Variable<String>(teamId);
+    map['tactic_id'] = Variable<String>(tacticId);
+    if (!nullToAbsent || sessionId != null) {
+      map['session_id'] = Variable<String>(sessionId);
+    }
+    if (!nullToAbsent || matchId != null) {
+      map['match_id'] = Variable<String>(matchId);
+    }
+    return map;
+  }
+
+  TacticLinksCompanion toCompanion(bool nullToAbsent) {
+    return TacticLinksCompanion(
+      id: Value(id),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      serverUpdatedAt: serverUpdatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(serverUpdatedAt),
+      deleted: Value(deleted),
+      isDirty: Value(isDirty),
+      teamId: Value(teamId),
+      tacticId: Value(tacticId),
+      sessionId: sessionId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sessionId),
+      matchId: matchId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(matchId),
+    );
+  }
+
+  factory TacticLink.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return TacticLink(
+      id: serializer.fromJson<String>(json['id']),
+      createdAt: serializer.fromJson<String>(json['createdAt']),
+      updatedAt: serializer.fromJson<String>(json['updatedAt']),
+      serverUpdatedAt: serializer.fromJson<String?>(json['serverUpdatedAt']),
+      deleted: serializer.fromJson<bool>(json['deleted']),
+      isDirty: serializer.fromJson<bool>(json['isDirty']),
+      teamId: serializer.fromJson<String>(json['teamId']),
+      tacticId: serializer.fromJson<String>(json['tacticId']),
+      sessionId: serializer.fromJson<String?>(json['sessionId']),
+      matchId: serializer.fromJson<String?>(json['matchId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'createdAt': serializer.toJson<String>(createdAt),
+      'updatedAt': serializer.toJson<String>(updatedAt),
+      'serverUpdatedAt': serializer.toJson<String?>(serverUpdatedAt),
+      'deleted': serializer.toJson<bool>(deleted),
+      'isDirty': serializer.toJson<bool>(isDirty),
+      'teamId': serializer.toJson<String>(teamId),
+      'tacticId': serializer.toJson<String>(tacticId),
+      'sessionId': serializer.toJson<String?>(sessionId),
+      'matchId': serializer.toJson<String?>(matchId),
+    };
+  }
+
+  TacticLink copyWith({
+    String? id,
+    String? createdAt,
+    String? updatedAt,
+    Value<String?> serverUpdatedAt = const Value.absent(),
+    bool? deleted,
+    bool? isDirty,
+    String? teamId,
+    String? tacticId,
+    Value<String?> sessionId = const Value.absent(),
+    Value<String?> matchId = const Value.absent(),
+  }) => TacticLink(
+    id: id ?? this.id,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    serverUpdatedAt: serverUpdatedAt.present
+        ? serverUpdatedAt.value
+        : this.serverUpdatedAt,
+    deleted: deleted ?? this.deleted,
+    isDirty: isDirty ?? this.isDirty,
+    teamId: teamId ?? this.teamId,
+    tacticId: tacticId ?? this.tacticId,
+    sessionId: sessionId.present ? sessionId.value : this.sessionId,
+    matchId: matchId.present ? matchId.value : this.matchId,
+  );
+  TacticLink copyWithCompanion(TacticLinksCompanion data) {
+    return TacticLink(
+      id: data.id.present ? data.id.value : this.id,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      serverUpdatedAt: data.serverUpdatedAt.present
+          ? data.serverUpdatedAt.value
+          : this.serverUpdatedAt,
+      deleted: data.deleted.present ? data.deleted.value : this.deleted,
+      isDirty: data.isDirty.present ? data.isDirty.value : this.isDirty,
+      teamId: data.teamId.present ? data.teamId.value : this.teamId,
+      tacticId: data.tacticId.present ? data.tacticId.value : this.tacticId,
+      sessionId: data.sessionId.present ? data.sessionId.value : this.sessionId,
+      matchId: data.matchId.present ? data.matchId.value : this.matchId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TacticLink(')
+          ..write('id: $id, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('serverUpdatedAt: $serverUpdatedAt, ')
+          ..write('deleted: $deleted, ')
+          ..write('isDirty: $isDirty, ')
+          ..write('teamId: $teamId, ')
+          ..write('tacticId: $tacticId, ')
+          ..write('sessionId: $sessionId, ')
+          ..write('matchId: $matchId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    createdAt,
+    updatedAt,
+    serverUpdatedAt,
+    deleted,
+    isDirty,
+    teamId,
+    tacticId,
+    sessionId,
+    matchId,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is TacticLink &&
+          other.id == this.id &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.serverUpdatedAt == this.serverUpdatedAt &&
+          other.deleted == this.deleted &&
+          other.isDirty == this.isDirty &&
+          other.teamId == this.teamId &&
+          other.tacticId == this.tacticId &&
+          other.sessionId == this.sessionId &&
+          other.matchId == this.matchId);
+}
+
+class TacticLinksCompanion extends UpdateCompanion<TacticLink> {
+  final Value<String> id;
+  final Value<String> createdAt;
+  final Value<String> updatedAt;
+  final Value<String?> serverUpdatedAt;
+  final Value<bool> deleted;
+  final Value<bool> isDirty;
+  final Value<String> teamId;
+  final Value<String> tacticId;
+  final Value<String?> sessionId;
+  final Value<String?> matchId;
+  final Value<int> rowid;
+  const TacticLinksCompanion({
+    this.id = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.serverUpdatedAt = const Value.absent(),
+    this.deleted = const Value.absent(),
+    this.isDirty = const Value.absent(),
+    this.teamId = const Value.absent(),
+    this.tacticId = const Value.absent(),
+    this.sessionId = const Value.absent(),
+    this.matchId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  TacticLinksCompanion.insert({
+    required String id,
+    required String createdAt,
+    required String updatedAt,
+    this.serverUpdatedAt = const Value.absent(),
+    this.deleted = const Value.absent(),
+    this.isDirty = const Value.absent(),
+    required String teamId,
+    required String tacticId,
+    this.sessionId = const Value.absent(),
+    this.matchId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt),
+       teamId = Value(teamId),
+       tacticId = Value(tacticId);
+  static Insertable<TacticLink> custom({
+    Expression<String>? id,
+    Expression<String>? createdAt,
+    Expression<String>? updatedAt,
+    Expression<String>? serverUpdatedAt,
+    Expression<bool>? deleted,
+    Expression<bool>? isDirty,
+    Expression<String>? teamId,
+    Expression<String>? tacticId,
+    Expression<String>? sessionId,
+    Expression<String>? matchId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (serverUpdatedAt != null) 'server_updated_at': serverUpdatedAt,
+      if (deleted != null) 'deleted': deleted,
+      if (isDirty != null) 'is_dirty': isDirty,
+      if (teamId != null) 'team_id': teamId,
+      if (tacticId != null) 'tactic_id': tacticId,
+      if (sessionId != null) 'session_id': sessionId,
+      if (matchId != null) 'match_id': matchId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  TacticLinksCompanion copyWith({
+    Value<String>? id,
+    Value<String>? createdAt,
+    Value<String>? updatedAt,
+    Value<String?>? serverUpdatedAt,
+    Value<bool>? deleted,
+    Value<bool>? isDirty,
+    Value<String>? teamId,
+    Value<String>? tacticId,
+    Value<String?>? sessionId,
+    Value<String?>? matchId,
+    Value<int>? rowid,
+  }) {
+    return TacticLinksCompanion(
+      id: id ?? this.id,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      serverUpdatedAt: serverUpdatedAt ?? this.serverUpdatedAt,
+      deleted: deleted ?? this.deleted,
+      isDirty: isDirty ?? this.isDirty,
+      teamId: teamId ?? this.teamId,
+      tacticId: tacticId ?? this.tacticId,
+      sessionId: sessionId ?? this.sessionId,
+      matchId: matchId ?? this.matchId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<String>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<String>(updatedAt.value);
+    }
+    if (serverUpdatedAt.present) {
+      map['server_updated_at'] = Variable<String>(serverUpdatedAt.value);
+    }
+    if (deleted.present) {
+      map['deleted'] = Variable<bool>(deleted.value);
+    }
+    if (isDirty.present) {
+      map['is_dirty'] = Variable<bool>(isDirty.value);
+    }
+    if (teamId.present) {
+      map['team_id'] = Variable<String>(teamId.value);
+    }
+    if (tacticId.present) {
+      map['tactic_id'] = Variable<String>(tacticId.value);
+    }
+    if (sessionId.present) {
+      map['session_id'] = Variable<String>(sessionId.value);
+    }
+    if (matchId.present) {
+      map['match_id'] = Variable<String>(matchId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TacticLinksCompanion(')
+          ..write('id: $id, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('serverUpdatedAt: $serverUpdatedAt, ')
+          ..write('deleted: $deleted, ')
+          ..write('isDirty: $isDirty, ')
+          ..write('teamId: $teamId, ')
+          ..write('tacticId: $tacticId, ')
+          ..write('sessionId: $sessionId, ')
+          ..write('matchId: $matchId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $SyncStateTable extends SyncState
     with TableInfo<$SyncStateTable, SyncStateData> {
   @override
@@ -13355,6 +14772,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $TestResultsTable testResults = $TestResultsTable(this);
   late final $PlayerProfilesTable playerProfiles = $PlayerProfilesTable(this);
   late final $PlayerMedicalTable playerMedical = $PlayerMedicalTable(this);
+  late final $TacticsTable tactics = $TacticsTable(this);
+  late final $TacticLinksTable tacticLinks = $TacticLinksTable(this);
   late final $SyncStateTable syncState = $SyncStateTable(this);
   late final $LocalSettingsTable localSettings = $LocalSettingsTable(this);
   @override
@@ -13376,6 +14795,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     testResults,
     playerProfiles,
     playerMedical,
+    tactics,
+    tacticLinks,
     syncState,
     localSettings,
   ];
@@ -15675,6 +17096,7 @@ typedef $$MatchesTableCreateCompanionBuilder = MatchesCompanion Function({
   Value<String> status,
   Value<String?> phase,
   Value<int?> matchday,
+  Value<String?> forfeitBy,
   Value<int> rowid,
 });
 typedef $$MatchesTableUpdateCompanionBuilder = MatchesCompanion Function({
@@ -15697,6 +17119,7 @@ typedef $$MatchesTableUpdateCompanionBuilder = MatchesCompanion Function({
   Value<String> status,
   Value<String?> phase,
   Value<int?> matchday,
+  Value<String?> forfeitBy,
   Value<int> rowid,
 });
 
@@ -15801,6 +17224,11 @@ class $$MatchesTableFilterComposer
 
   ColumnFilters<int> get matchday => $composableBuilder(
     column: $table.matchday,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get forfeitBy => $composableBuilder(
+    column: $table.forfeitBy,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -15908,6 +17336,11 @@ class $$MatchesTableOrderingComposer
     column: $table.matchday,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get forfeitBy => $composableBuilder(
+    column: $table.forfeitBy,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$MatchesTableAnnotationComposer
@@ -15985,6 +17418,9 @@ class $$MatchesTableAnnotationComposer
 
   GeneratedColumn<int> get matchday =>
       $composableBuilder(column: $table.matchday, builder: (column) => column);
+
+  GeneratedColumn<String> get forfeitBy =>
+      $composableBuilder(column: $table.forfeitBy, builder: (column) => column);
 }
 
 class $$MatchesTableTableManager
@@ -16037,6 +17473,7 @@ class $$MatchesTableTableManager
                 Value<String> status = const Value.absent(),
                 Value<String?> phase = const Value.absent(),
                 Value<int?> matchday = const Value.absent(),
+                Value<String?> forfeitBy = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => MatchesCompanion(
                 id: id,
@@ -16058,6 +17495,7 @@ class $$MatchesTableTableManager
                 status: status,
                 phase: phase,
                 matchday: matchday,
+                forfeitBy: forfeitBy,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -16081,6 +17519,7 @@ class $$MatchesTableTableManager
                 Value<String> status = const Value.absent(),
                 Value<String?> phase = const Value.absent(),
                 Value<int?> matchday = const Value.absent(),
+                Value<String?> forfeitBy = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => MatchesCompanion.insert(
                 id: id,
@@ -16102,6 +17541,7 @@ class $$MatchesTableTableManager
                 status: status,
                 phase: phase,
                 matchday: matchday,
+                forfeitBy: forfeitBy,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -19310,6 +20750,667 @@ typedef $$PlayerMedicalTableProcessedTableManager =
       MedicalRecord,
       PrefetchHooks Function()
     >;
+typedef $$TacticsTableCreateCompanionBuilder = TacticsCompanion Function({
+  required String id,
+  required String createdAt,
+  required String updatedAt,
+  Value<String?> serverUpdatedAt,
+  Value<bool> deleted,
+  Value<bool> isDirty,
+  required String teamId,
+  required String name,
+  required String kind,
+  required String side,
+  Value<String> pitch,
+  Value<String> board,
+  Value<String?> notes,
+  Value<int> rowid,
+});
+typedef $$TacticsTableUpdateCompanionBuilder = TacticsCompanion Function({
+  Value<String> id,
+  Value<String> createdAt,
+  Value<String> updatedAt,
+  Value<String?> serverUpdatedAt,
+  Value<bool> deleted,
+  Value<bool> isDirty,
+  Value<String> teamId,
+  Value<String> name,
+  Value<String> kind,
+  Value<String> side,
+  Value<String> pitch,
+  Value<String> board,
+  Value<String?> notes,
+  Value<int> rowid,
+});
+
+class $$TacticsTableFilterComposer
+    extends Composer<_$AppDatabase, $TacticsTable> {
+  $$TacticsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get serverUpdatedAt => $composableBuilder(
+    column: $table.serverUpdatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get deleted => $composableBuilder(
+    column: $table.deleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDirty => $composableBuilder(
+    column: $table.isDirty,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get teamId => $composableBuilder(
+    column: $table.teamId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get side => $composableBuilder(
+    column: $table.side,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get pitch => $composableBuilder(
+    column: $table.pitch,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get board => $composableBuilder(
+    column: $table.board,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$TacticsTableOrderingComposer
+    extends Composer<_$AppDatabase, $TacticsTable> {
+  $$TacticsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get serverUpdatedAt => $composableBuilder(
+    column: $table.serverUpdatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get deleted => $composableBuilder(
+    column: $table.deleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDirty => $composableBuilder(
+    column: $table.isDirty,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get teamId => $composableBuilder(
+    column: $table.teamId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get side => $composableBuilder(
+    column: $table.side,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get pitch => $composableBuilder(
+    column: $table.pitch,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get board => $composableBuilder(
+    column: $table.board,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$TacticsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $TacticsTable> {
+  $$TacticsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get serverUpdatedAt => $composableBuilder(
+    column: $table.serverUpdatedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get deleted =>
+      $composableBuilder(column: $table.deleted, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDirty =>
+      $composableBuilder(column: $table.isDirty, builder: (column) => column);
+
+  GeneratedColumn<String> get teamId =>
+      $composableBuilder(column: $table.teamId, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => column);
+
+  GeneratedColumn<String> get side =>
+      $composableBuilder(column: $table.side, builder: (column) => column);
+
+  GeneratedColumn<String> get pitch =>
+      $composableBuilder(column: $table.pitch, builder: (column) => column);
+
+  GeneratedColumn<String> get board =>
+      $composableBuilder(column: $table.board, builder: (column) => column);
+
+  GeneratedColumn<String> get notes =>
+      $composableBuilder(column: $table.notes, builder: (column) => column);
+}
+
+class $$TacticsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $TacticsTable,
+          Tactic,
+          $$TacticsTableFilterComposer,
+          $$TacticsTableOrderingComposer,
+          $$TacticsTableAnnotationComposer,
+          $$TacticsTableCreateCompanionBuilder,
+          $$TacticsTableUpdateCompanionBuilder,
+          (Tactic, BaseReferences<_$AppDatabase, $TacticsTable, Tactic>),
+          Tactic,
+          PrefetchHooks Function()
+        > {
+  $$TacticsTableTableManager(_$AppDatabase db, $TacticsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$TacticsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$TacticsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$TacticsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> createdAt = const Value.absent(),
+                Value<String> updatedAt = const Value.absent(),
+                Value<String?> serverUpdatedAt = const Value.absent(),
+                Value<bool> deleted = const Value.absent(),
+                Value<bool> isDirty = const Value.absent(),
+                Value<String> teamId = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> kind = const Value.absent(),
+                Value<String> side = const Value.absent(),
+                Value<String> pitch = const Value.absent(),
+                Value<String> board = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => TacticsCompanion(
+                id: id,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                serverUpdatedAt: serverUpdatedAt,
+                deleted: deleted,
+                isDirty: isDirty,
+                teamId: teamId,
+                name: name,
+                kind: kind,
+                side: side,
+                pitch: pitch,
+                board: board,
+                notes: notes,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String createdAt,
+                required String updatedAt,
+                Value<String?> serverUpdatedAt = const Value.absent(),
+                Value<bool> deleted = const Value.absent(),
+                Value<bool> isDirty = const Value.absent(),
+                required String teamId,
+                required String name,
+                required String kind,
+                required String side,
+                Value<String> pitch = const Value.absent(),
+                Value<String> board = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => TacticsCompanion.insert(
+                id: id,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                serverUpdatedAt: serverUpdatedAt,
+                deleted: deleted,
+                isDirty: isDirty,
+                teamId: teamId,
+                name: name,
+                kind: kind,
+                side: side,
+                pitch: pitch,
+                board: board,
+                notes: notes,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$TacticsTable, Tactic>(table),
+                  BaseReferences<_$AppDatabase, $TacticsTable, Tactic>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$TacticsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $TacticsTable,
+      Tactic,
+      $$TacticsTableFilterComposer,
+      $$TacticsTableOrderingComposer,
+      $$TacticsTableAnnotationComposer,
+      $$TacticsTableCreateCompanionBuilder,
+      $$TacticsTableUpdateCompanionBuilder,
+      (Tactic, BaseReferences<_$AppDatabase, $TacticsTable, Tactic>),
+      Tactic,
+      PrefetchHooks Function()
+    >;
+typedef $$TacticLinksTableCreateCompanionBuilder =
+    TacticLinksCompanion Function({
+      required String id,
+      required String createdAt,
+      required String updatedAt,
+      Value<String?> serverUpdatedAt,
+      Value<bool> deleted,
+      Value<bool> isDirty,
+      required String teamId,
+      required String tacticId,
+      Value<String?> sessionId,
+      Value<String?> matchId,
+      Value<int> rowid,
+    });
+typedef $$TacticLinksTableUpdateCompanionBuilder =
+    TacticLinksCompanion Function({
+      Value<String> id,
+      Value<String> createdAt,
+      Value<String> updatedAt,
+      Value<String?> serverUpdatedAt,
+      Value<bool> deleted,
+      Value<bool> isDirty,
+      Value<String> teamId,
+      Value<String> tacticId,
+      Value<String?> sessionId,
+      Value<String?> matchId,
+      Value<int> rowid,
+    });
+
+class $$TacticLinksTableFilterComposer
+    extends Composer<_$AppDatabase, $TacticLinksTable> {
+  $$TacticLinksTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get serverUpdatedAt => $composableBuilder(
+    column: $table.serverUpdatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get deleted => $composableBuilder(
+    column: $table.deleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDirty => $composableBuilder(
+    column: $table.isDirty,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get teamId => $composableBuilder(
+    column: $table.teamId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tacticId => $composableBuilder(
+    column: $table.tacticId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sessionId => $composableBuilder(
+    column: $table.sessionId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get matchId => $composableBuilder(
+    column: $table.matchId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$TacticLinksTableOrderingComposer
+    extends Composer<_$AppDatabase, $TacticLinksTable> {
+  $$TacticLinksTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get serverUpdatedAt => $composableBuilder(
+    column: $table.serverUpdatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get deleted => $composableBuilder(
+    column: $table.deleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDirty => $composableBuilder(
+    column: $table.isDirty,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get teamId => $composableBuilder(
+    column: $table.teamId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get tacticId => $composableBuilder(
+    column: $table.tacticId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sessionId => $composableBuilder(
+    column: $table.sessionId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get matchId => $composableBuilder(
+    column: $table.matchId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$TacticLinksTableAnnotationComposer
+    extends Composer<_$AppDatabase, $TacticLinksTable> {
+  $$TacticLinksTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get serverUpdatedAt => $composableBuilder(
+    column: $table.serverUpdatedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get deleted =>
+      $composableBuilder(column: $table.deleted, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDirty =>
+      $composableBuilder(column: $table.isDirty, builder: (column) => column);
+
+  GeneratedColumn<String> get teamId =>
+      $composableBuilder(column: $table.teamId, builder: (column) => column);
+
+  GeneratedColumn<String> get tacticId =>
+      $composableBuilder(column: $table.tacticId, builder: (column) => column);
+
+  GeneratedColumn<String> get sessionId =>
+      $composableBuilder(column: $table.sessionId, builder: (column) => column);
+
+  GeneratedColumn<String> get matchId =>
+      $composableBuilder(column: $table.matchId, builder: (column) => column);
+}
+
+class $$TacticLinksTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $TacticLinksTable,
+          TacticLink,
+          $$TacticLinksTableFilterComposer,
+          $$TacticLinksTableOrderingComposer,
+          $$TacticLinksTableAnnotationComposer,
+          $$TacticLinksTableCreateCompanionBuilder,
+          $$TacticLinksTableUpdateCompanionBuilder,
+          (
+            TacticLink,
+            BaseReferences<_$AppDatabase, $TacticLinksTable, TacticLink>,
+          ),
+          TacticLink,
+          PrefetchHooks Function()
+        > {
+  $$TacticLinksTableTableManager(_$AppDatabase db, $TacticLinksTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$TacticLinksTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$TacticLinksTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$TacticLinksTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> createdAt = const Value.absent(),
+                Value<String> updatedAt = const Value.absent(),
+                Value<String?> serverUpdatedAt = const Value.absent(),
+                Value<bool> deleted = const Value.absent(),
+                Value<bool> isDirty = const Value.absent(),
+                Value<String> teamId = const Value.absent(),
+                Value<String> tacticId = const Value.absent(),
+                Value<String?> sessionId = const Value.absent(),
+                Value<String?> matchId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => TacticLinksCompanion(
+                id: id,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                serverUpdatedAt: serverUpdatedAt,
+                deleted: deleted,
+                isDirty: isDirty,
+                teamId: teamId,
+                tacticId: tacticId,
+                sessionId: sessionId,
+                matchId: matchId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String createdAt,
+                required String updatedAt,
+                Value<String?> serverUpdatedAt = const Value.absent(),
+                Value<bool> deleted = const Value.absent(),
+                Value<bool> isDirty = const Value.absent(),
+                required String teamId,
+                required String tacticId,
+                Value<String?> sessionId = const Value.absent(),
+                Value<String?> matchId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => TacticLinksCompanion.insert(
+                id: id,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                serverUpdatedAt: serverUpdatedAt,
+                deleted: deleted,
+                isDirty: isDirty,
+                teamId: teamId,
+                tacticId: tacticId,
+                sessionId: sessionId,
+                matchId: matchId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$TacticLinksTable, TacticLink>(table),
+                  BaseReferences<_$AppDatabase, $TacticLinksTable, TacticLink>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$TacticLinksTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $TacticLinksTable,
+      TacticLink,
+      $$TacticLinksTableFilterComposer,
+      $$TacticLinksTableOrderingComposer,
+      $$TacticLinksTableAnnotationComposer,
+      $$TacticLinksTableCreateCompanionBuilder,
+      $$TacticLinksTableUpdateCompanionBuilder,
+      (
+        TacticLink,
+        BaseReferences<_$AppDatabase, $TacticLinksTable, TacticLink>,
+      ),
+      TacticLink,
+      PrefetchHooks Function()
+    >;
 typedef $$SyncStateTableCreateCompanionBuilder = SyncStateCompanion Function({
   required String tableName_,
   required String cursor,
@@ -19641,6 +21742,10 @@ class $AppDatabaseManager {
       $$PlayerProfilesTableTableManager(_db, _db.playerProfiles);
   $$PlayerMedicalTableTableManager get playerMedical =>
       $$PlayerMedicalTableTableManager(_db, _db.playerMedical);
+  $$TacticsTableTableManager get tactics =>
+      $$TacticsTableTableManager(_db, _db.tactics);
+  $$TacticLinksTableTableManager get tacticLinks =>
+      $$TacticLinksTableTableManager(_db, _db.tacticLinks);
   $$SyncStateTableTableManager get syncState =>
       $$SyncStateTableTableManager(_db, _db.syncState);
   $$LocalSettingsTableTableManager get localSettings =>

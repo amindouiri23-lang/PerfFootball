@@ -198,7 +198,7 @@ class SessionRepository {
     _sync();
   }
 
-  /// Suppression : séance, présence et bien-être. Les blessures restent (elles concernent le joueur)
+  /// Suppression : séance, présence, bien-être et liens vers les tactiques. Les blessures restent (elles concernent le joueur)
   /// mais ne sont plus rattachées à la séance.
   Future<void> deleteSession(String id) async {
     final now = nowIso();
@@ -212,6 +212,8 @@ class SessionRepository {
           .write(WellnessCompanion(deleted: gone, updatedAt: Value(now), isDirty: gone));
       await (_db.update(_db.injuries)..where((i) => i.sessionId.equals(id)))
           .write(InjuriesCompanion(sessionId: const Value(null), updatedAt: Value(now), isDirty: gone));
+      await (_db.update(_db.tacticLinks)..where((l) => l.sessionId.equals(id)))
+          .write(TacticLinksCompanion(deleted: gone, updatedAt: Value(now), isDirty: gone));
     });
     _sync();
   }
