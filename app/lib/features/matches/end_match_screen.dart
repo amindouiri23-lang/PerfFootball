@@ -12,10 +12,12 @@ import 'match_screen.dart' show squadOrder;
 /// E25 — Fin de match : score final, temps de jeu et RPE de chaque présent.
 /// Temps de jeu par défaut : titulaire = durée du match, remplaçant = 0, exclu = minute du carton
 /// rouge, titulaire blessé = minute de la blessure. Valeurs enregistrées à chaque appui.
+/// Match arrêté (`abandoned`) : même écran, les minutes par défaut s'arrêtent à la minute de l'arrêt.
 class EndMatchScreen extends ConsumerStatefulWidget {
-  const EndMatchScreen({super.key, required this.matchId});
+  const EndMatchScreen({super.key, required this.matchId, this.abandoned = false});
 
   final String matchId;
+  final bool abandoned;
 
   @override
   ConsumerState<EndMatchScreen> createState() => _EndMatchScreenState();
@@ -24,15 +26,16 @@ class EndMatchScreen extends ConsumerStatefulWidget {
 class _EndMatchScreenState extends ConsumerState<EndMatchScreen> {
   int? _for;
   int? _against;
+  int? _stop;
   final Map<String, int> _minutes = {};
   final Map<String, int?> _rpes = {};
 
-  int _default(FootballMatch m, MatchPlayer r, List<MatchEvent> events, List<Injury> injuries) {
+  int _default(int end, MatchPlayer r, List<MatchEvent> events, List<Injury> injuries) {
     final red = events.where((e) => e.type == 'red_card' && e.playerId == r.playerId).firstOrNull;
-    if (red != null && r.role == 'starter') return red.minute.clamp(0, m.durationMin);
+    if (red != null && r.role == 'starter') return red.minute.clamp(0, end);
     final injury = injuries.where((i) => i.playerId == r.playerId && i.minute != null).firstOrNull;
-    if (injury != null && r.role == 'starter') return injury.minute!.clamp(0, m.durationMin);
-    return r.role == 'starter' ? m.durationMin : 0;
+    if (injury != null && r.role == 'starter') return injury.minute!.clamp(0, end);
+    return r.role == 'starter' ? end : 0;
   }
 
   @override
@@ -49,7 +52,11 @@ class _EndMatchScreenState extends ConsumerState<EndMatchScreen> {
 
     final goalsFor = _for ?? m.goalsFor ?? events.where((e) => e.type == 'goal').length;
     final goalsAgainst = _against ?? m.goalsAgainst ?? 0;
-    int minutesOf(MatchPlayer r) => _minutes[r.id] ?? r.minutesPlayed ?? _default(m, r, events, injuries);
+    // Minute de l'arrêt : par défaut la dernière minute saisie, sinon la mi-temps.
+    final end = !widget.abandoned
+        ? m.durationMin
+        : _stop ?? (events.isEmpty ? m.durationMin ~/ 2 : events.map((e) => e.minute).reduce((a, b) => a > b ? a : b));
+    int minutesOf(MatchPlayer r) => _minutes[r.id] ?? r.minutesPlayed ?? _default(end, r, events, injuries);
     int? rpeOf(MatchPlayer r) => _rpes.containsKey(r.id) ? _rpes[r.id] : r.rpe;
 
     Widget score(String label, int value, ValueChanged<int> onChanged) => Column(children: [
@@ -62,9 +69,20 @@ class _EndMatchScreenState extends ConsumerState<EndMatchScreen> {
         ]);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Fin de match')),
+      appBar: AppBar(title: Text(widget.abandoned ? 'Match arrêté' : 'Fin de match')),
       body: ListView(padding: const EdgeInsets.fromLTRB(16, 8, 16, 96), children: [
-        Text('Score final', style: theme.textTheme.titleSmall),
+        if (widget.abandoned) ...[
+          Text('Minute de l\'arrêt', style: theme.textTheme.titleSmall),
+          Card(
+            child: ListTile(
+              title: const Text('Arrêté à la minute'),
+              subtitle: const Text('Sert de temps de jeu par défaut aux titulaires.'),
+              trailing: MinutesStepper(value: end, min: 1, max: m.durationMin + 30, onChanged: (v) => setState(() => _stop = v)),
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
+        Text(widget.abandoned ? 'Score au moment de l\'arrêt' : 'Score final', style: theme.textTheme.titleSmall),
         Card(
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 8),
@@ -123,12 +141,12 @@ class _EndMatchScreenState extends ConsumerState<EndMatchScreen> {
             onPressed: () async {
               await repo.complete(m, goalsFor: goalsFor, goalsAgainst: goalsAgainst, defaultMinutes: {
                 for (final r in present) r.id: minutesOf(r),
-              });
+              }, status: widget.abandoned ? 'abandoned' : 'completed');
               if (!context.mounted) return;
-              showMessage(context, 'Match terminé : $goalsFor - $goalsAgainst');
+              showMessage(context, '${widget.abandoned ? 'Match arrêté' : 'Match terminé'} : $goalsFor - $goalsAgainst');
               context.go('/matches/${m.id}');
             },
-            child: const Text('Valider le match'),
+            child: Text(widget.abandoned ? 'Valider l\'arrêt du match' : 'Valider le match'),
           ),
         ),
       ),

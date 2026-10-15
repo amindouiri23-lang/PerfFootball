@@ -149,6 +149,8 @@ class StatusChip extends StatelessWidget {
     final (bg, fg) = switch (status) {
       'in_progress' => (c.tertiaryContainer, c.onTertiaryContainer),
       'completed' => (c.primaryContainer, c.onPrimaryContainer),
+      'forfeit' || 'abandoned' => (c.secondaryContainer, c.onSecondaryContainer),
+      'cancelled' || 'postponed' => (c.errorContainer, c.onErrorContainer),
       _ => (c.surfaceContainerHighest, c.onSurfaceVariant),
     };
     return Container(

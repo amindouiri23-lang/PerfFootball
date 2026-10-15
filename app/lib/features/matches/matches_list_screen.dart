@@ -142,7 +142,8 @@ class ScoreChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
       decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(12)),
-      child: Text('${m.goalsFor} - ${m.goalsAgainst}', style: TextStyle(color: fg, fontWeight: FontWeight.bold)),
+      child: Text('${m.goalsFor} - ${m.goalsAgainst}${m.status == 'forfeit' ? ' (forfait)' : ''}',
+          style: TextStyle(color: fg, fontWeight: FontWeight.bold)),
     );
   }
 }

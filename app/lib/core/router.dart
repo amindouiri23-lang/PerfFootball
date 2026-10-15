@@ -23,6 +23,7 @@ import '../features/sessions/wellness_screens.dart';
 import '../features/import/import_screen.dart';
 import '../features/team/player_files.dart';
 import '../features/team/player_screens.dart';
+import '../features/tactics/tactic_screens.dart';
 import '../features/tests/test_screens.dart';
 import '../features/team/team_form_screen.dart';
 import '../features/team/team_screen.dart';
@@ -67,6 +68,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                     GoRoute(path: 'edit', builder: (_, s) => SessionFormScreen(id: s.pathParameters['id'])),
                     GoRoute(path: 'attendance', builder: (_, s) => AttendanceScreen(sessionId: s.pathParameters['id']!)),
                     GoRoute(path: 'close', builder: (_, s) => ClosingScreen(sessionId: s.pathParameters['id']!)),
+                    GoRoute(path: 'tactic/:tid', builder: (_, s) => TacticEditorScreen(id: s.pathParameters['tid']!)),
                     GoRoute(
                       path: 'injury/:playerId',
                       builder: (_, s) =>
@@ -104,7 +106,12 @@ final routerProvider = Provider<GoRouter>((ref) {
                   routes: [
                     GoRoute(path: 'edit', builder: (_, s) => MatchFormScreen(id: s.pathParameters['id'])),
                     GoRoute(path: 'squad', builder: (_, s) => SquadScreen(matchId: s.pathParameters['id']!)),
-                    GoRoute(path: 'end', builder: (_, s) => EndMatchScreen(matchId: s.pathParameters['id']!)),
+                    GoRoute(path: 'tactic/:tid', builder: (_, s) => TacticEditorScreen(id: s.pathParameters['tid']!)),
+                    GoRoute(
+                      path: 'end',
+                      builder: (_, s) => EndMatchScreen(
+                          matchId: s.pathParameters['id']!, abandoned: s.uri.queryParameters['abandoned'] == '1'),
+                    ),
                     GoRoute(
                       path: 'injury/:playerId',
                       builder: (_, s) =>
@@ -124,6 +131,11 @@ final routerProvider = Provider<GoRouter>((ref) {
                 GoRoute(path: 'edit', builder: (_, _) => const TeamFormScreen(editActive: true)),
                 GoRoute(path: 'players/new', builder: (_, _) => const PlayerFormScreen()),
                 GoRoute(path: 'import', builder: (_, _) => const ImportScreen()),
+                GoRoute(
+                  path: 'tactics',
+                  builder: (_, _) => const TacticsListScreen(),
+                  routes: [GoRoute(path: ':tid', builder: (_, s) => TacticEditorScreen(id: s.pathParameters['tid']!))],
+                ),
                 GoRoute(
                   path: 'tests',
                   builder: (_, _) => const TestDaysScreen(),
