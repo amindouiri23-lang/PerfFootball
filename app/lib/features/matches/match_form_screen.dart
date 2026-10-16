@@ -9,6 +9,8 @@ import '../../core/widgets/form_page.dart';
 import '../../core/widgets/steppers.dart';
 import '../../data/database.dart';
 import '../sessions/session_repository.dart' show isoDate;
+import '../tactics/tactic_repository.dart';
+import '../tactics/tactic_screens.dart' show TacticsField;
 import '../team/team_repository.dart';
 import 'match_repository.dart';
 
@@ -35,6 +37,8 @@ class _MatchFormScreenState extends ConsumerState<MatchFormScreen> {
   int? _matchday;
   bool _loaded = false;
   bool _submitted = false;
+  /// Tactiques prévues ; null tant que celles d'un match existant ne sont pas lues.
+  Set<String>? _tactics;
 
   void _load(FootballMatch? m) {
     if (_loaded || m == null) return;
@@ -73,6 +77,10 @@ class _MatchFormScreenState extends ConsumerState<MatchFormScreen> {
           phase: _competition == 'league' ? _phase : null,
           matchday: _competition == 'league' ? _matchday : null,
         );
+    final tactics = _tactics;
+    if (tactics != null && (widget.id != null || tactics.isNotEmpty)) {
+      await ref.read(tacticRepositoryProvider).setLinks(teamId: team.id, matchId: id, tacticIds: tactics);
+    }
     if (!mounted) return;
     if (widget.id != null) {
       showMessage(context, 'Match modifié');
@@ -129,6 +137,14 @@ class _MatchFormScreenState extends ConsumerState<MatchFormScreen> {
         ? const <String>[]
         : {for (final m in ref.watch(matchesProvider(team.id)).value ?? const <FootballMatch>[]) m.opponent}.toList();
     final create = widget.id == null;
+    if (_tactics == null && team != null) {
+      if (create) {
+        _tactics = {};
+      } else {
+        final links = ref.watch(teamTacticLinksProvider(team.id));
+        if (links.hasValue) _tactics = {for (final l in links.value!) if (l.matchId == widget.id) l.tacticId};
+      }
+    }
 
     return FormPage(title: create ? 'Nouveau match' : 'Modifier le match', children: [
       Row(children: [
@@ -213,6 +229,15 @@ class _MatchFormScreenState extends ConsumerState<MatchFormScreen> {
         alignment: Alignment.centerLeft,
         child: MinutesStepper(value: _duration, min: 20, max: 130, onChanged: (v) => setState(() => _duration = v)),
       ),
+      if (team != null && _tactics != null) ...[
+        const SizedBox(height: 16),
+        TacticsField(
+          teamId: team.id,
+          label: 'Coups de pied arrêtés et tactiques',
+          selected: _tactics!,
+          onChanged: (v) => setState(() => _tactics = v),
+        ),
+      ],
       const SizedBox(height: 24),
       if (create) ...[
         FilledButton(onPressed: () => _save(squad: true), child: const Text('Choisir les joueurs présents')),

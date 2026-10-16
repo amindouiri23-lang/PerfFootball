@@ -142,7 +142,12 @@ class _BoardViewState extends State<BoardView> {
     return t.label ?? '';
   }
 
-  String? _caption(BoardToken t) => t.role ?? widget.players[t.playerId]?.lastName;
+  /// Sous le pion : le nom du joueur (suivi de son rôle s'il en a un), sinon le rôle seul.
+  String? _caption(BoardToken t) {
+    final name = widget.players[t.playerId]?.lastName;
+    if (name == null) return t.role;
+    return t.role == null ? name : '$name · ${t.role}';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -192,9 +197,9 @@ class _BoardViewState extends State<BoardView> {
             Positioned.fill(child: CustomPaint(painter: PitchPainter(pitch: widget.pitch, arrows: widget.board.arrows, preview: _preview))),
             for (final t in widget.board.tokens)
               Positioned(
-                left: t.x * size.width - ts * 1.5,
+                left: t.x * size.width - ts * 2,
                 top: t.y * size.height - (t.kind == 'ball' ? ts * 0.35 : ts / 2),
-                width: ts * 3,
+                width: ts * 4,
                 child: Align(
                   alignment: Alignment.topCenter,
                   child: IgnorePointer(
@@ -713,49 +718,98 @@ class LinkedTactics extends ConsumerWidget {
   }
 
   Future<void> _choose(BuildContext context, WidgetRef ref, List<Tactic> tactics, Set<String> current) async {
-    if (tactics.isEmpty) {
-      final go = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Aucune tactique'),
-          content: const Text('Créez d\'abord vos tactiques dans Équipe → Tactiques.'),
-          actions: [
-            TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Plus tard')),
-            FilledButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Créer une tactique')),
-          ],
-        ),
-      );
-      if (go == true && context.mounted) context.go('/team/tactics');
-      return;
-    }
-    final selected = {...current};
-    final ok = await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => SafeArea(
-          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            Padding(padding: const EdgeInsets.all(16), child: Text(title, style: Theme.of(context).textTheme.titleMedium)),
-            Flexible(
-              child: ListView(shrinkWrap: true, children: [
-                for (final t in tactics)
-                  CheckboxListTile(
-                    value: selected.contains(t.id),
-                    title: Text(t.name),
-                    subtitle: Text('${tacticKinds[t.kind]} · ${tacticSides[t.side]}'),
-                    onChanged: (v) => setState(() => v == true ? selected.add(t.id) : selected.remove(t.id)),
-                  ),
-              ]),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: FilledButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Valider')),
-            ),
-          ]),
-        ),
-      ),
-    );
-    if (ok != true) return;
+    final selected = await pickTactics(context, ref, teamId: teamId, initial: current, title: title);
+    if (selected == null) return;
     await ref.read(tacticRepositoryProvider).setLinks(teamId: teamId, sessionId: sessionId, matchId: matchId, tacticIds: selected);
+  }
+}
+
+/// Choix des tactiques (cases à cocher), avec création d'une nouvelle tactique sans quitter l'écran.
+/// Renvoie la sélection, ou null si annulé.
+Future<Set<String>?> pickTactics(BuildContext context, WidgetRef ref,
+    {required String teamId, required Set<String> initial, required String title}) async {
+  final selected = {...initial};
+  final ok = await showModalBottomSheet<bool>(
+    context: context,
+    isScrollControlled: true,
+    builder: (context) => Consumer(
+      builder: (context, ref, _) {
+        final tactics = ref.watch(tacticsProvider(teamId)).value ?? const <Tactic>[];
+        return StatefulBuilder(
+          builder: (context, setState) => SafeArea(
+            child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              Padding(padding: const EdgeInsets.all(16), child: Text(title, style: Theme.of(context).textTheme.titleMedium)),
+              if (tactics.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: Text("Aucune tactique pour l'instant : créez la première ci-dessous."),
+                ),
+              Flexible(
+                child: ListView(shrinkWrap: true, children: [
+                  for (final t in tactics)
+                    CheckboxListTile(
+                      value: selected.contains(t.id),
+                      title: Text(t.name),
+                      subtitle: Text('${tacticKinds[t.kind]} · ${tacticSides[t.side]}'),
+                      onChanged: (v) => setState(() => v == true ? selected.add(t.id) : selected.remove(t.id)),
+                    ),
+                ]),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                child: Row(children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      icon: const Icon(Icons.add),
+                      label: const Text('Nouvelle tactique'),
+                      onPressed: () async {
+                        final id = await showTacticInfoSheet(context, ref, teamId: teamId);
+                        if (id != null) setState(() => selected.add(id));
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(child: FilledButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Valider'))),
+                ]),
+              ),
+            ]),
+          ),
+        );
+      },
+    ),
+  );
+  return ok == true ? selected : null;
+}
+
+/// Champ « Tactiques » des formulaires de séance et de match : pastilles des tactiques choisies et bouton
+/// pour les choisir. Le rattachement est enregistré par le formulaire (voir [TacticRepository.setLinks]).
+class TacticsField extends ConsumerWidget {
+  const TacticsField({super.key, required this.teamId, required this.selected, required this.onChanged, required this.label});
+
+  final String teamId;
+  final Set<String> selected;
+  final ValueChanged<Set<String>> onChanged;
+  final String label;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tactics = ref.watch(tacticsProvider(teamId)).value ?? const <Tactic>[];
+    final chosen = tactics.where((t) => selected.contains(t.id)).toList();
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Text(label, style: Theme.of(context).textTheme.labelLarge),
+      const SizedBox(height: 8),
+      Wrap(spacing: 8, runSpacing: 8, children: [
+        for (final t in chosen)
+          InputChip(label: Text(t.name), onDeleted: () => onChanged({...selected}..remove(t.id))),
+        ActionChip(
+          avatar: const Icon(Icons.sports_soccer, size: 18),
+          label: Text(chosen.isEmpty ? 'Choisir des tactiques' : 'Modifier'),
+          onPressed: () async {
+            final s = await pickTactics(context, ref, teamId: teamId, initial: selected, title: label);
+            if (s != null) onChanged(s);
+          },
+        ),
+      ]),
+    ]);
   }
 }
