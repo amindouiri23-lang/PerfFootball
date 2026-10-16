@@ -10,6 +10,7 @@ import '../../data/database.dart';
 import '../../data/sync.dart';
 import '../matches/match_repository.dart';
 import '../sessions/session_repository.dart';
+import '../tactics/tactic_repository.dart';
 import 'team_repository.dart';
 
 /// E07 — Mon équipe (effectif).
@@ -40,6 +41,7 @@ class _TeamScreenState extends ConsumerState<TeamScreen> {
 
   Widget _roster(BuildContext context, Team team) {
     final players = ref.watch(playersProvider(team.id)).value ?? const <Player>[];
+    final tacticCount = (ref.watch(tacticsProvider(team.id)).value ?? const <Tactic>[]).length;
     final injured = {for (final i in ref.watch(openInjuriesProvider(team.id)).value ?? const <Injury>[]) i.playerId};
     // Statistiques réelles de la saison pour les cartes : minutes jouées, buts, passes décisives.
     final minutes = <String, int>{};
@@ -74,7 +76,6 @@ class _TeamScreenState extends ConsumerState<TeamScreen> {
               'switch' => _switchTeam(context),
               'injuries' => context.go('/team/injuries'),
               'tests' => context.go('/team/tests'),
-              'tactics' => context.go('/team/tactics'),
               'import' => context.go('/team/import'),
               _ => context.go('/team/new'),
             },
@@ -84,7 +85,6 @@ class _TeamScreenState extends ConsumerState<TeamScreen> {
               PopupMenuItem(value: 'new', child: Text('Créer une autre équipe')),
               PopupMenuItem(value: 'injuries', child: Text('Infirmerie')),
               PopupMenuItem(value: 'tests', child: Text('Tests physiques')),
-              PopupMenuItem(value: 'tactics', child: Text('Tactiques')),
               PopupMenuItem(value: 'import', child: Text('Importer un fichier Excel')),
             ],
           ),
@@ -98,6 +98,14 @@ class _TeamScreenState extends ConsumerState<TeamScreen> {
       body: players.isEmpty
           ? const _EmptyRoster()
           : ListView(padding: const EdgeInsets.only(bottom: 88), children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                child: OutlinedButton.icon(
+                  onPressed: () => context.go('/team/tactics'),
+                  icon: const Icon(Icons.sports_soccer),
+                  label: Text('Tactiques${tacticCount > 0 ? ' ($tacticCount)' : ''}'),
+                ),
+              ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                 child: TextField(

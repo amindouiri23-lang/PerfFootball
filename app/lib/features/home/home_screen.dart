@@ -12,6 +12,7 @@ import '../matches/match_repository.dart';
 import '../profile/profile_repository.dart';
 import '../sessions/session_repository.dart';
 import '../sessions/sessions_list_screen.dart';
+import '../tactics/tactic_screens.dart' show showTacticInfoSheet;
 import '../team/team_repository.dart';
 
 /// E10 — Accueil, façon « centre du club » d'un jeu de foot : identité de l'équipe, prochain match,
@@ -94,7 +95,8 @@ class HomeScreen extends ConsumerWidget {
           child: OutlinedButton.icon(
             onPressed: () => context.go('/sessions/new'),
             icon: const Icon(Icons.add),
-            label: const Text('Séance'),
+            label: const FittedBox(fit: BoxFit.scaleDown, child: Text('Séance')),
+            style: _compact,
           ),
         ),
         const SizedBox(width: 12),
@@ -102,12 +104,28 @@ class HomeScreen extends ConsumerWidget {
           child: OutlinedButton.icon(
             onPressed: () => context.go('/matches/new'),
             icon: const Icon(Icons.add),
-            label: const Text('Match'),
+            label: const FittedBox(fit: BoxFit.scaleDown, child: Text('Match')),
+            style: _compact,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: () async {
+              final id = await showTacticInfoSheet(context, ref, teamId: teamId);
+              if (id != null && context.mounted) context.go('/team/tactics/$id');
+            },
+            icon: const Icon(Icons.add),
+            label: const FittedBox(fit: BoxFit.scaleDown, child: Text('Tactique')),
+            style: _compact,
           ),
         ),
       ]),
     ];
   }
+
+  /// Trois boutons côte à côte sur un téléphone : marges réduites, libellé réduit plutôt que coupé.
+  static final _compact = OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 8));
 
   /// En-tête du club : logo de l'équipe (modifiable dans « Modifier l'équipe »), club et équipe.
   Widget _clubHeader(BuildContext context, Team team) => Padding(

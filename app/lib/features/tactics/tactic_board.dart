@@ -236,7 +236,7 @@ class TokenView extends StatelessWidget {
           margin: const EdgeInsets.only(top: 1),
           padding: const EdgeInsets.symmetric(horizontal: 3),
           decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.55), borderRadius: BorderRadius.circular(3)),
-          child: Text(caption!, maxLines: 1, style: const TextStyle(color: Colors.white, fontSize: 10)),
+          child: Text(caption!, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white, fontSize: 10)),
         ),
     ]);
   }

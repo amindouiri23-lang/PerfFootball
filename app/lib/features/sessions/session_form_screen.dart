@@ -8,6 +8,8 @@ import '../../core/settings.dart';
 import '../../core/widgets/form_page.dart';
 import '../../core/widgets/steppers.dart';
 import '../../data/database.dart';
+import '../tactics/tactic_repository.dart';
+import '../tactics/tactic_screens.dart' show TacticsField;
 import '../team/team_repository.dart';
 import 'session_repository.dart';
 
@@ -32,6 +34,8 @@ class _SessionFormScreenState extends ConsumerState<SessionFormScreen> {
   int? _plannedRpe;
   bool _loaded = false;
   bool _typeMissing = false;
+  /// Tactiques travaillées ; null tant que celles d'une séance existante ne sont pas lues.
+  Set<String>? _tactics;
 
   static TimeOfDay _nextQuarter() {
     final now = DateTime.now().add(const Duration(minutes: 15));
@@ -91,6 +95,10 @@ class _SessionFormScreenState extends ConsumerState<SessionFormScreen> {
           id: widget.id, teamId: team.id, date: date, startTime: _timeValue, type: _type!,
           plannedDurationMin: _duration, plannedRpe: _plannedRpe, objective: objective.isEmpty ? null : objective,
         );
+    final tactics = _tactics;
+    if (tactics != null && (widget.id != null || tactics.isNotEmpty)) {
+      await ref.read(tacticRepositoryProvider).setLinks(teamId: team.id, sessionId: id, tacticIds: tactics);
+    }
     if (!mounted) return;
     if (widget.id != null) {
       showMessage(context, 'Séance modifiée');
@@ -125,6 +133,15 @@ class _SessionFormScreenState extends ConsumerState<SessionFormScreen> {
     }
     final theme = Theme.of(context);
     final create = widget.id == null;
+    final team = ref.watch(activeTeamProvider).value;
+    if (_tactics == null && team != null) {
+      if (create) {
+        _tactics = {};
+      } else {
+        final links = ref.watch(teamTacticLinksProvider(team.id));
+        if (links.hasValue) _tactics = {for (final l in links.value!) if (l.sessionId == widget.id) l.tacticId};
+      }
+    }
     return FormPage(title: create ? 'Nouvelle séance' : 'Modifier la séance', children: [
       if (create) Text('Étape 1 sur 3 — informations', style: theme.textTheme.labelLarge),
       const SizedBox(height: 16),
@@ -200,6 +217,15 @@ class _SessionFormScreenState extends ConsumerState<SessionFormScreen> {
         controller: _objective,
         decoration: const InputDecoration(labelText: 'Objectif', hintText: 'Ex. Travail de pressing haut'),
       ),
+      if (team != null && _tactics != null) ...[
+        const SizedBox(height: 16),
+        TacticsField(
+          teamId: team.id,
+          label: 'Tactiques travaillées',
+          selected: _tactics!,
+          onChanged: (v) => setState(() => _tactics = v),
+        ),
+      ],
       const SizedBox(height: 24),
       if (create) ...[
         FilledButton(onPressed: () => _save(startCall: true), child: const Text('Démarrer l\'appel')),
