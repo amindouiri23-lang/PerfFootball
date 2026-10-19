@@ -4,7 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../auth/auth_repository.dart';
 
 class StaffAccount {
-  const StaffAccount({required this.id, required this.email, this.firstName, this.lastName, this.jobTitle,
+  const StaffAccount({required this.id, required this.email, this.firstName, this.lastName,
       required this.isAdmin, required this.isDisabled, required this.mustChangePassword, this.teamIds = const [],
       this.role = 'observer', this.playerId});
 
@@ -13,7 +13,6 @@ class StaffAccount {
         email: j['email'] as String? ?? '',
         firstName: j['first_name'] as String?,
         lastName: j['last_name'] as String?,
-        jobTitle: j['job_title'] as String?,
         isAdmin: j['is_admin'] == true,
         isDisabled: j['is_disabled'] == true,
         mustChangePassword: j['must_change_password'] == true,
@@ -26,7 +25,6 @@ class StaffAccount {
   final String email;
   final String? firstName;
   final String? lastName;
-  final String? jobTitle;
   final bool isAdmin;
   final bool isDisabled;
   final bool mustChangePassword;
@@ -130,11 +128,13 @@ class AdminRepository {
   final SupabaseClient _client;
 
   /// Crée le compte et renvoie le mot de passe temporaire (affiché une seule fois).
+  /// [permissions] : cases changées par rapport aux droits du rôle (enregistrées comme exceptions du compte).
   Future<String> create({required String email, required String firstName, required String lastName,
-      required String jobTitle, required String role, String? playerId, List<String> teamIds = const []}) async {
+      required String role, String? playerId, List<String> teamIds = const [],
+      Map<String, bool> permissions = const {}}) async {
     final r = await _call({
       'action': 'create', 'email': email, 'first_name': firstName, 'last_name': lastName,
-      'job_title': jobTitle, 'role': role, 'player_id': playerId, 'team_ids': teamIds,
+      'role': role, 'player_id': playerId, 'team_ids': teamIds, 'permissions': permissions,
     }) as Map<String, dynamic>;
     return r['temporary_password'] as String;
   }

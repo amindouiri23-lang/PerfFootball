@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/permissions.dart';
 import '../../core/photos.dart';
 import '../../core/router.dart';
 import '../../core/settings.dart';
@@ -46,7 +47,7 @@ class ProfileScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 12),
             Text(p?.fullName ?? 'Profil à compléter', style: theme.textTheme.titleLarge),
-            Text(jobTitles[p?.jobTitle] ?? '', style: theme.textTheme.bodyMedium),
+            Text(roleLabels[ref.watch(permsProvider).role] ?? '', style: theme.textTheme.bodyMedium),
             const SizedBox(height: 16),
             if (p?.phone != null) ListTile(leading: const Icon(Icons.phone_outlined), title: Text(p!.phone!)),
           ]),
@@ -125,14 +126,13 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   late final _first = TextEditingController(text: _initial?.firstName);
   late final _last = TextEditingController(text: _initial?.lastName);
   late final _phone = TextEditingController(text: _initial?.phone);
-  late String? _job = _initial?.jobTitle;
   bool _busy = false;
 
   Future<void> _save() async {
     if (!_form.currentState!.validate()) return;
     setState(() => _busy = true);
     try {
-      await saveMyProfile(ref, firstName: _first.text, lastName: _last.text, jobTitle: _job!, phone: _phone.text);
+      await saveMyProfile(ref, firstName: _first.text, lastName: _last.text, phone: _phone.text);
       if (!mounted) return;
       showMessage(context, 'Profil mis à jour');
       context.go('/profile');
@@ -161,14 +161,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         TextFormField(controller: _first, decoration: const InputDecoration(labelText: 'Prénom *'), validator: _required),
         const SizedBox(height: 16),
         TextFormField(controller: _last, decoration: const InputDecoration(labelText: 'Nom *'), validator: _required),
-        const SizedBox(height: 16),
-        DropdownButtonFormField<String>(
-          initialValue: _job,
-          decoration: const InputDecoration(labelText: 'Fonction *'),
-          items: [for (final e in jobTitles.entries) DropdownMenuItem(value: e.key, child: Text(e.value))],
-          onChanged: (v) => setState(() => _job = v),
-          validator: (v) => v == null ? 'Obligatoire' : null,
-        ),
         const SizedBox(height: 16),
         TextFormField(controller: _phone, keyboardType: TextInputType.phone,
             decoration: const InputDecoration(labelText: 'Téléphone')),

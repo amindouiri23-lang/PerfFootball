@@ -8,7 +8,6 @@ import '../../core/permissions.dart';
 import '../../core/router.dart';
 import '../../core/widgets/form_page.dart';
 import '../auth/auth_repository.dart';
-import '../profile/profile_repository.dart';
 import 'admin_repository.dart';
 import 'roles_screens.dart';
 import 'team_picker.dart';
@@ -173,8 +172,9 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
   final _first = TextEditingController();
   final _last = TextEditingController();
   final _email = TextEditingController();
-  String? _job;
   String? _role;
+  /// Cases changées par rapport aux droits du rôle choisi.
+  Map<String, bool> _perms = {};
   String? _playerId;
   bool _busy = false;
   Set<String> _teams = {};
@@ -190,7 +190,7 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
       final email = _email.text.trim().toLowerCase();
       final pwd = await ref.read(adminRepositoryProvider).create(
           email: email, firstName: _first.text.trim(), lastName: _last.text.trim(),
-          jobTitle: _role == 'player' ? 'other' : _job!, role: _role!, playerId: _playerId,
+          role: _role!, playerId: _playerId, permissions: _perms,
           teamIds: _role == 'player' ? const [] : _teams.toList());
       ref.invalidate(staffAccountsProvider);
       if (!mounted) return;
@@ -234,6 +234,7 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
           role: _role,
           playerId: _playerId,
           onChanged: (r, p, player) => setState(() {
+            if (r != _role) _perms = {};
             _role = r;
             _playerId = p;
             // Compte joueur : nom repris de sa fiche si le formulaire est encore vide.
@@ -245,17 +246,23 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
         ),
         if (_role != 'player') ...[
           const SizedBox(height: 16),
-          DropdownButtonFormField<String>(
-            initialValue: _job,
-            decoration: const InputDecoration(labelText: 'Fonction *'),
-            items: [for (final e in jobTitles.entries) DropdownMenuItem(value: e.key, child: Text(e.value))],
-            onChanged: (v) => setState(() => _job = v),
-            validator: (v) => v == null ? 'Obligatoire' : null,
-          ),
-          const SizedBox(height: 16),
           Text('Équipes', style: Theme.of(context).textTheme.titleSmall),
           const Text('Le compte agit dans les équipes cochées, selon les permissions de son rôle.'),
           TeamPicker(selected: _teams, onChanged: (s) => setState(() => _teams = s)),
+          if (_role != null && _role != 'admin') ...[
+            const SizedBox(height: 16),
+            Text('Écrans et actions', style: Theme.of(context).textTheme.titleSmall),
+            Text('Cochées par défaut selon le rôle. Décochez ou cochez pour ce compte seulement.',
+                style: Theme.of(context).textTheme.bodySmall),
+            Builder(builder: (context) {
+              final defaults = ref.watch(rolePermissionsProvider).value?[_role] ?? const <String, bool>{};
+              return PermissionMatrix(
+                values: {for (final k in {...defaults.keys, ..._perms.keys}) k: _perms[k] ?? defaults[k] ?? false},
+                defaults: defaults,
+                onChanged: (k, v) => setState(() => v == (defaults[k] ?? false) ? _perms.remove(k) : _perms[k] = v),
+              );
+            }),
+          ],
         ] else
           const Padding(
             padding: EdgeInsets.only(top: 12),
