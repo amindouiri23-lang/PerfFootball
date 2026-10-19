@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import '../../core/permissions.dart';
 import '../../core/router.dart';
 import '../auth/auth_repository.dart';
-import '../profile/profile_repository.dart';
 import 'admin_repository.dart';
 import 'team_picker.dart';
 
@@ -137,15 +136,6 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
     }
   }
 
-  Future<void> _setOverride(String permission, bool? allowed) async {
-    try {
-      await ref.read(adminRepositoryProvider).setAccountPermission(widget.userId, permission, allowed);
-      ref.invalidate(accountPermissionsProvider(widget.userId));
-    } on AppException catch (e) {
-      if (mounted) showMessage(context, e.message);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final accounts = ref.watch(staffAccountsProvider);
@@ -168,7 +158,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
               contentPadding: EdgeInsets.zero,
               leading: CircleAvatar(child: Text(a.initials)),
               title: Text(a.displayName, style: theme.textTheme.titleMedium),
-              subtitle: Text([a.email, if (a.jobTitle != null) jobTitles[a.jobTitle], if (a.isDisabled) 'désactivé'].join(' · ')),
+              subtitle: Text([a.email, if (a.isDisabled) 'désactivé'].join(' · ')),
             ),
             const SizedBox(height: 8),
             Text('Rôle', style: theme.textTheme.titleSmall),
@@ -214,7 +204,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
             else if (a.role == 'player')
               const Text('Compte joueur : il remplit seulement son dossier, son RPE et son questionnaire de bien-être.')
             else
-              _Overrides(account: a, onChanged: _setOverride),
+              _AccountPermissions(account: a),
           ]);
         },
       ),
@@ -222,65 +212,94 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
   }
 }
 
-/// Exceptions du compte, écran par écran : « Rôle » (la matrice décide), « Oui » ou « Non ».
-class _Overrides extends ConsumerWidget {
-  const _Overrides({required this.account, required this.onChanged});
+/// Matrice des permissions à cocher, écran par écran. Avec [defaults] (droits du rôle), une case qui
+/// s'en écarte est signalée « modifié pour ce compte ».
+class PermissionMatrix extends StatelessWidget {
+  const PermissionMatrix({super.key, required this.values, this.defaults, required this.onChanged});
+
+  final Map<String, bool> values;
+  final Map<String, bool>? defaults;
+  final void Function(String permission, bool allowed) onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      for (final f in permissionCatalog)
+        Card(
+          margin: const EdgeInsets.only(top: 12),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              Padding(padding: const EdgeInsets.fromLTRB(16, 8, 16, 0), child: Text(f.label, style: theme.textTheme.titleSmall)),
+              for (final e in f.actions.entries)
+                Builder(builder: (context) {
+                  final key = '${f.key}.${e.key}';
+                  final value = values[key] ?? false;
+                  final changed = defaults != null && value != (defaults![key] ?? false);
+                  return CheckboxListTile(
+                    dense: true,
+                    title: Text(e.value),
+                    subtitle: changed
+                        ? Text('Modifié pour ce compte (rôle : ${(defaults![key] ?? false) ? 'oui' : 'non'})',
+                            style: TextStyle(color: theme.colorScheme.primary))
+                        : null,
+                    value: value,
+                    onChanged: (v) => onChanged(key, v ?? false),
+                  );
+                }),
+            ]),
+          ),
+        ),
+    ]);
+  }
+}
+
+/// Permissions d'un compte : les droits de son rôle, cochés ou décochés pour lui seul.
+class _AccountPermissions extends ConsumerWidget {
+  const _AccountPermissions({required this.account});
 
   final StaffAccount account;
-  final Future<void> Function(String permission, bool? allowed) onChanged;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final matrix = ref.watch(rolePermissionsProvider).value?[account.role] ?? const <String, bool>{};
+    final defaults = ref.watch(rolePermissionsProvider).value?[account.role] ?? const <String, bool>{};
     final overrides = ref.watch(accountPermissionsProvider(account.id));
     final theme = Theme.of(context);
+    Future<void> set(String permission, bool? allowed) async {
+      try {
+        await ref.read(adminRepositoryProvider).setAccountPermission(account.id, permission, allowed);
+        ref.invalidate(accountPermissionsProvider(account.id));
+      } on AppException catch (e) {
+        if (context.mounted) showMessage(context, e.message);
+      }
+    }
+
     return overrides.when(
       loading: () => const LinearProgressIndicator(),
       error: (e, _) => Text(e is AppException ? e.message : networkErrorMessage),
       data: (o) => Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        Text(
-          'Par défaut, le compte a les droits de son rôle (${roleLabels[account.role]}). Choisissez « Oui » ou « Non » '
-          'pour faire une exception pour ce compte seulement.',
-          style: theme.textTheme.bodySmall,
-        ),
+        Text('Cochées : ce que ce compte peut voir et faire. Au départ, les droits de son rôle '
+            '(${roleLabels[account.role]}) ; une case changée ici ne vaut que pour ce compte.', style: theme.textTheme.bodySmall),
         if (o.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.only(top: 6),
-            child: Text('${o.length} exception${o.length > 1 ? 's' : ''} pour ce compte.',
-                style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.primary)),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              icon: const Icon(Icons.restart_alt, size: 18),
+              label: Text('Revenir aux droits du rôle (${o.length} modification${o.length > 1 ? 's' : ''})'),
+              onPressed: () async {
+                for (final k in o.keys) {
+                  await set(k, null);
+                }
+              },
+            ),
           ),
-        for (final f in permissionCatalog)
-          ExpansionTile(
-            tilePadding: EdgeInsets.zero,
-            title: Text(f.label),
-            subtitle: [for (final a in f.actions.keys) '${f.key}.$a'].any(o.containsKey)
-                ? Text('Exception', style: TextStyle(color: theme.colorScheme.primary))
-                : null,
-            children: [
-              for (final e in f.actions.entries)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
-                  child: Row(children: [
-                    Expanded(
-                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        Text(e.value),
-                        Text('Rôle : ${(matrix['${f.key}.${e.key}'] ?? false) ? 'oui' : 'non'}', style: theme.textTheme.bodySmall),
-                      ]),
-                    ),
-                    SegmentedButton<bool?>(
-                      showSelectedIcon: false,
-                      segments: const [
-                        ButtonSegment(value: null, label: Text('Rôle')),
-                        ButtonSegment(value: true, label: Text('Oui')),
-                        ButtonSegment(value: false, label: Text('Non')),
-                      ],
-                      selected: {o['${f.key}.${e.key}']},
-                      onSelectionChanged: (v) => onChanged('${f.key}.${e.key}', v.first),
-                    ),
-                  ]),
-                ),
-            ],
-          ),
+        PermissionMatrix(
+          values: {for (final k in {...defaults.keys, ...o.keys}) k: o[k] ?? defaults[k] ?? false},
+          defaults: defaults,
+          // Revenir à la valeur du rôle efface l'exception plutôt que de la recopier.
+          onChanged: (k, v) => set(k, v == (defaults[k] ?? false) ? null : v),
+        ),
       ]),
     );
   }
@@ -334,23 +353,10 @@ class _RolesScreenState extends ConsumerState<RolesScreen> {
           const SizedBox(height: 4),
           Text('Administrateur : tous les droits. Joueur : son dossier, son RPE et son bien-être. Ces deux rôles ne se règlent pas ici.',
               style: theme.textTheme.bodySmall),
-          for (final f in permissionCatalog)
-            Card(
-              margin: const EdgeInsets.only(top: 12),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                  Padding(padding: const EdgeInsets.fromLTRB(16, 8, 16, 0), child: Text(f.label, style: theme.textTheme.titleSmall)),
-                  for (final e in f.actions.entries)
-                    CheckboxListTile(
-                      dense: true,
-                      title: Text(e.value),
-                      value: _pending['$_role|${f.key}.${e.key}'] ?? m[_role]?['${f.key}.${e.key}'] ?? false,
-                      onChanged: (v) => _toggle('${f.key}.${e.key}', v ?? false),
-                    ),
-                ]),
-              ),
-            ),
+          PermissionMatrix(
+            values: {...?m[_role], for (final e in _pending.entries) if (e.key.startsWith('$_role|')) e.key.split('|')[1]: e.value},
+            onChanged: _toggle,
+          ),
         ]),
       ),
     );

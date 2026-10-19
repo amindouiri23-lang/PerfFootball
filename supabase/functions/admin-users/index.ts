@@ -3,7 +3,8 @@
 // POST { action: "list" }                                                     -> comptes + team_ids
 // POST { action: "list_teams" }                                               -> toutes les équipes du projet
 // POST { action: "list_players" }                                             -> joueurs de toutes les équipes
-// POST { action: "create", email, first_name, last_name, job_title, role, player_id?, team_ids? }
+// POST { action: "create", email, first_name, last_name, role, player_id?, team_ids?, permissions? }
+//        permissions : { "matchs.delete": false, ... } — écarts du compte par rapport à son rôle
 //                                                                             -> { id, temporary_password }
 // POST { action: "set_role", user_id, role, player_id? }                      -> rôle du compte
 // POST { action: "set_teams", user_id, team_ids }                             -> équipes où il est « staff »
@@ -27,7 +28,6 @@ const CORS = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const JOB_TITLES = ["fitness_coach", "head_coach", "assistant_coach", "physio", "doctor", "other"];
 // Rôle du compte (app_metadata.role) : il fixe ses permissions (migration 20261019000001).
 const ROLES = ["admin", "technical_director", "head_coach", "fitness_coach", "assistant_coach", "medical", "observer", "player"];
 const BANNED = "876000h"; // ~100 ans
@@ -77,7 +77,7 @@ async function revokeSessions(userId: string) {
 async function list() {
   const { data, error } = await admin.auth.admin.listUsers({ perPage: 1000 });
   if (error) throw error;
-  const { data: profiles, error: pErr } = await admin.from("staff_profiles").select("id, first_name, last_name, job_title");
+  const { data: profiles, error: pErr } = await admin.from("staff_profiles").select("id, first_name, last_name");
   if (pErr) throw pErr;
   const byId = new Map(profiles.map((p) => [p.id, p]));
   const { data: members, error: mErr } = await admin.from("team_members").select("team_id, user_id").eq("deleted", false);
@@ -88,7 +88,6 @@ async function list() {
     email: u.email,
     first_name: byId.get(u.id)?.first_name ?? null,
     last_name: byId.get(u.id)?.last_name ?? null,
-    job_title: byId.get(u.id)?.job_title ?? null,
     is_admin: u.app_metadata?.role === "admin",
     role: u.app_metadata?.role ?? "observer",
     player_id: u.app_metadata?.player_id ?? null,
@@ -155,14 +154,24 @@ async function listPlayers() {
   return data;
 }
 
+// Écarts aux droits du rôle choisis à la création : { "feature.action": true | false }.
+function permissionsOf(raw: unknown): [string, boolean][] {
+  if (raw === undefined || raw === null) return [];
+  if (typeof raw !== "object" || Array.isArray(raw)) throw new HttpError(400, "permissions invalide.");
+  const entries = Object.entries(raw as Record<string, unknown>);
+  if (entries.some(([k, v]) => !/^[a-z]+\.[a-z]+$/.test(k) || typeof v !== "boolean")) {
+    throw new HttpError(400, "permissions invalide.");
+  }
+  return entries as [string, boolean][];
+}
+
 async function create(body: Record<string, unknown>) {
   const email = String(body.email ?? "").trim().toLowerCase();
   const firstName = String(body.first_name ?? "").trim();
   const lastName = String(body.last_name ?? "").trim();
-  const jobTitle = String(body.job_title ?? "");
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw new HttpError(400, "Adresse e-mail invalide.");
   if (!firstName || !lastName) throw new HttpError(400, "Prénom et nom obligatoires.");
-  if (!JOB_TITLES.includes(jobTitle)) throw new HttpError(400, "Fonction invalide.");
+  const permissions = permissionsOf(body.permissions);
   const role = await roleOf(body);
 
   const password = temporaryPassword();
@@ -178,11 +187,16 @@ async function create(body: Record<string, unknown>) {
     throw error;
   }
   const { error: pErr } = await admin.from("staff_profiles").insert({
-    id: data.user.id, first_name: firstName, last_name: lastName, job_title: jobTitle,
+    id: data.user.id, first_name: firstName, last_name: lastName,
   });
   if (pErr) {
     await admin.auth.admin.deleteUser(data.user.id); // pas de compte sans profil
     throw pErr;
+  }
+  if (permissions.length > 0) {
+    const { error: aErr } = await admin.from("account_permissions")
+      .insert(permissions.map(([permission, allowed]) => ({ user_id: data.user.id, permission, allowed })));
+    if (aErr) throw aErr;
   }
   if (role.player) {
     await setPlayerTeam(data.user.id, role.player.team_id);
