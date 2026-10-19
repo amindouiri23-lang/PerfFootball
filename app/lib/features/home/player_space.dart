@@ -9,7 +9,9 @@ import '../../core/widgets/steppers.dart';
 import '../../data/database.dart';
 import '../../data/sync.dart';
 import '../sessions/session_repository.dart';
+import '../matches/match_repository.dart';
 import '../team/team_repository.dart';
+import '../wellness/wellness_repository.dart';
 
 /// Questionnaires de bien-être du joueur (le serveur ne lui envoie que les siens).
 final _myWellnessProvider = StreamProvider.family<List<WellnessEntry>, String>((ref, playerId) {
@@ -46,11 +48,60 @@ class PlayerSpace extends ConsumerWidget {
         .toList()
       ..sort((a, b) => '${sessions[b.sessionId]!.date}${sessions[b.sessionId]!.startTime}'
           .compareTo('${sessions[a.sessionId]!.date}${sessions[a.sessionId]!.startTime}'));
-    final answered = {for (final w in ref.watch(_myWellnessProvider(id)).value ?? const <WellnessEntry>[]) w.sessionId};
+    // Mes matchs : joués (ou en cours) et où j'étais sur la feuille.
+    final matches = {for (final m in ref.watch(matchesProvider(player.teamId)).value ?? const <FootballMatch>[]) m.id: m};
+    final matchRows = (ref.watch(teamMatchPlayersProvider(player.teamId)).value ?? const <MatchPlayer>[])
+        .where((r) => r.playerId == id && r.present && {'in_progress', 'completed', 'abandoned'}.contains(matches[r.matchId]?.status))
+        .toList()
+      ..sort((a, b) => matches[b.matchId]!.date.compareTo(matches[a.matchId]!.date));
+    // Questionnaires de bien-être qui me sont adressés, sans réponse de ma part d'abord.
+    final surveys = {for (final s in ref.watch(surveysProvider(player.teamId)).value ?? const <WellnessSurvey>[]) s.id: s};
+    final mine = (ref.watch(surveyPlayersProvider((teamId: player.teamId, surveyId: null))).value ?? const <WellnessSurveyPlayer>[])
+        .where((c) => c.playerId == id && surveys.containsKey(c.surveyId))
+        .map((c) => surveys[c.surveyId]!)
+        .toList();
+    final answered = {for (final w in ref.watch(_myWellnessProvider(id)).value ?? const <WellnessEntry>[]) w.surveyId};
+    final pending = mine.where((s) => !answered.contains(s.id)).toList();
+
+    Widget rpeCard(String title, int? rpe, VoidCallback onTap) => Card(
+          child: ListTile(
+            title: Text(title),
+            trailing: rpe == null
+                ? FilledButton.icon(icon: const Icon(Icons.speed), label: const Text('Mon RPE'), onPressed: onTap)
+                : OutlinedButton.icon(icon: const Icon(Icons.check), label: Text('RPE $rpe'), onPressed: onTap),
+          ),
+        );
 
     return ListView(padding: const EdgeInsets.all(16), children: [
       Text(player.fullName.toUpperCase(), style: gameTitle(context, size: 28)),
       Text('Votre espace joueur', style: theme.textTheme.bodyMedium),
+      const SizedBox(height: 16),
+      Text('QUESTIONNAIRES DE BIEN-ÊTRE', style: sectionLabel(context)),
+      const SizedBox(height: 8),
+      if (pending.isEmpty) const Text('Aucun questionnaire en attente.'),
+      for (final s in pending)
+        Card(
+          child: ListTile(
+            leading: Icon(Icons.favorite, color: theme.colorScheme.primary),
+            title: Text(s.label),
+            subtitle: const Text('À remplir'),
+            trailing: FilledButton(onPressed: () => context.go('/home/survey/${s.id}/$id'), child: const Text('Répondre')),
+          ),
+        ),
+      const SizedBox(height: 16),
+      Text('MES SÉANCES', style: sectionLabel(context)),
+      const SizedBox(height: 8),
+      if (rows.isEmpty) const Text('Aucune séance pour l\'instant. Elles apparaissent ici après l\'appel du staff.'),
+      for (final r in rows.take(10))
+        rpeCard('${sessions[r.sessionId]!.dayLabel} · ${sessionTypes[sessions[r.sessionId]!.type]}', r.rpe,
+            () => _askRpe(context, 'pendant la séance', r.rpe, (v) => ref.read(sessionRepositoryProvider).setRpe(r.id, v))),
+      const SizedBox(height: 16),
+      Text('MES MATCHS', style: sectionLabel(context)),
+      const SizedBox(height: 8),
+      if (matchRows.isEmpty) const Text('Aucun match pour l\'instant.'),
+      for (final r in matchRows.take(10))
+        rpeCard('${matches[r.matchId]!.dayLabel} · ${matches[r.matchId]!.opponent}', r.rpe,
+            () => _askRpe(context, 'pendant le match', r.rpe, (v) => ref.read(matchRepositoryProvider).setRpe(r.id, v))),
       const SizedBox(height: 16),
       Card(
         child: ListTile(
@@ -61,48 +112,11 @@ class PlayerSpace extends ConsumerWidget {
           onTap: () => context.go('/home/dossier/$id'),
         ),
       ),
-      const SizedBox(height: 16),
-      Text('MES SÉANCES', style: sectionLabel(context)),
-      const SizedBox(height: 8),
-      if (rows.isEmpty) const Text('Aucune séance pour l\'instant. Elles apparaissent ici après l\'appel du staff.'),
-      for (final r in rows.take(15))
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-              Text('${sessions[r.sessionId]!.dayLabel} · ${sessionTypes[sessions[r.sessionId]!.type]}', style: theme.textTheme.titleMedium),
-              const SizedBox(height: 8),
-              Row(children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    icon: Icon(r.rpe == null ? Icons.speed : Icons.check),
-                    label: Text(r.rpe == null ? 'Donner mon RPE' : 'RPE ${r.rpe}'),
-                    onPressed: () => _askRpe(context, ref, r),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: answered.contains(r.sessionId)
-                      ? OutlinedButton.icon(
-                          icon: const Icon(Icons.check),
-                          label: const Text('Bien-être'),
-                          onPressed: () => context.go('/home/wellness/${r.sessionId}/$id'),
-                        )
-                      : FilledButton.icon(
-                          icon: const Icon(Icons.favorite_border),
-                          label: const Text('Bien-être'),
-                          onPressed: () => context.go('/home/wellness/${r.sessionId}/$id'),
-                        ),
-                ),
-              ]),
-            ]),
-          ),
-        ),
     ]);
   }
 
-  Future<void> _askRpe(BuildContext context, WidgetRef ref, SessionPlayer row) async {
-    int? value = row.rpe;
+  Future<void> _askRpe(BuildContext context, String when, int? current, Future<void> Function(int? v) save) async {
+    int? value = current;
     final ok = await showModalBottomSheet<bool>(
       context: context,
       builder: (context) => StatefulBuilder(
@@ -110,7 +124,7 @@ class PlayerSpace extends ConsumerWidget {
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-              Text('Effort ressenti pendant la séance (RPE)', style: Theme.of(context).textTheme.titleMedium),
+              Text('Effort ressenti $when (RPE)', style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 4),
               const Text('1 = très facile · 10 = effort maximal'),
               const SizedBox(height: 12),
@@ -123,7 +137,7 @@ class PlayerSpace extends ConsumerWidget {
       ),
     );
     if (ok != true) return;
-    await ref.read(sessionRepositoryProvider).setRpe(row.id, value);
+    await save(value);
     if (context.mounted) showMessage(context, 'RPE enregistré, merci !');
   }
 }

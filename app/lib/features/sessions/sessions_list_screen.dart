@@ -39,7 +39,15 @@ class _SessionsListScreenState extends ConsumerState<SessionsListScreen> {
     final past = sessions.where((s) => !upcoming.contains(s)).toList()..sort((a, b) => key(b).compareTo(key(a)));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Séances'), actions: const [SyncIndicator()], bottom: teamFilterBar(ref)),
+      appBar: AppBar(title: const Text('Séances'), bottom: teamFilterBar(ref), actions: [
+        if (ref.watch(permsProvider).can('bienetre.view'))
+          TextButton.icon(
+            onPressed: () => context.go('/sessions/wellness'),
+            icon: const Icon(Icons.favorite_border),
+            label: const Text('Bien-être'),
+          ),
+        const SyncIndicator(),
+      ]),
       floatingActionButton: !ref.watch(permsProvider).can('seances.add') ? null : FloatingActionButton.extended(
         onPressed: () => context.go('/sessions/new'),
         icon: const Icon(Icons.add),

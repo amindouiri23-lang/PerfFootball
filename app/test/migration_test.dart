@@ -87,4 +87,35 @@ void main() {
     expect(await db.select(db.tacticLinks).get(), isEmpty);
     await db.close();
   });
+
+  test('migration v6 → v7 (préparation et questionnaires de bien-être)', () async {
+    final file = File('${Directory.systemTemp.createTempSync('perffoot').path}/v6.sqlite');
+    final v7 = AppDatabase(NativeDatabase(file));
+    await v7.customSelect('SELECT 1').get();
+    await v7.close();
+    final raw = sqlite3.open(file.path);
+    raw.execute('ALTER TABLE matches DROP COLUMN formation');
+    raw.execute('ALTER TABLE match_players DROP COLUMN slot');
+    for (final t in ['session_exercises', 'session_comments', 'wellness_surveys', 'wellness_survey_players']) {
+      raw.execute('DROP TABLE $t');
+    }
+    // Table du bien-être d'avant : séance obligatoire, pas de questionnaire.
+    raw.execute('DROP TABLE wellness');
+    raw.execute('CREATE TABLE wellness (id TEXT NOT NULL PRIMARY KEY, created_at TEXT NOT NULL, updated_at TEXT NOT NULL, '
+        'server_updated_at TEXT, deleted INTEGER NOT NULL DEFAULT 0, is_dirty INTEGER NOT NULL DEFAULT 0, team_id TEXT NOT NULL, '
+        'session_id TEXT NOT NULL, player_id TEXT NOT NULL, sleep_hours REAL NOT NULL, sleep_quality INTEGER NOT NULL, '
+        'fatigue INTEGER NOT NULL, soreness INTEGER NOT NULL, stress INTEGER NOT NULL, mood INTEGER NOT NULL, remark TEXT)');
+    raw.execute("INSERT INTO wellness (id, created_at, updated_at, team_id, session_id, player_id, sleep_hours, sleep_quality, "
+        "fatigue, soreness, stress, mood) VALUES ('w1', 'x', 'x', 't1', 's1', 'p1', 8, 4, 4, 4, 4, 4)");
+    raw.execute('PRAGMA user_version = 6');
+    raw.close();
+
+    final db = AppDatabase(NativeDatabase(file));
+    final w = await db.select(db.wellness).getSingle();
+    expect(w.sessionId, 's1');
+    expect(w.surveyId, isNull);
+    expect(await db.select(db.wellnessSurveys).get(), isEmpty);
+    expect(await db.select(db.sessionExercises).get(), isEmpty);
+    await db.close();
+  });
 }

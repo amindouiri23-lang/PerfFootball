@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../features/admin/admin_screens.dart';
+import '../features/admin/player_accounts_screen.dart';
 import '../features/admin/roles_screens.dart';
 import '../features/auth/auth_repository.dart';
 import '../features/auth/auth_screens.dart';
@@ -10,6 +11,7 @@ import '../features/home/home_screen.dart';
 import '../features/profile/profile_screens.dart';
 import '../features/injuries/injuries_screen.dart';
 import '../features/matches/end_match_screen.dart';
+import '../features/matches/lineup_screen.dart';
 import '../features/matches/match_form_screen.dart';
 import '../features/matches/match_screen.dart';
 import '../features/matches/matches_list_screen.dart';
@@ -26,6 +28,7 @@ import '../features/team/player_files.dart';
 import '../features/team/player_screens.dart';
 import '../features/tactics/tactic_screens.dart';
 import '../features/tests/test_screens.dart';
+import '../features/wellness/wellness_survey_screens.dart';
 import '../features/team/team_form_screen.dart';
 import '../features/team/team_screen.dart';
 import 'permissions.dart';
@@ -75,6 +78,14 @@ final routerProvider = Provider<GoRouter>((ref) {
                     single: true,
                   ),
                 ),
+                GoRoute(
+                  path: 'survey/:surveyId/:playerId',
+                  builder: (_, s) => WellnessFormScreen(
+                    surveyId: s.pathParameters['surveyId']!,
+                    playerId: s.pathParameters['playerId']!,
+                    single: true,
+                  ),
+                ),
               ],
             ),
           ]),
@@ -84,6 +95,28 @@ final routerProvider = Provider<GoRouter>((ref) {
               builder: (_, _) => const SessionsListScreen(),
               routes: [
                 GoRoute(path: 'new', builder: (_, _) => const SessionFormScreen()),
+                // Questionnaires de bien-être lancés seuls (avant « :id », qui sinon les capterait).
+                GoRoute(
+                  path: 'wellness',
+                  builder: (_, _) => const SurveysScreen(),
+                  routes: [
+                    GoRoute(path: 'new', builder: (_, _) => const NewSurveyScreen()),
+                    GoRoute(
+                      path: ':surveyId',
+                      builder: (_, s) => SurveyScreen(id: s.pathParameters['surveyId']!),
+                      routes: [
+                        GoRoute(
+                          path: ':playerId',
+                          builder: (_, s) => WellnessFormScreen(
+                            key: ValueKey(s.pathParameters['playerId']),
+                            surveyId: s.pathParameters['surveyId']!,
+                            playerId: s.pathParameters['playerId']!,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
                 GoRoute(
                   path: ':id',
                   builder: (_, s) => SessionScreen(id: s.pathParameters['id']!),
@@ -129,6 +162,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                   routes: [
                     GoRoute(path: 'edit', builder: (_, s) => MatchFormScreen(id: s.pathParameters['id'])),
                     GoRoute(path: 'squad', builder: (_, s) => SquadScreen(matchId: s.pathParameters['id']!)),
+                    GoRoute(path: 'lineup', builder: (_, s) => LineupScreen(matchId: s.pathParameters['id']!)),
                     GoRoute(path: 'tactic/:tid', builder: (_, s) => TacticEditorScreen(id: s.pathParameters['tid']!)),
                     GoRoute(
                       path: 'end',
@@ -194,6 +228,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                   routes: [
                     GoRoute(path: 'new', builder: (_, _) => const CreateAccountScreen()),
                     GoRoute(path: 'roles', builder: (_, _) => const RolesScreen()),
+                    GoRoute(path: 'players', builder: (_, _) => const PlayerAccountsScreen()),
                     GoRoute(path: 'account/:id', builder: (_, s) => AccountScreen(userId: s.pathParameters['id']!)),
                   ],
                 ),
@@ -207,11 +242,15 @@ final routerProvider = Provider<GoRouter>((ref) {
 });
 
 /// Écrans ouverts à un compte joueur : son espace (accueil), son profil, la synchronisation.
-final _playerRoutes = RegExp(r'^/(home(/dossier/[^/]+|/wellness/[^/]+/[^/]+)?|profile(/edit|/password)?|sync)$');
+final _playerRoutes =
+    RegExp(r'^/(home(/dossier/[^/]+|/(wellness|survey)/[^/]+/[^/]+)?|profile(/edit|/password)?|sync)$');
 
 /// Permission nécessaire pour ouvrir un écran (null : écran ouvert à tout le staff).
 String? requiredPermission(String location) {
   final rules = <(RegExp, String)>[
+    (RegExp(r'^/sessions/wellness/new$'), 'bienetre.edit'),
+    (RegExp(r'^/sessions/wellness/[^/]+/[^/]+$'), 'bienetre.edit'),
+    (RegExp(r'^/sessions/wellness'), 'bienetre.view'),
     (RegExp(r'^/sessions/new$'), 'seances.add'),
     (RegExp(r'^/sessions/[^/]+/edit$'), 'seances.edit'),
     (RegExp(r'^/sessions/[^/]+/(attendance|close)$'), 'seances.appel'),
@@ -221,7 +260,7 @@ String? requiredPermission(String location) {
     (RegExp(r'^/sessions'), 'seances.view'),
     (RegExp(r'^/matches/new$'), 'matchs.add'),
     (RegExp(r'^/matches/[^/]+/edit$'), 'matchs.edit'),
-    (RegExp(r'^/matches/[^/]+/(squad|end)$'), 'matchs.jouer'),
+    (RegExp(r'^/matches/[^/]+/(squad|end|lineup)$'), 'matchs.jouer'),
     (RegExp(r'^/matches'), 'matchs.view'),
     (RegExp(r'^/team/new$'), 'equipes.add'),
     (RegExp(r'^/team/edit$'), 'equipes.edit'),

@@ -188,6 +188,8 @@ class MatchRepository {
           present: Value(c.present),
           absenceReason: Value(c.present ? null : c.reason),
           role: Value(c.present ? c.role : null),
+          // Une place dans le dispositif n'a de sens que pour un titulaire.
+          slot: Value(c.present && c.role == 'starter' ? existing?.slot : null),
           minutesPlayed: c.present ? Value(existing?.minutesPlayed) : const Value(null),
           rpe: c.present ? Value(existing?.rpe) : const Value(null),
           deleted: const Value(false),
@@ -206,6 +208,40 @@ class MatchRepository {
       if (m.status == 'planned') {
         await (_db.update(_db.matches)..where((x) => x.id.equals(m.id)))
             .write(MatchesCompanion(status: const Value('in_progress'), updatedAt: Value(now), isDirty: const Value(true)));
+      }
+    });
+    _sync();
+  }
+
+  /// Préparation du match : dispositif, titulaires à leur place, remplaçants ; les autres joueurs sont
+  /// « non retenus ». Le match reste planifié ; minutes et RPE déjà saisis sont conservés.
+  Future<void> saveLineup(FootballMatch m, {required String formation, required Map<int, String> starters,
+      required Set<String> subs, required List<String> playerIds}) async {
+    final now = nowIso();
+    final slotOf = {for (final e in starters.entries) e.value: e.key};
+    await _db.transaction(() async {
+      await (_db.update(_db.matches)..where((x) => x.id.equals(m.id)))
+          .write(MatchesCompanion(formation: Value(formation), updatedAt: Value(now), isDirty: const Value(true)));
+      for (final p in playerIds) {
+        final id = pairId(m.id, p);
+        final starter = slotOf.containsKey(p);
+        final called = starter || subs.contains(p);
+        final existing = await (_db.select(_db.matchPlayers)..where((r) => r.id.equals(id))).getSingleOrNull();
+        final fields = MatchPlayersCompanion(
+          present: Value(called),
+          absenceReason: Value(called ? null : existing?.absenceReason ?? 'not_selected'),
+          role: Value(called ? (starter ? 'starter' : 'sub') : null),
+          slot: Value(slotOf[p]),
+          deleted: const Value(false),
+          updatedAt: Value(now),
+          isDirty: const Value(true),
+        );
+        if (existing == null) {
+          await _db.into(_db.matchPlayers).insert(fields.copyWith(
+                id: Value(id), teamId: Value(m.teamId), matchId: Value(m.id), playerId: Value(p), createdAt: Value(now)));
+        } else {
+          await (_db.update(_db.matchPlayers)..where((r) => r.id.equals(id))).write(fields);
+        }
       }
     });
     _sync();

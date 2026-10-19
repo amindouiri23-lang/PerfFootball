@@ -49,12 +49,13 @@ const permissionCatalog = [
   PermissionFeature('dossier', 'Dossier joueur', {'view': 'Voir', 'edit': 'Modifier'}),
   PermissionFeature('medical', 'Dossier médical', {'view': 'Voir', 'edit': 'Modifier'}),
   PermissionFeature('seances', 'Séances', {
-    'view': 'Voir', 'add': 'Ajouter', 'edit': 'Modifier', 'delete': 'Supprimer', 'appel': 'Faire l\'appel et clôturer',
+    'view': 'Voir', 'add': 'Ajouter', 'edit': 'Modifier et préparer (exercices)', 'delete': 'Supprimer',
+    'appel': 'Faire l\'appel et clôturer', 'commenter': 'Commenter',
   }),
-  PermissionFeature('bienetre', 'Bien-être', {'view': 'Voir', 'edit': 'Saisir les questionnaires'}),
+  PermissionFeature('bienetre', 'Bien-être', {'view': 'Voir', 'edit': 'Lancer et remplir les questionnaires'}),
   PermissionFeature('matchs', 'Matchs', {
     'view': 'Voir', 'add': 'Ajouter', 'edit': 'Modifier', 'delete': 'Supprimer',
-    'jouer': 'Feuille de match, buts, cartons, fin', 'issues': 'Forfait, report, annulation',
+    'jouer': 'Composition, feuille de match, buts, cartons, fin', 'issues': 'Forfait, report, annulation',
   }),
   PermissionFeature('blessures', 'Blessures et infirmerie', {'view': 'Voir', 'add': 'Déclarer', 'edit': 'Modifier'}),
   PermissionFeature('tests', 'Tests physiques', {'view': 'Voir', 'add': 'Ajouter', 'edit': 'Modifier', 'delete': 'Supprimer'}),

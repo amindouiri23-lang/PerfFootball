@@ -82,7 +82,9 @@ class SessionPlayers extends Table with SyncColumns {
 @DataClassName('WellnessEntry')
 class Wellness extends Table with SyncColumns {
   TextColumn get teamId => text()();
-  TextColumn get sessionId => text()();
+  /// Séance (ancien parcours) ou questionnaire ([surveyId]) : l'un des deux.
+  TextColumn get sessionId => text().nullable()();
+  TextColumn get surveyId => text().nullable()();
   TextColumn get playerId => text()();
   RealColumn get sleepHours => real()();
   IntColumn get sleepQuality => integer()();
@@ -111,6 +113,8 @@ class Matches extends Table with SyncColumns {
   IntColumn get matchday => integer().nullable()();
   /// Forfait (status 'forfeit') : us = défaite 0-3, opponent = victoire 3-0.
   TextColumn get forfeitBy => text().nullable()();
+  /// Dispositif préparé : '4-4-2', '4-3-3'…
+  TextColumn get formation => text().nullable()();
 }
 
 /// Feuille de match d'un joueur (id déterministe : match + joueur).
@@ -124,6 +128,8 @@ class MatchPlayers extends Table with SyncColumns {
   IntColumn get minutesPlayed => integer().nullable()();
   IntColumn get rpe => integer().nullable()();
   TextColumn get remark => text().nullable()();
+  /// Place du titulaire dans le dispositif (0 = gardien … 10).
+  IntColumn get slot => integer().nullable()();
 }
 
 /// But (avec passeur éventuel) ou carton. Les blessures de match sont dans Injuries.
@@ -242,6 +248,41 @@ class TacticLinks extends Table with SyncColumns {
   TextColumn get matchId => text().nullable()();
 }
 
+/// Exercice du programme d'une séance, avec une tactique éventuelle.
+class SessionExercises extends Table with SyncColumns {
+  TextColumn get teamId => text()();
+  TextColumn get sessionId => text()();
+  IntColumn get sortOrder => integer().withDefault(const Constant(0))();
+  TextColumn get name => text()();
+  TextColumn get description => text().nullable()();
+  IntColumn get durationMin => integer().nullable()();
+  TextColumn get tacticId => text().nullable()();
+}
+
+/// Commentaire d'un membre du staff (directeur technique…) sur une séance.
+class SessionComments extends Table with SyncColumns {
+  TextColumn get teamId => text()();
+  TextColumn get sessionId => text()();
+  TextColumn get authorId => text()();
+  TextColumn get authorName => text()();
+  TextColumn get text_ => text().named('text')();
+}
+
+/// Questionnaire de bien-être lancé pour une liste de joueurs, avec ou sans séance.
+class WellnessSurveys extends Table with SyncColumns {
+  TextColumn get teamId => text()();
+  TextColumn get date => text()();
+  TextColumn get title => text().nullable()();
+  TextColumn get sessionId => text().nullable()();
+}
+
+/// Joueur appelé à répondre à un questionnaire (id déterministe : questionnaire + joueur).
+class WellnessSurveyPlayers extends Table with SyncColumns {
+  TextColumn get teamId => text()();
+  TextColumn get surveyId => text()();
+  TextColumn get playerId => text()();
+}
+
 /// Curseur de synchronisation par table : plus grand server_updated_at reçu.
 class SyncState extends Table {
   TextColumn get tableName_ => text().named('table_name')();
@@ -263,13 +304,14 @@ class LocalSettings extends Table {
 @DriftDatabase(tables: [
   Teams, TeamMembers, Players, Sessions, SessionPlayers, Wellness, Matches, MatchPlayers, MatchEvents, Injuries,
   TestTypes, TestResults, PlayerProfiles, PlayerMedical, Tactics, TacticLinks,
+  SessionExercises, SessionComments, WellnessSurveys, WellnessSurveyPlayers,
   SyncState, LocalSettings,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? openConnection());
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -319,6 +361,23 @@ class AppDatabase extends _$AppDatabase {
             }
             for (final TableInfo<Table, dynamic> t in [tactics, tacticLinks]) {
               await m.createTable(t);
+            }
+          }
+          if (from < 7) {
+            // v7 : préparation (dispositif, places, exercices, commentaires) et questionnaires de bien-être.
+            Future<bool> has(String table, String column) async =>
+                (await customSelect('PRAGMA table_info($table)').get()).any((c) => c.read<String>('name') == column);
+            if (!await has('matches', 'formation')) await m.addColumn(matches, matches.formation);
+            if (!await has('match_players', 'slot')) await m.addColumn(matchPlayers, matchPlayers.slot);
+            // Séance devenue facultative : la table est reconstruite avec la colonne du questionnaire.
+            await m.alterTable(TableMigration(wellness,
+                newColumns: [if (!await has('wellness', 'survey_id')) wellness.surveyId]));
+            for (final TableInfo<Table, dynamic> t in [sessionExercises, sessionComments, wellnessSurveys, wellnessSurveyPlayers]) {
+              await m.createTable(t);
+            }
+            // Matchs et feuilles relus pour recevoir dispositif et places.
+            for (final name in ['matches', 'match_players']) {
+              await (delete(syncState)..where((s) => s.tableName_.equals(name))).go();
             }
           }
         },

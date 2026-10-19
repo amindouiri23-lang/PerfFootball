@@ -148,6 +148,21 @@ class AdminRepository {
   Future<void> setTeams(String userId, List<String> teamIds) =>
       _call({'action': 'set_teams', 'user_id': userId, 'team_ids': teamIds});
 
+  /// Crée un compte pour chaque joueur de l'équipe qui n'en a pas ; renvoie identifiants et mots de passe
+  /// temporaires (affichés une seule fois).
+  Future<List<({String playerId, String name, String email, String password})>> createPlayerAccounts(String teamId) async {
+    final list = await _call({'action': 'create_player_accounts', 'team_id': teamId}) as List<dynamic>;
+    return [
+      for (final j in list.cast<Map<String, dynamic>>())
+        (
+          playerId: j['player_id'] as String,
+          name: '${j['first_name']} ${j['last_name']}',
+          email: j['email'] as String,
+          password: j['temporary_password'] as String,
+        ),
+    ];
+  }
+
   /// Rôle du compte ; un compte joueur est relié à [playerId] (il devient membre de son équipe).
   Future<void> setRole(String userId, String role, {String? playerId}) =>
       _call({'action': 'set_role', 'user_id': userId, 'role': role, 'player_id': playerId});

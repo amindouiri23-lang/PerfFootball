@@ -280,7 +280,7 @@ class SessionRepository {
     final now = nowIso();
     final id = pairId(s.id, playerId);
     await _db.into(_db.wellness).insertOnConflictUpdate(WellnessCompanion.insert(
-          id: id, teamId: s.teamId, sessionId: s.id, playerId: playerId,
+          id: id, teamId: s.teamId, sessionId: Value(s.id), playerId: playerId,
           sleepHours: sleepHours, sleepQuality: sleepQuality, fatigue: fatigue, soreness: soreness,
           stress: stress, mood: mood, remark: Value(remark),
           createdAt: now, updatedAt: now, isDirty: const Value(true),

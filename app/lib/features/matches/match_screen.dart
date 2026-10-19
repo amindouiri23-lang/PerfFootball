@@ -13,6 +13,7 @@ import '../sessions/session_screen.dart' show showRemarkSheet;
 import '../sessions/sessions_list_screen.dart' show StatusChip;
 import '../tactics/tactic_screens.dart' show LinkedTactics;
 import '../team/team_repository.dart';
+import 'lineup_screen.dart';
 import 'match_repository.dart';
 import 'matches_list_screen.dart';
 
@@ -176,11 +177,23 @@ class MatchScreen extends ConsumerWidget {
               _ => 'Match annulé. Il ne compte pas dans les statistiques.',
             }),
           )
-        else if (m.status == 'planned')
+        else if (m.status == 'planned') ...[
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 16),
-            child: Text('Le match n\'a pas encore commencé : choisissez les joueurs présents et les titulaires.'),
-          )
+            child: Text('Le match n\'a pas encore commencé : préparez la composition, puis le jour du match '
+                'confirmez les joueurs présents.'),
+          ),
+          if (play)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              child: OutlinedButton.icon(
+                onPressed: () => context.go('/matches/${m.id}/lineup'),
+                icon: const Icon(Icons.groups_outlined),
+                label: Text(m.formation == null ? 'Préparer le match (dispositif et titulaires)' : 'Modifier la composition'),
+              ),
+            ),
+          LineupPreview(match: m),
+        ]
         else ...[
           if (m.status == 'abandoned')
             const Padding(
