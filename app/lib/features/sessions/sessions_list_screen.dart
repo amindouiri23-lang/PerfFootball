@@ -10,6 +10,7 @@ import '../../data/database.dart';
 import '../team/team_repository.dart';
 import '../team/team_screen.dart';
 import 'session_repository.dart';
+import '../team/team_filter.dart';
 
 /// E11 — Liste des séances : « À venir » (de la plus proche à la plus lointaine) puis « Passées »
 /// (de la plus récente à la plus ancienne), regroupées par semaine.
@@ -38,7 +39,7 @@ class _SessionsListScreenState extends ConsumerState<SessionsListScreen> {
     final past = sessions.where((s) => !upcoming.contains(s)).toList()..sort((a, b) => key(b).compareTo(key(a)));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Séances'), actions: const [SyncIndicator()]),
+      appBar: AppBar(title: const Text('Séances'), actions: const [SyncIndicator()], bottom: teamFilterBar(ref)),
       floatingActionButton: !ref.watch(permsProvider).can('seances.add') ? null : FloatingActionButton.extended(
         onPressed: () => context.go('/sessions/new'),
         icon: const Icon(Icons.add),

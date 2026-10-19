@@ -13,6 +13,7 @@ import '../matches/match_repository.dart';
 import '../sessions/session_repository.dart';
 import '../tactics/tactic_repository.dart';
 import 'team_repository.dart';
+import 'team_filter.dart';
 
 /// E07 — Mon équipe (effectif).
 class TeamScreen extends ConsumerStatefulWidget {
@@ -61,6 +62,7 @@ class _TeamScreenState extends ConsumerState<TeamScreen> {
         .toList();
     return Scaffold(
       appBar: AppBar(
+        bottom: teamFilterBar(ref),
         title: Row(children: [
           PhotoAvatar(path: team.logoPath, initials: team.name.substring(0, 1).toUpperCase(), radius: 16),
           const SizedBox(width: 10),

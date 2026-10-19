@@ -10,6 +10,7 @@ import '../../data/database.dart';
 import '../sessions/session_repository.dart';
 import '../team/team_repository.dart';
 import '../team/team_screen.dart';
+import '../team/team_filter.dart';
 
 /// E27 — Infirmerie : blessures en cours (avec retour du joueur), puis historique.
 class InjuriesScreen extends ConsumerWidget {
@@ -43,7 +44,7 @@ class InjuriesScreen extends ConsumerWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Infirmerie')),
+      appBar: AppBar(title: const Text('Infirmerie'), bottom: teamFilterBar(ref)),
       floatingActionButton: !ref.watch(permsProvider).can('blessures.add') ? null : FloatingActionButton.extended(
         onPressed: () => context.go('/team/injuries/new'),
         icon: const Icon(Icons.healing),

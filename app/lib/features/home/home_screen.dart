@@ -16,6 +16,7 @@ import '../sessions/sessions_list_screen.dart';
 import '../tactics/tactic_screens.dart' show showTacticInfoSheet;
 import '../team/team_repository.dart';
 import 'player_space.dart';
+import '../team/team_filter.dart';
 
 /// E10 — Accueil, façon « centre du club » d'un jeu de foot : identité de l'équipe, prochain match,
 /// état de l'effectif, charge de la semaine, séances du jour, infirmerie.
@@ -39,6 +40,7 @@ class HomeScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Text(profile == null ? 'Bonjour' : 'Bonjour ${profile.firstName}'),
         actions: const [SyncIndicator()],
+        bottom: teamFilterBar(ref),
       ),
       body: ListView(padding: const EdgeInsets.all(16), children: [
         if (team.value != null) _clubHeader(context, team.value!),

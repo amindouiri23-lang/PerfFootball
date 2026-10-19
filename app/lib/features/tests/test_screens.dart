@@ -11,6 +11,7 @@ import '../../data/database.dart';
 import '../sessions/session_repository.dart' show isoDate;
 import '../team/team_repository.dart';
 import 'test_repository.dart';
+import '../team/team_filter.dart';
 
 String _dayLabel(String date) {
   final s = DateFormat('EEEE d MMMM y', 'fr_FR').format(DateTime.parse(date));
@@ -34,7 +35,7 @@ class TestDaysScreen extends ConsumerWidget {
     final days = byDay.keys.toList()..sort((a, b) => b.compareTo(a));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Tests physiques'), actions: const [SyncIndicator()]),
+      appBar: AppBar(title: const Text('Tests physiques'), actions: const [SyncIndicator()], bottom: teamFilterBar(ref)),
       floatingActionButton: !ref.watch(permsProvider).can('tests.add') ? null : FloatingActionButton.extended(
         icon: const Icon(Icons.add),
         label: const Text('Nouvelle journée de tests'),

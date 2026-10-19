@@ -14,6 +14,7 @@ import '../team/team_repository.dart';
 import '../team/team_screen.dart' show NoTeamScreen;
 import 'tactic_board.dart';
 import 'tactic_repository.dart';
+import '../team/team_filter.dart';
 
 /// Bibliothèque des tactiques de l'équipe : coups de pied arrêtés et situations personnalisées.
 class TacticsListScreen extends ConsumerStatefulWidget {
@@ -35,7 +36,7 @@ class _TacticsListScreenState extends ConsumerState<TacticsListScreen> {
     final tactics = all.where((t) => _kind == null || t.kind == _kind).toList();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Tactiques'), actions: const [SyncIndicator()]),
+      appBar: AppBar(title: const Text('Tactiques'), actions: const [SyncIndicator()], bottom: teamFilterBar(ref)),
       floatingActionButton: !ref.watch(permsProvider).can('tactiques.add') ? null : FloatingActionButton.extended(
         onPressed: () async {
           final id = await showTacticInfoSheet(context, ref, teamId: team.id);
