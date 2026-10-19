@@ -24,7 +24,9 @@ import '../features/sessions/session_screen.dart';
 import '../features/sessions/sessions_list_screen.dart';
 import '../features/sessions/wellness_screens.dart';
 import '../features/import/import_screen.dart';
+import '../features/team/club_players_screen.dart';
 import '../features/team/player_files.dart';
+import '../features/team/team_staff_screen.dart';
 import '../features/team/player_screens.dart';
 import '../features/tactics/tactic_screens.dart';
 import '../features/tests/test_screens.dart';
@@ -187,6 +189,8 @@ final routerProvider = Provider<GoRouter>((ref) {
                 GoRoute(path: 'new', builder: (_, _) => const TeamFormScreen()),
                 GoRoute(path: 'edit', builder: (_, _) => const TeamFormScreen(editActive: true)),
                 GoRoute(path: 'players/new', builder: (_, _) => const PlayerFormScreen()),
+                GoRoute(path: 'players/club', builder: (_, _) => const ClubPlayersScreen()),
+                GoRoute(path: 'staff', builder: (_, _) => const TeamStaffScreen()),
                 GoRoute(path: 'import', builder: (_, _) => const ImportScreen()),
                 GoRoute(
                   path: 'tactics',
@@ -269,7 +273,7 @@ String? requiredPermission(String location) {
     (RegExp(r'^/team/tactics'), 'tactiques.view'),
     (RegExp(r'^/team/injuries/new$'), 'blessures.add'),
     (RegExp(r'^/team/injuries'), 'blessures.view'),
-    (RegExp(r'^/team/players/new$'), 'effectif.add'),
+    (RegExp(r'^/team/players/(new|club)$'), 'effectif.add'),
     (RegExp(r'^/team/players/[^/]+/edit$'), 'effectif.edit'),
     (RegExp(r'^/team/players/[^/]+/profile$'), 'dossier.edit'),
     (RegExp(r'^/team/players/[^/]+/medical$'), 'medical.edit'),

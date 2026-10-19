@@ -13,6 +13,7 @@ import '../matches/match_repository.dart';
 import '../sessions/session_repository.dart';
 import '../tactics/tactic_repository.dart';
 import 'team_repository.dart';
+import 'team_staff_screen.dart' show teamStaffProvider;
 import 'team_filter.dart';
 
 /// E07 — Mon équipe (effectif).
@@ -97,21 +98,34 @@ class _TeamScreenState extends ConsumerState<TeamScreen> {
         ],
       ),
       floatingActionButton: !ref.watch(permsProvider).can('effectif.add') ? null : FloatingActionButton.extended(
-        onPressed: () => context.go('/team/players/new'),
+        onPressed: () => _addPlayer(context),
         icon: const Icon(Icons.person_add_alt),
         label: const Text('Ajouter un joueur'),
       ),
       body: players.isEmpty
           ? const _EmptyRoster()
           : ListView(padding: const EdgeInsets.only(bottom: 88), children: [
-              if (ref.watch(permsProvider).can('tactiques.view'))
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                child: OutlinedButton.icon(
-                  onPressed: () => context.go('/team/tactics'),
-                  icon: const Icon(Icons.sports_soccer),
-                  label: Text('Tactiques${tacticCount > 0 ? ' ($tacticCount)' : ''}'),
-                ),
+                child: Row(children: [
+                  if (ref.watch(permsProvider).can('tactiques.view')) ...[
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () => context.go('/team/tactics'),
+                        icon: const Icon(Icons.sports_soccer),
+                        label: Text('Tactiques${tacticCount > 0 ? ' ($tacticCount)' : ''}'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                  ],
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => context.go('/team/staff'),
+                      icon: const Icon(Icons.badge_outlined),
+                      label: Text('Staff${(ref.watch(teamStaffProvider(team.id)).value?.length ?? 0) > 0 ? ' (${ref.watch(teamStaffProvider(team.id)).value!.length})' : ''}'),
+                    ),
+                  ),
+                ]),
               ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
@@ -188,6 +202,30 @@ class _TeamScreenState extends ConsumerState<TeamScreen> {
     } else {
       await confirmDeletePlayer(context, ref, p);
     }
+  }
+
+  /// Ajouter un joueur : en créer un, ou reprendre un joueur d'une autre équipe du même club.
+  Future<void> _addPlayer(BuildContext context) async {
+    final choice = await showModalBottomSheet<String>(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          ListTile(
+            leading: const Icon(Icons.person_add_alt),
+            title: const Text('Créer un nouveau joueur'),
+            onTap: () => Navigator.of(context).pop('new'),
+          ),
+          ListTile(
+            leading: const Icon(Icons.group_add_outlined),
+            title: const Text('Ajouter un joueur d\'une autre équipe du club'),
+            subtitle: const Text('Surclassement, renfort : il reste aussi dans son équipe'),
+            onTap: () => Navigator.of(context).pop('club'),
+          ),
+        ]),
+      ),
+    );
+    if (!context.mounted || choice == null) return;
+    context.go(choice == 'new' ? '/team/players/new' : '/team/players/club');
   }
 
   Future<void> _switchTeam(BuildContext context) async {
