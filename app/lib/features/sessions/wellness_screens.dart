@@ -97,10 +97,12 @@ class WellnessListScreen extends ConsumerWidget {
 
 /// E18 — Questionnaire d'un joueur, en plein écran, pensé pour être tendu au joueur.
 class WellnessFormScreen extends ConsumerStatefulWidget {
-  const WellnessFormScreen({super.key, required this.sessionId, required this.playerId});
+  const WellnessFormScreen({super.key, required this.sessionId, required this.playerId, this.single = false});
 
   final String sessionId;
   final String playerId;
+  /// Rempli par le joueur lui-même (espace joueur) : pas de « joueur suivant », retour à l'accueil.
+  final bool single;
 
   @override
   ConsumerState<WellnessFormScreen> createState() => _WellnessFormScreenState();
@@ -134,6 +136,11 @@ class _WellnessFormScreenState extends ConsumerState<WellnessFormScreen> {
           remark: remark.isEmpty ? null : remark,
         );
     if (!mounted) return;
+    if (widget.single) {
+      showMessage(context, 'Questionnaire enregistré, merci !');
+      context.go('/home');
+      return;
+    }
     if (next) {
       final players = {for (final p in ref.read(playersProvider(s.teamId)).value ?? const <Player>[]) p.id: p};
       final done = {for (final w in ref.read(sessionWellnessProvider(s.id)).value ?? const <WellnessEntry>[]) w.playerId};
@@ -213,9 +220,13 @@ class _WellnessFormScreenState extends ConsumerState<WellnessFormScreen> {
             if (missing)
               Text('Répondez aux 5 questions pour valider.', style: TextStyle(color: theme.colorScheme.error)),
             const SizedBox(height: 8),
-            FilledButton(onPressed: () => _save(next: true), child: const Text('Valider et joueur suivant')),
-            const SizedBox(height: 12),
-            OutlinedButton(onPressed: () => _save(next: false), child: const Text('Valider')),
+            if (widget.single)
+              FilledButton(onPressed: () => _save(next: false), child: const Text('Valider'))
+            else ...[
+              FilledButton(onPressed: () => _save(next: true), child: const Text('Valider et joueur suivant')),
+              const SizedBox(height: 12),
+              OutlinedButton(onPressed: () => _save(next: false), child: const Text('Valider')),
+            ],
           ]),
         ),
       ),

@@ -5,11 +5,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/permissions.dart';
 import '../../core/router.dart';
 import '../../core/widgets/form_page.dart';
 import '../../data/database.dart';
 import '../../data/sync.dart';
-import '../auth/auth_repository.dart';
 import '../sessions/session_repository.dart' show isoDate;
 import 'team_repository.dart';
 
@@ -36,17 +36,6 @@ final playerProfileProvider = StreamProvider.family<PlayerProfile?, String>((ref
 final playerMedicalProvider = StreamProvider.family<MedicalRecord?, String>((ref, playerId) {
   final db = ref.watch(databaseProvider);
   return (db.select(db.playerMedical)..where((m) => m.id.equals(playerId) & m.deleted.equals(false))).watchSingleOrNull();
-});
-
-/// Vrai si l'utilisateur connecté est propriétaire de l'équipe : seul accès au dossier médical
-/// (même règle que la base, docs/01 §7).
-final isTeamOwnerProvider = StreamProvider.family<bool, String>((ref, teamId) {
-  final db = ref.watch(databaseProvider);
-  final userId = ref.watch(supabaseProvider).auth.currentUser?.id ?? '';
-  return (db.select(db.teamMembers)
-        ..where((m) => m.teamId.equals(teamId) & m.userId.equals(userId) & m.role.equals('owner') & m.deleted.equals(false)))
-      .watch()
-      .map((rows) => rows.isNotEmpty);
 });
 
 final playerFilesRepositoryProvider = Provider<PlayerFilesRepository>((ref) => PlayerFilesRepository(ref));
@@ -104,6 +93,7 @@ class PlayerProfileTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final p = ref.watch(playerProfileProvider(player.id)).value;
     return ListView(padding: const EdgeInsets.only(bottom: 24), children: [
+      if (ref.watch(permsProvider).can('dossier.edit'))
       Padding(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
         child: Align(
@@ -141,7 +131,7 @@ class PlayerProfileTab extends ConsumerWidget {
   }
 }
 
-/// E37 — Onglet « Médical » : visible du seul propriétaire de l'équipe.
+/// E37 — Onglet « Médical » : visible avec la permission « Dossier médical — Voir ».
 class PlayerMedicalTab extends ConsumerWidget {
   const PlayerMedicalTab({super.key, required this.player});
 
@@ -149,16 +139,18 @@ class PlayerMedicalTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    if (!(ref.watch(isTeamOwnerProvider(player.teamId)).value ?? false)) {
+    final perms = ref.watch(permsProvider);
+    if (!perms.can('medical.view')) {
       return const Center(
         child: Padding(
           padding: EdgeInsets.all(24),
-          child: Text('Le dossier médical n\'est visible que du responsable de l\'équipe.', textAlign: TextAlign.center),
+          child: Text('Votre rôle ne permet pas de voir le dossier médical.', textAlign: TextAlign.center),
         ),
       );
     }
     final m = ref.watch(playerMedicalProvider(player.id)).value;
     return ListView(padding: const EdgeInsets.only(bottom: 24), children: [
+      if (perms.can('medical.edit'))
       Padding(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
         child: Align(
@@ -272,7 +264,7 @@ class _PlayerProfileFormScreenState extends ConsumerState<PlayerProfileFormScree
           );
       if (!mounted) return;
       showMessage(context, 'Dossier enregistré');
-      context.go('/team/players/${player.id}');
+      context.go(ref.read(permsProvider).isPlayer ? '/home' : '/team/players/${player.id}');
     } finally {
       Future<void>.delayed(const Duration(milliseconds: 600), () => _saving = false);
     }
@@ -420,15 +412,14 @@ class _PlayerMedicalFormScreenState extends ConsumerState<PlayerMedicalFormScree
   @override
   Widget build(BuildContext context) {
     final player = ref.watch(playerProvider(widget.playerId)).value;
-    final owner = ref.watch(isTeamOwnerProvider(player?.teamId ?? '')).value;
     final medical = ref.watch(playerMedicalProvider(widget.playerId));
-    if (player == null || owner == null || medical.isLoading) {
+    if (player == null || medical.isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
-    if (!owner) {
+    if (!ref.watch(permsProvider).can('medical.edit')) {
       return Scaffold(
         appBar: AppBar(),
-        body: const Center(child: Text('Réservé au responsable de l\'équipe.')),
+        body: const Center(child: Text('Votre rôle ne permet pas de modifier le dossier médical.')),
       );
     }
     _load(medical.value);

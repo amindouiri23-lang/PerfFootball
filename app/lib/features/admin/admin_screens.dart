@@ -4,11 +4,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../core/permissions.dart';
 import '../../core/router.dart';
 import '../../core/widgets/form_page.dart';
 import '../auth/auth_repository.dart';
 import '../profile/profile_repository.dart';
 import 'admin_repository.dart';
+import 'roles_screens.dart';
 import 'team_picker.dart';
 
 /// E29 — Comptes du staff.
@@ -56,7 +58,13 @@ class _StaffAccountsScreenState extends ConsumerState<StaffAccountsScreen> {
     final accounts = ref.watch(staffAccountsProvider);
     final me = ref.watch(currentUserProvider).value?.id;
     return Scaffold(
-      appBar: AppBar(title: const Text('Administration')),
+      appBar: AppBar(title: const Text('Administration'), actions: [
+        TextButton.icon(
+          onPressed: () => context.go('/profile/admin/roles'),
+          icon: const Icon(Icons.admin_panel_settings_outlined),
+          label: const Text('Rôles'),
+        ),
+      ]),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.go('/profile/admin/new'),
         icon: const Icon(Icons.person_add_alt),
@@ -94,9 +102,10 @@ class _StaffAccountsScreenState extends ConsumerState<StaffAccountsScreen> {
                   enabled: !a.isDisabled,
                   leading: CircleAvatar(child: Text(a.initials)),
                   title: Text(a.displayName),
+                  onTap: () => openAccount(context, a),
                   subtitle: Text([
                     a.email,
-                    if (a.jobTitle != null) jobTitles[a.jobTitle],
+                    roleLabels[a.role] ?? a.role,
                     '${a.teamIds.length} équipe${a.teamIds.length > 1 ? 's' : ''}',
                   ].join(' · ')),
                   trailing: Row(mainAxisSize: MainAxisSize.min, children: [
@@ -165,18 +174,24 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
   final _last = TextEditingController();
   final _email = TextEditingController();
   String? _job;
-  bool _admin = false;
+  String? _role;
+  String? _playerId;
   bool _busy = false;
   Set<String> _teams = {};
 
   Future<void> _create() async {
     if (!_form.currentState!.validate()) return;
+    if (_role == 'player' && _playerId == null) {
+      showMessage(context, 'Choisissez le joueur relié au compte.');
+      return;
+    }
     setState(() => _busy = true);
     try {
       final email = _email.text.trim().toLowerCase();
       final pwd = await ref.read(adminRepositoryProvider).create(
-          email: email, firstName: _first.text.trim(), lastName: _last.text.trim(), jobTitle: _job!, isAdmin: _admin,
-          teamIds: _teams.toList());
+          email: email, firstName: _first.text.trim(), lastName: _last.text.trim(),
+          jobTitle: _role == 'player' ? 'other' : _job!, role: _role!, playerId: _playerId,
+          teamIds: _role == 'player' ? const [] : _teams.toList());
       ref.invalidate(staffAccountsProvider);
       if (!mounted) return;
       await showTemporaryPassword(context, email, '${_first.text.trim()} ${_last.text.trim()}', pwd);
@@ -215,25 +230,37 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
               ? null : 'Adresse e-mail invalide.',
         ),
         const SizedBox(height: 16),
-        DropdownButtonFormField<String>(
-          initialValue: _job,
-          decoration: const InputDecoration(labelText: 'Fonction *'),
-          items: [for (final e in jobTitles.entries) DropdownMenuItem(value: e.key, child: Text(e.value))],
-          onChanged: (v) => setState(() => _job = v),
-          validator: (v) => v == null ? 'Obligatoire' : null,
+        RoleField(
+          role: _role,
+          playerId: _playerId,
+          onChanged: (r, p, player) => setState(() {
+            _role = r;
+            _playerId = p;
+            // Compte joueur : nom repris de sa fiche si le formulaire est encore vide.
+            if (player != null && _first.text.trim().isEmpty && _last.text.trim().isEmpty) {
+              _first.text = player.firstName;
+              _last.text = player.lastName;
+            }
+          }),
         ),
-        const SizedBox(height: 8),
-        SwitchListTile(
-          contentPadding: EdgeInsets.zero,
-          title: const Text('Administrateur'),
-          subtitle: const Text('Peut gérer les comptes du staff'),
-          value: _admin,
-          onChanged: (v) => setState(() => _admin = v),
-        ),
-        const SizedBox(height: 16),
-        Text('Équipes', style: Theme.of(context).textTheme.titleSmall),
-        const Text('Le compte verra toutes les données des équipes cochées, sauf le dossier médical.'),
-        TeamPicker(selected: _teams, onChanged: (s) => setState(() => _teams = s)),
+        if (_role != 'player') ...[
+          const SizedBox(height: 16),
+          DropdownButtonFormField<String>(
+            initialValue: _job,
+            decoration: const InputDecoration(labelText: 'Fonction *'),
+            items: [for (final e in jobTitles.entries) DropdownMenuItem(value: e.key, child: Text(e.value))],
+            onChanged: (v) => setState(() => _job = v),
+            validator: (v) => v == null ? 'Obligatoire' : null,
+          ),
+          const SizedBox(height: 16),
+          Text('Équipes', style: Theme.of(context).textTheme.titleSmall),
+          const Text('Le compte agit dans les équipes cochées, selon les permissions de son rôle.'),
+          TeamPicker(selected: _teams, onChanged: (s) => setState(() => _teams = s)),
+        ] else
+          const Padding(
+            padding: EdgeInsets.only(top: 12),
+            child: Text('Le compte joueur rejoint automatiquement l\'équipe de son joueur.'),
+          ),
         const SizedBox(height: 8),
         const Text('Un mot de passe temporaire sera généré. Aucun e-mail n\'est envoyé : '
             'vous le transmettrez vous-même.'),

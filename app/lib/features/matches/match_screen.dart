@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/permissions.dart';
 import '../../core/router.dart';
 import '../../core/widgets/sync_indicator.dart';
 import '../../data/database.dart';
@@ -35,6 +36,8 @@ class MatchScreen extends ConsumerWidget {
     final completed = m.status == 'completed' || m.status == 'abandoned';
     final goalsFor = completed || m.status == 'forfeit' ? (m.goalsFor ?? 0) : events.where((e) => e.type == 'goal').length;
     final open = m.status == 'planned' || m.status == 'in_progress';
+    final perms = ref.watch(permsProvider);
+    final play = perms.can('matchs.jouer');
     final goalsAgainst = m.goalsAgainst ?? 0;
     final present = squadOrder(rows.where((r) => r.present).toList(), players);
     String name(String? id) => players[id]?.fullName ?? '—';
@@ -108,19 +111,20 @@ class MatchScreen extends ConsumerWidget {
             }
           },
           itemBuilder: (_) => [
-            const PopupMenuItem(value: 'edit', child: Text('Modifier les informations')),
-            if (m.status == 'in_progress' || completed)
+            if (perms.can('matchs.edit')) const PopupMenuItem(value: 'edit', child: Text('Modifier les informations')),
+            if ((m.status == 'in_progress' || completed) && play)
               const PopupMenuItem(value: 'squad', child: Text('Modifier la feuille de match')),
-            if (completed)
+            if (completed && play)
               PopupMenuItem(value: m.status == 'abandoned' ? 'abandon' : 'end', child: const Text('Modifier temps de jeu et RPE')),
-            if (m.status == 'in_progress') const PopupMenuItem(value: 'abandon', child: Text('Match arrêté')),
-            if (open) ...const [
+            if (m.status == 'in_progress' && play) const PopupMenuItem(value: 'abandon', child: Text('Match arrêté')),
+            if (open && perms.can('matchs.issues')) ...const [
               PopupMenuItem(value: 'forfeit', child: Text('Déclarer un forfait')),
               PopupMenuItem(value: 'postpone', child: Text('Reporter le match')),
               PopupMenuItem(value: 'cancel', child: Text('Annuler le match')),
             ],
-            if (m.notPlayed) const PopupMenuItem(value: 'restore', child: Text('Rétablir le match')),
-            const PopupMenuItem(value: 'delete', child: Text('Supprimer le match')),
+            if (m.notPlayed && perms.can('matchs.issues'))
+              const PopupMenuItem(value: 'restore', child: Text('Rétablir le match')),
+            if (perms.can('matchs.delete')) const PopupMenuItem(value: 'delete', child: Text('Supprimer le match')),
           ],
         ),
       ]),
@@ -183,6 +187,7 @@ class MatchScreen extends ConsumerWidget {
               padding: EdgeInsets.fromLTRB(16, 0, 16, 8),
               child: Text('Match arrêté : score et minutes jusqu\'à l\'arrêt. Il ne compte pas au bilan des résultats.'),
             ),
+          if (play)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Row(children: [
@@ -225,7 +230,7 @@ class MatchScreen extends ConsumerWidget {
           },
         ),
       ]),
-      bottomNavigationBar: !open && m.status != 'postponed'
+      bottomNavigationBar: !(m.status == 'postponed' ? perms.can('matchs.issues') : open && play)
           ? null
           : SafeArea(
               child: Padding(

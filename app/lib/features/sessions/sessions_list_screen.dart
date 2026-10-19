@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/permissions.dart';
 import '../../core/router.dart';
 import '../../core/widgets/sync_indicator.dart';
 import '../../data/database.dart';
@@ -38,7 +39,7 @@ class _SessionsListScreenState extends ConsumerState<SessionsListScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Séances'), actions: const [SyncIndicator()]),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: !ref.watch(permsProvider).can('seances.add') ? null : FloatingActionButton.extended(
         onPressed: () => context.go('/sessions/new'),
         icon: const Icon(Icons.add),
         label: const Text('Nouvelle séance'),
@@ -126,9 +127,9 @@ class _SessionTile extends ConsumerWidget {
         PopupMenuButton<String>(
           tooltip: 'Actions',
           onSelected: (v) => v == 'edit' ? context.go('/sessions/${s.id}/edit') : confirmDeleteSession(context, ref, s),
-          itemBuilder: (_) => const [
-            PopupMenuItem(value: 'edit', child: Text('Modifier')),
-            PopupMenuItem(value: 'delete', child: Text('Supprimer')),
+          itemBuilder: (_) => [
+            if (ref.read(permsProvider).can('seances.edit')) const PopupMenuItem(value: 'edit', child: Text('Modifier')),
+            if (ref.read(permsProvider).can('seances.delete')) const PopupMenuItem(value: 'delete', child: Text('Supprimer')),
           ],
         ),
       ]),

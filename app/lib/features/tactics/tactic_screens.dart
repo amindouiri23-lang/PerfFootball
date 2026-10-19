@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../core/permissions.dart';
 import '../../core/router.dart';
 import '../../core/widgets/sync_indicator.dart';
 import '../../data/database.dart';
@@ -35,7 +36,7 @@ class _TacticsListScreenState extends ConsumerState<TacticsListScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Tactiques'), actions: const [SyncIndicator()]),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: !ref.watch(permsProvider).can('tactiques.add') ? null : FloatingActionButton.extended(
         onPressed: () async {
           final id = await showTacticInfoSheet(context, ref, teamId: team.id);
           if (id != null && context.mounted) context.go('/team/tactics/$id');
@@ -268,11 +269,14 @@ class _TacticEditorScreenState extends ConsumerState<TacticEditorScreen> {
     final players = {for (final p in ref.watch(playersProvider(t.teamId)).value ?? const <Player>[]) p.id: p};
     final links = ref.watch(teamTacticLinksProvider(t.teamId)).value ?? const <TacticLink>[];
     final theme = Theme.of(context);
+    final perms = ref.watch(permsProvider);
+    final editable = perms.can('tactiques.edit');
 
     return Scaffold(
       appBar: AppBar(
         title: Text(t.name),
         actions: [
+          if (editable)
           IconButton(
             tooltip: 'Annuler la dernière modification',
             icon: const Icon(Icons.undo),
@@ -308,12 +312,12 @@ class _TacticEditorScreenState extends ConsumerState<TacticEditorScreen> {
                   }
               }
             },
-            itemBuilder: (_) => const [
-              PopupMenuItem(value: 'info', child: Text('Modifier les informations')),
-              PopupMenuItem(value: 'share', child: Text('Partager en image')),
-              PopupMenuItem(value: 'duplicate', child: Text('Dupliquer')),
-              PopupMenuItem(value: 'clear', child: Text('Effacer toutes les flèches')),
-              PopupMenuItem(value: 'delete', child: Text('Supprimer la tactique')),
+            itemBuilder: (_) => [
+              if (editable) const PopupMenuItem(value: 'info', child: Text('Modifier les informations')),
+              const PopupMenuItem(value: 'share', child: Text('Partager en image')),
+              if (perms.can('tactiques.add')) const PopupMenuItem(value: 'duplicate', child: Text('Dupliquer')),
+              if (editable) const PopupMenuItem(value: 'clear', child: Text('Effacer toutes les flèches')),
+              if (perms.can('tactiques.delete')) const PopupMenuItem(value: 'delete', child: Text('Supprimer la tactique')),
             ],
           ),
         ],
@@ -325,6 +329,7 @@ class _TacticEditorScreenState extends ConsumerState<TacticEditorScreen> {
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text('${tacticSummary(t, links)} · ${tacticPitches[t.pitch]}', style: theme.textTheme.bodySmall),
               if (t.notes != null) Text(t.notes!, style: theme.textTheme.bodySmall),
+              if (editable)
               Text(
                 _arrowMode == null
                     ? 'Glissez les pions pour les placer. Touchez un pion pour lui donner un rôle ou un joueur, une flèche pour la retirer.'
@@ -340,7 +345,9 @@ class _TacticEditorScreenState extends ConsumerState<TacticEditorScreen> {
                 alignment: Alignment.topCenter,
                 child: RepaintBoundary(
                   key: _capture,
-                  child: BoardView(
+                  child: IgnorePointer(
+                    ignoring: !editable,
+                    child: BoardView(
                     board: board,
                     pitch: t.pitch,
                     players: players,
@@ -366,10 +373,12 @@ class _TacticEditorScreenState extends ConsumerState<TacticEditorScreen> {
                       showMessage(context, 'Flèche retirée (Annuler pour la remettre)');
                     },
                   ),
+                  ),
                 ),
               ),
             ),
           ),
+          if (editable)
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
             child: Wrap(spacing: 8, runSpacing: 4, alignment: WrapAlignment.center, children: [

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/permissions.dart';
 import '../../core/router.dart';
 import '../../core/widgets/form_page.dart';
 import '../../data/database.dart';
@@ -65,11 +66,13 @@ class PlayerScreen extends ConsumerWidget {
           length: 7,
           child: Scaffold(
             appBar: AppBar(title: const Text('Fiche joueur'), actions: [
+              if (ref.watch(permsProvider).can('effectif.edit'))
               IconButton(
                 tooltip: 'Modifier',
                 icon: const Icon(Icons.edit_outlined),
                 onPressed: () => context.go('/team/players/$id/edit'),
               ),
+              if (ref.watch(permsProvider).can('effectif.delete'))
               PopupMenuButton<String>(
                 onSelected: (_) async {
                   if (await confirmDeletePlayer(context, ref, p) && context.mounted) context.go('/team');

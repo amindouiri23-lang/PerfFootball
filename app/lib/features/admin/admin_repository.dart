@@ -5,7 +5,8 @@ import '../auth/auth_repository.dart';
 
 class StaffAccount {
   const StaffAccount({required this.id, required this.email, this.firstName, this.lastName, this.jobTitle,
-      required this.isAdmin, required this.isDisabled, required this.mustChangePassword, this.teamIds = const []});
+      required this.isAdmin, required this.isDisabled, required this.mustChangePassword, this.teamIds = const [],
+      this.role = 'observer', this.playerId});
 
   factory StaffAccount.fromJson(Map<String, dynamic> j) => StaffAccount(
         id: j['id'] as String,
@@ -17,6 +18,8 @@ class StaffAccount {
         isDisabled: j['is_disabled'] == true,
         mustChangePassword: j['must_change_password'] == true,
         teamIds: [for (final t in (j['team_ids'] as List<dynamic>? ?? const <dynamic>[])) t as String],
+        role: j['role'] as String? ?? 'observer',
+        playerId: j['player_id'] as String?,
       );
 
   final String id;
@@ -27,8 +30,11 @@ class StaffAccount {
   final bool isAdmin;
   final bool isDisabled;
   final bool mustChangePassword;
-  /// Équipes dont le compte est membre (propriétaire ou staff).
+  /// Équipes dont le compte est membre (propriétaire, staff ou joueur).
   final List<String> teamIds;
+  /// Rôle (core/permissions.dart) et, pour un compte joueur, le joueur relié.
+  final String role;
+  final String? playerId;
 
   String get displayName => [firstName, lastName].whereType<String>().join(' ').ifEmpty(email);
   String get initials => (firstName != null && lastName != null)
@@ -75,6 +81,48 @@ final adminTeamsProvider = FutureProvider<List<AdminTeam>>((ref) async {
   return [for (final j in list) AdminTeam.fromJson(j as Map<String, dynamic>)];
 });
 
+/// Un joueur d'une équipe du projet (choix du joueur relié à un compte joueur).
+class AdminPlayer {
+  const AdminPlayer({required this.id, required this.teamId, required this.firstName, required this.lastName, this.shirtNumber});
+
+  factory AdminPlayer.fromJson(Map<String, dynamic> j) => AdminPlayer(
+        id: j['id'] as String,
+        teamId: j['team_id'] as String,
+        firstName: j['first_name'] as String,
+        lastName: j['last_name'] as String,
+        shirtNumber: j['shirt_number'] as int?,
+      );
+
+  final String id;
+  final String teamId;
+  final String firstName;
+  final String lastName;
+  final int? shirtNumber;
+
+  String get fullName => '$firstName $lastName';
+}
+
+final adminPlayersProvider = FutureProvider<List<AdminPlayer>>((ref) async {
+  final list = await ref.watch(adminRepositoryProvider)._call({'action': 'list_players'}) as List<dynamic>;
+  return [for (final j in list) AdminPlayer.fromJson(j as Map<String, dynamic>)];
+});
+
+/// Matrice de tous les rôles réglables : rôle → permission → autorisé.
+final rolePermissionsProvider = FutureProvider<Map<String, Map<String, bool>>>((ref) async {
+  final rows = await ref.watch(supabaseProvider).from('role_permissions').select('role, permission, allowed');
+  final m = <String, Map<String, bool>>{};
+  for (final r in rows) {
+    (m[r['role'] as String] ??= {})[r['permission'] as String] = r['allowed'] as bool;
+  }
+  return m;
+});
+
+/// Exceptions d'un compte : permission → autorisé (true) ou interdit (false).
+final accountPermissionsProvider = FutureProvider.family<Map<String, bool>, String>((ref, userId) async {
+  final rows = await ref.watch(supabaseProvider).from('account_permissions').select('permission, allowed').eq('user_id', userId);
+  return {for (final r in rows) r['permission'] as String: r['allowed'] as bool};
+});
+
 /// Appels à la fonction Edge `admin-users` (docs/01 §7.1). Toutes les actions demandent le réseau.
 class AdminRepository {
   const AdminRepository(this._client);
@@ -83,10 +131,10 @@ class AdminRepository {
 
   /// Crée le compte et renvoie le mot de passe temporaire (affiché une seule fois).
   Future<String> create({required String email, required String firstName, required String lastName,
-      required String jobTitle, required bool isAdmin, List<String> teamIds = const []}) async {
+      required String jobTitle, required String role, String? playerId, List<String> teamIds = const []}) async {
     final r = await _call({
       'action': 'create', 'email': email, 'first_name': firstName, 'last_name': lastName,
-      'job_title': jobTitle, 'is_admin': isAdmin, 'team_ids': teamIds,
+      'job_title': jobTitle, 'role': role, 'player_id': playerId, 'team_ids': teamIds,
     }) as Map<String, dynamic>;
     return r['temporary_password'] as String;
   }
@@ -99,6 +147,34 @@ class AdminRepository {
   /// Le compte devient « staff » exactement de ces équipes (celles dont il est propriétaire restent).
   Future<void> setTeams(String userId, List<String> teamIds) =>
       _call({'action': 'set_teams', 'user_id': userId, 'team_ids': teamIds});
+
+  /// Rôle du compte ; un compte joueur est relié à [playerId] (il devient membre de son équipe).
+  Future<void> setRole(String userId, String role, {String? playerId}) =>
+      _call({'action': 'set_role', 'user_id': userId, 'role': role, 'player_id': playerId});
+
+  /// Coche ou décoche une case de la matrice d'un rôle.
+  Future<void> setRolePermission(String role, String permission, bool allowed) => _guard(() => _client
+      .from('role_permissions')
+      .upsert({'role': role, 'permission': permission, 'allowed': allowed, 'updated_at': DateTime.now().toUtc().toIso8601String()}));
+
+  /// Exception d'un compte : true autorise, false interdit, null revient au rôle.
+  Future<void> setAccountPermission(String userId, String permission, bool? allowed) => _guard(() => allowed == null
+      ? _client.from('account_permissions').delete().eq('user_id', userId).eq('permission', permission)
+      : _client.from('account_permissions').upsert({
+          'user_id': userId, 'permission': permission, 'allowed': allowed,
+          'updated_at': DateTime.now().toUtc().toIso8601String(),
+        }));
+
+  Future<void> _guard(Future<Object?> Function() action) async {
+    try {
+      await action();
+    } on PostgrestException catch (e) {
+      throw AppException('Erreur du serveur : ${e.message}');
+    } catch (e) {
+      if (e is AppException) rethrow;
+      throw const AppException(networkErrorMessage);
+    }
+  }
 
   Future<void> setDisabled(String userId, bool disabled) =>
       _call({'action': disabled ? 'disable' : 'enable', 'user_id': userId});
