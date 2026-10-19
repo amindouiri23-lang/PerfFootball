@@ -58,6 +58,11 @@ class _StaffAccountsScreenState extends ConsumerState<StaffAccountsScreen> {
     final me = ref.watch(currentUserProvider).value?.id;
     return Scaffold(
       appBar: AppBar(title: const Text('Administration'), actions: [
+        IconButton(
+          tooltip: 'Comptes joueurs',
+          onPressed: () => context.go('/profile/admin/players'),
+          icon: const Icon(Icons.sports_soccer),
+        ),
         TextButton.icon(
           onPressed: () => context.go('/profile/admin/roles'),
           icon: const Icon(Icons.admin_panel_settings_outlined),

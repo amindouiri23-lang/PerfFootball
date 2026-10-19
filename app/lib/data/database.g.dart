@@ -4044,9 +4044,20 @@ class $WellnessTable extends Wellness
   late final GeneratedColumn<String> sessionId = GeneratedColumn<String>(
     'session_id',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.string,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _surveyIdMeta = const VerificationMeta(
+    'surveyId',
+  );
+  @override
+  late final GeneratedColumn<String> surveyId = GeneratedColumn<String>(
+    'survey_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
   );
   static const VerificationMeta _playerIdMeta = const VerificationMeta(
     'playerId',
@@ -4140,6 +4151,7 @@ class $WellnessTable extends Wellness
     isDirty,
     teamId,
     sessionId,
+    surveyId,
     playerId,
     sleepHours,
     sleepQuality,
@@ -4216,8 +4228,12 @@ class $WellnessTable extends Wellness
         _sessionIdMeta,
         sessionId.isAcceptableOrUnknown(data['session_id']!, _sessionIdMeta),
       );
-    } else if (isInserting) {
-      context.missing(_sessionIdMeta);
+    }
+    if (data.containsKey('survey_id')) {
+      context.handle(
+        _surveyIdMeta,
+        surveyId.isAcceptableOrUnknown(data['survey_id']!, _surveyIdMeta),
+      );
     }
     if (data.containsKey('player_id')) {
       context.handle(
@@ -4324,7 +4340,11 @@ class $WellnessTable extends Wellness
       sessionId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}session_id'],
-      )!,
+      ),
+      surveyId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}survey_id'],
+      ),
       playerId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}player_id'],
@@ -4376,7 +4396,10 @@ class WellnessEntry extends DataClass implements Insertable<WellnessEntry> {
   /// Modifiée localement et pas encore envoyée. Jamais synchronisée.
   final bool isDirty;
   final String teamId;
-  final String sessionId;
+
+  /// Séance (ancien parcours) ou questionnaire ([surveyId]) : l'un des deux.
+  final String? sessionId;
+  final String? surveyId;
   final String playerId;
   final double sleepHours;
   final int sleepQuality;
@@ -4393,7 +4416,8 @@ class WellnessEntry extends DataClass implements Insertable<WellnessEntry> {
     required this.deleted,
     required this.isDirty,
     required this.teamId,
-    required this.sessionId,
+    this.sessionId,
+    this.surveyId,
     required this.playerId,
     required this.sleepHours,
     required this.sleepQuality,
@@ -4415,7 +4439,12 @@ class WellnessEntry extends DataClass implements Insertable<WellnessEntry> {
     map['deleted'] = Variable<bool>(deleted);
     map['is_dirty'] = Variable<bool>(isDirty);
     map['team_id'] = Variable<String>(teamId);
-    map['session_id'] = Variable<String>(sessionId);
+    if (!nullToAbsent || sessionId != null) {
+      map['session_id'] = Variable<String>(sessionId);
+    }
+    if (!nullToAbsent || surveyId != null) {
+      map['survey_id'] = Variable<String>(surveyId);
+    }
     map['player_id'] = Variable<String>(playerId);
     map['sleep_hours'] = Variable<double>(sleepHours);
     map['sleep_quality'] = Variable<int>(sleepQuality);
@@ -4440,7 +4469,12 @@ class WellnessEntry extends DataClass implements Insertable<WellnessEntry> {
       deleted: Value(deleted),
       isDirty: Value(isDirty),
       teamId: Value(teamId),
-      sessionId: Value(sessionId),
+      sessionId: sessionId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sessionId),
+      surveyId: surveyId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(surveyId),
       playerId: Value(playerId),
       sleepHours: Value(sleepHours),
       sleepQuality: Value(sleepQuality),
@@ -4467,7 +4501,8 @@ class WellnessEntry extends DataClass implements Insertable<WellnessEntry> {
       deleted: serializer.fromJson<bool>(json['deleted']),
       isDirty: serializer.fromJson<bool>(json['isDirty']),
       teamId: serializer.fromJson<String>(json['teamId']),
-      sessionId: serializer.fromJson<String>(json['sessionId']),
+      sessionId: serializer.fromJson<String?>(json['sessionId']),
+      surveyId: serializer.fromJson<String?>(json['surveyId']),
       playerId: serializer.fromJson<String>(json['playerId']),
       sleepHours: serializer.fromJson<double>(json['sleepHours']),
       sleepQuality: serializer.fromJson<int>(json['sleepQuality']),
@@ -4489,7 +4524,8 @@ class WellnessEntry extends DataClass implements Insertable<WellnessEntry> {
       'deleted': serializer.toJson<bool>(deleted),
       'isDirty': serializer.toJson<bool>(isDirty),
       'teamId': serializer.toJson<String>(teamId),
-      'sessionId': serializer.toJson<String>(sessionId),
+      'sessionId': serializer.toJson<String?>(sessionId),
+      'surveyId': serializer.toJson<String?>(surveyId),
       'playerId': serializer.toJson<String>(playerId),
       'sleepHours': serializer.toJson<double>(sleepHours),
       'sleepQuality': serializer.toJson<int>(sleepQuality),
@@ -4509,7 +4545,8 @@ class WellnessEntry extends DataClass implements Insertable<WellnessEntry> {
     bool? deleted,
     bool? isDirty,
     String? teamId,
-    String? sessionId,
+    Value<String?> sessionId = const Value.absent(),
+    Value<String?> surveyId = const Value.absent(),
     String? playerId,
     double? sleepHours,
     int? sleepQuality,
@@ -4528,7 +4565,8 @@ class WellnessEntry extends DataClass implements Insertable<WellnessEntry> {
     deleted: deleted ?? this.deleted,
     isDirty: isDirty ?? this.isDirty,
     teamId: teamId ?? this.teamId,
-    sessionId: sessionId ?? this.sessionId,
+    sessionId: sessionId.present ? sessionId.value : this.sessionId,
+    surveyId: surveyId.present ? surveyId.value : this.surveyId,
     playerId: playerId ?? this.playerId,
     sleepHours: sleepHours ?? this.sleepHours,
     sleepQuality: sleepQuality ?? this.sleepQuality,
@@ -4550,6 +4588,7 @@ class WellnessEntry extends DataClass implements Insertable<WellnessEntry> {
       isDirty: data.isDirty.present ? data.isDirty.value : this.isDirty,
       teamId: data.teamId.present ? data.teamId.value : this.teamId,
       sessionId: data.sessionId.present ? data.sessionId.value : this.sessionId,
+      surveyId: data.surveyId.present ? data.surveyId.value : this.surveyId,
       playerId: data.playerId.present ? data.playerId.value : this.playerId,
       sleepHours: data.sleepHours.present
           ? data.sleepHours.value
@@ -4576,6 +4615,7 @@ class WellnessEntry extends DataClass implements Insertable<WellnessEntry> {
           ..write('isDirty: $isDirty, ')
           ..write('teamId: $teamId, ')
           ..write('sessionId: $sessionId, ')
+          ..write('surveyId: $surveyId, ')
           ..write('playerId: $playerId, ')
           ..write('sleepHours: $sleepHours, ')
           ..write('sleepQuality: $sleepQuality, ')
@@ -4598,6 +4638,7 @@ class WellnessEntry extends DataClass implements Insertable<WellnessEntry> {
     isDirty,
     teamId,
     sessionId,
+    surveyId,
     playerId,
     sleepHours,
     sleepQuality,
@@ -4619,6 +4660,7 @@ class WellnessEntry extends DataClass implements Insertable<WellnessEntry> {
           other.isDirty == this.isDirty &&
           other.teamId == this.teamId &&
           other.sessionId == this.sessionId &&
+          other.surveyId == this.surveyId &&
           other.playerId == this.playerId &&
           other.sleepHours == this.sleepHours &&
           other.sleepQuality == this.sleepQuality &&
@@ -4637,7 +4679,8 @@ class WellnessCompanion extends UpdateCompanion<WellnessEntry> {
   final Value<bool> deleted;
   final Value<bool> isDirty;
   final Value<String> teamId;
-  final Value<String> sessionId;
+  final Value<String?> sessionId;
+  final Value<String?> surveyId;
   final Value<String> playerId;
   final Value<double> sleepHours;
   final Value<int> sleepQuality;
@@ -4656,6 +4699,7 @@ class WellnessCompanion extends UpdateCompanion<WellnessEntry> {
     this.isDirty = const Value.absent(),
     this.teamId = const Value.absent(),
     this.sessionId = const Value.absent(),
+    this.surveyId = const Value.absent(),
     this.playerId = const Value.absent(),
     this.sleepHours = const Value.absent(),
     this.sleepQuality = const Value.absent(),
@@ -4674,7 +4718,8 @@ class WellnessCompanion extends UpdateCompanion<WellnessEntry> {
     this.deleted = const Value.absent(),
     this.isDirty = const Value.absent(),
     required String teamId,
-    required String sessionId,
+    this.sessionId = const Value.absent(),
+    this.surveyId = const Value.absent(),
     required String playerId,
     required double sleepHours,
     required int sleepQuality,
@@ -4688,7 +4733,6 @@ class WellnessCompanion extends UpdateCompanion<WellnessEntry> {
        createdAt = Value(createdAt),
        updatedAt = Value(updatedAt),
        teamId = Value(teamId),
-       sessionId = Value(sessionId),
        playerId = Value(playerId),
        sleepHours = Value(sleepHours),
        sleepQuality = Value(sleepQuality),
@@ -4705,6 +4749,7 @@ class WellnessCompanion extends UpdateCompanion<WellnessEntry> {
     Expression<bool>? isDirty,
     Expression<String>? teamId,
     Expression<String>? sessionId,
+    Expression<String>? surveyId,
     Expression<String>? playerId,
     Expression<double>? sleepHours,
     Expression<int>? sleepQuality,
@@ -4724,6 +4769,7 @@ class WellnessCompanion extends UpdateCompanion<WellnessEntry> {
       if (isDirty != null) 'is_dirty': isDirty,
       if (teamId != null) 'team_id': teamId,
       if (sessionId != null) 'session_id': sessionId,
+      if (surveyId != null) 'survey_id': surveyId,
       if (playerId != null) 'player_id': playerId,
       if (sleepHours != null) 'sleep_hours': sleepHours,
       if (sleepQuality != null) 'sleep_quality': sleepQuality,
@@ -4744,7 +4790,8 @@ class WellnessCompanion extends UpdateCompanion<WellnessEntry> {
     Value<bool>? deleted,
     Value<bool>? isDirty,
     Value<String>? teamId,
-    Value<String>? sessionId,
+    Value<String?>? sessionId,
+    Value<String?>? surveyId,
     Value<String>? playerId,
     Value<double>? sleepHours,
     Value<int>? sleepQuality,
@@ -4764,6 +4811,7 @@ class WellnessCompanion extends UpdateCompanion<WellnessEntry> {
       isDirty: isDirty ?? this.isDirty,
       teamId: teamId ?? this.teamId,
       sessionId: sessionId ?? this.sessionId,
+      surveyId: surveyId ?? this.surveyId,
       playerId: playerId ?? this.playerId,
       sleepHours: sleepHours ?? this.sleepHours,
       sleepQuality: sleepQuality ?? this.sleepQuality,
@@ -4802,6 +4850,9 @@ class WellnessCompanion extends UpdateCompanion<WellnessEntry> {
     }
     if (sessionId.present) {
       map['session_id'] = Variable<String>(sessionId.value);
+    }
+    if (surveyId.present) {
+      map['survey_id'] = Variable<String>(surveyId.value);
     }
     if (playerId.present) {
       map['player_id'] = Variable<String>(playerId.value);
@@ -4844,6 +4895,7 @@ class WellnessCompanion extends UpdateCompanion<WellnessEntry> {
           ..write('isDirty: $isDirty, ')
           ..write('teamId: $teamId, ')
           ..write('sessionId: $sessionId, ')
+          ..write('surveyId: $surveyId, ')
           ..write('playerId: $playerId, ')
           ..write('sleepHours: $sleepHours, ')
           ..write('sleepQuality: $sleepQuality, ')
@@ -5084,6 +5136,17 @@ class $MatchesTable extends Matches
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _formationMeta = const VerificationMeta(
+    'formation',
+  );
+  @override
+  late final GeneratedColumn<String> formation = GeneratedColumn<String>(
+    'formation',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -5106,6 +5169,7 @@ class $MatchesTable extends Matches
     phase,
     matchday,
     forfeitBy,
+    formation,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -5269,6 +5333,12 @@ class $MatchesTable extends Matches
         forfeitBy.isAcceptableOrUnknown(data['forfeit_by']!, _forfeitByMeta),
       );
     }
+    if (data.containsKey('formation')) {
+      context.handle(
+        _formationMeta,
+        formation.isAcceptableOrUnknown(data['formation']!, _formationMeta),
+      );
+    }
     return context;
   }
 
@@ -5358,6 +5428,10 @@ class $MatchesTable extends Matches
         DriftSqlType.string,
         data['${effectivePrefix}forfeit_by'],
       ),
+      formation: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}formation'],
+      ),
     );
   }
 
@@ -5394,6 +5468,9 @@ class FootballMatch extends DataClass implements Insertable<FootballMatch> {
 
   /// Forfait (status 'forfeit') : us = défaite 0-3, opponent = victoire 3-0.
   final String? forfeitBy;
+
+  /// Dispositif préparé : '4-4-2', '4-3-3'…
+  final String? formation;
   const FootballMatch({
     required this.id,
     required this.createdAt,
@@ -5415,6 +5492,7 @@ class FootballMatch extends DataClass implements Insertable<FootballMatch> {
     this.phase,
     this.matchday,
     this.forfeitBy,
+    this.formation,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -5452,6 +5530,9 @@ class FootballMatch extends DataClass implements Insertable<FootballMatch> {
     }
     if (!nullToAbsent || forfeitBy != null) {
       map['forfeit_by'] = Variable<String>(forfeitBy);
+    }
+    if (!nullToAbsent || formation != null) {
+      map['formation'] = Variable<String>(formation);
     }
     return map;
   }
@@ -5492,6 +5573,9 @@ class FootballMatch extends DataClass implements Insertable<FootballMatch> {
       forfeitBy: forfeitBy == null && nullToAbsent
           ? const Value.absent()
           : Value(forfeitBy),
+      formation: formation == null && nullToAbsent
+          ? const Value.absent()
+          : Value(formation),
     );
   }
 
@@ -5521,6 +5605,7 @@ class FootballMatch extends DataClass implements Insertable<FootballMatch> {
       phase: serializer.fromJson<String?>(json['phase']),
       matchday: serializer.fromJson<int?>(json['matchday']),
       forfeitBy: serializer.fromJson<String?>(json['forfeitBy']),
+      formation: serializer.fromJson<String?>(json['formation']),
     );
   }
   @override
@@ -5547,6 +5632,7 @@ class FootballMatch extends DataClass implements Insertable<FootballMatch> {
       'phase': serializer.toJson<String?>(phase),
       'matchday': serializer.toJson<int?>(matchday),
       'forfeitBy': serializer.toJson<String?>(forfeitBy),
+      'formation': serializer.toJson<String?>(formation),
     };
   }
 
@@ -5571,6 +5657,7 @@ class FootballMatch extends DataClass implements Insertable<FootballMatch> {
     Value<String?> phase = const Value.absent(),
     Value<int?> matchday = const Value.absent(),
     Value<String?> forfeitBy = const Value.absent(),
+    Value<String?> formation = const Value.absent(),
   }) => FootballMatch(
     id: id ?? this.id,
     createdAt: createdAt ?? this.createdAt,
@@ -5594,6 +5681,7 @@ class FootballMatch extends DataClass implements Insertable<FootballMatch> {
     phase: phase.present ? phase.value : this.phase,
     matchday: matchday.present ? matchday.value : this.matchday,
     forfeitBy: forfeitBy.present ? forfeitBy.value : this.forfeitBy,
+    formation: formation.present ? formation.value : this.formation,
   );
   FootballMatch copyWithCompanion(MatchesCompanion data) {
     return FootballMatch(
@@ -5627,6 +5715,7 @@ class FootballMatch extends DataClass implements Insertable<FootballMatch> {
       phase: data.phase.present ? data.phase.value : this.phase,
       matchday: data.matchday.present ? data.matchday.value : this.matchday,
       forfeitBy: data.forfeitBy.present ? data.forfeitBy.value : this.forfeitBy,
+      formation: data.formation.present ? data.formation.value : this.formation,
     );
   }
 
@@ -5652,13 +5741,14 @@ class FootballMatch extends DataClass implements Insertable<FootballMatch> {
           ..write('status: $status, ')
           ..write('phase: $phase, ')
           ..write('matchday: $matchday, ')
-          ..write('forfeitBy: $forfeitBy')
+          ..write('forfeitBy: $forfeitBy, ')
+          ..write('formation: $formation')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     id,
     createdAt,
     updatedAt,
@@ -5679,7 +5769,8 @@ class FootballMatch extends DataClass implements Insertable<FootballMatch> {
     phase,
     matchday,
     forfeitBy,
-  );
+    formation,
+  ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -5703,7 +5794,8 @@ class FootballMatch extends DataClass implements Insertable<FootballMatch> {
           other.status == this.status &&
           other.phase == this.phase &&
           other.matchday == this.matchday &&
-          other.forfeitBy == this.forfeitBy);
+          other.forfeitBy == this.forfeitBy &&
+          other.formation == this.formation);
 }
 
 class MatchesCompanion extends UpdateCompanion<FootballMatch> {
@@ -5727,6 +5819,7 @@ class MatchesCompanion extends UpdateCompanion<FootballMatch> {
   final Value<String?> phase;
   final Value<int?> matchday;
   final Value<String?> forfeitBy;
+  final Value<String?> formation;
   final Value<int> rowid;
   const MatchesCompanion({
     this.id = const Value.absent(),
@@ -5749,6 +5842,7 @@ class MatchesCompanion extends UpdateCompanion<FootballMatch> {
     this.phase = const Value.absent(),
     this.matchday = const Value.absent(),
     this.forfeitBy = const Value.absent(),
+    this.formation = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   MatchesCompanion.insert({
@@ -5772,6 +5866,7 @@ class MatchesCompanion extends UpdateCompanion<FootballMatch> {
     this.phase = const Value.absent(),
     this.matchday = const Value.absent(),
     this.forfeitBy = const Value.absent(),
+    this.formation = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        createdAt = Value(createdAt),
@@ -5803,6 +5898,7 @@ class MatchesCompanion extends UpdateCompanion<FootballMatch> {
     Expression<String>? phase,
     Expression<int>? matchday,
     Expression<String>? forfeitBy,
+    Expression<String>? formation,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -5826,6 +5922,7 @@ class MatchesCompanion extends UpdateCompanion<FootballMatch> {
       if (phase != null) 'phase': phase,
       if (matchday != null) 'matchday': matchday,
       if (forfeitBy != null) 'forfeit_by': forfeitBy,
+      if (formation != null) 'formation': formation,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -5851,6 +5948,7 @@ class MatchesCompanion extends UpdateCompanion<FootballMatch> {
     Value<String?>? phase,
     Value<int?>? matchday,
     Value<String?>? forfeitBy,
+    Value<String?>? formation,
     Value<int>? rowid,
   }) {
     return MatchesCompanion(
@@ -5874,6 +5972,7 @@ class MatchesCompanion extends UpdateCompanion<FootballMatch> {
       phase: phase ?? this.phase,
       matchday: matchday ?? this.matchday,
       forfeitBy: forfeitBy ?? this.forfeitBy,
+      formation: formation ?? this.formation,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -5941,6 +6040,9 @@ class MatchesCompanion extends UpdateCompanion<FootballMatch> {
     if (forfeitBy.present) {
       map['forfeit_by'] = Variable<String>(forfeitBy.value);
     }
+    if (formation.present) {
+      map['formation'] = Variable<String>(formation.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -5970,6 +6072,7 @@ class MatchesCompanion extends UpdateCompanion<FootballMatch> {
           ..write('phase: $phase, ')
           ..write('matchday: $matchday, ')
           ..write('forfeitBy: $forfeitBy, ')
+          ..write('formation: $formation, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -6149,6 +6252,15 @@ class $MatchPlayersTable extends MatchPlayers
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _slotMeta = const VerificationMeta('slot');
+  @override
+  late final GeneratedColumn<int> slot = GeneratedColumn<int>(
+    'slot',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -6166,6 +6278,7 @@ class $MatchPlayersTable extends MatchPlayers
     minutesPlayed,
     rpe,
     remark,
+    slot,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -6287,6 +6400,12 @@ class $MatchPlayersTable extends MatchPlayers
         remark.isAcceptableOrUnknown(data['remark']!, _remarkMeta),
       );
     }
+    if (data.containsKey('slot')) {
+      context.handle(
+        _slotMeta,
+        slot.isAcceptableOrUnknown(data['slot']!, _slotMeta),
+      );
+    }
     return context;
   }
 
@@ -6356,6 +6475,10 @@ class $MatchPlayersTable extends MatchPlayers
         DriftSqlType.string,
         data['${effectivePrefix}remark'],
       ),
+      slot: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}slot'],
+      ),
     );
   }
 
@@ -6383,6 +6506,9 @@ class MatchPlayer extends DataClass implements Insertable<MatchPlayer> {
   final int? minutesPlayed;
   final int? rpe;
   final String? remark;
+
+  /// Place du titulaire dans le dispositif (0 = gardien … 10).
+  final int? slot;
   const MatchPlayer({
     required this.id,
     required this.createdAt,
@@ -6399,6 +6525,7 @@ class MatchPlayer extends DataClass implements Insertable<MatchPlayer> {
     this.minutesPlayed,
     this.rpe,
     this.remark,
+    this.slot,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -6430,6 +6557,9 @@ class MatchPlayer extends DataClass implements Insertable<MatchPlayer> {
     if (!nullToAbsent || remark != null) {
       map['remark'] = Variable<String>(remark);
     }
+    if (!nullToAbsent || slot != null) {
+      map['slot'] = Variable<int>(slot);
+    }
     return map;
   }
 
@@ -6458,6 +6588,7 @@ class MatchPlayer extends DataClass implements Insertable<MatchPlayer> {
       remark: remark == null && nullToAbsent
           ? const Value.absent()
           : Value(remark),
+      slot: slot == null && nullToAbsent ? const Value.absent() : Value(slot),
     );
   }
 
@@ -6482,6 +6613,7 @@ class MatchPlayer extends DataClass implements Insertable<MatchPlayer> {
       minutesPlayed: serializer.fromJson<int?>(json['minutesPlayed']),
       rpe: serializer.fromJson<int?>(json['rpe']),
       remark: serializer.fromJson<String?>(json['remark']),
+      slot: serializer.fromJson<int?>(json['slot']),
     );
   }
   @override
@@ -6503,6 +6635,7 @@ class MatchPlayer extends DataClass implements Insertable<MatchPlayer> {
       'minutesPlayed': serializer.toJson<int?>(minutesPlayed),
       'rpe': serializer.toJson<int?>(rpe),
       'remark': serializer.toJson<String?>(remark),
+      'slot': serializer.toJson<int?>(slot),
     };
   }
 
@@ -6522,6 +6655,7 @@ class MatchPlayer extends DataClass implements Insertable<MatchPlayer> {
     Value<int?> minutesPlayed = const Value.absent(),
     Value<int?> rpe = const Value.absent(),
     Value<String?> remark = const Value.absent(),
+    Value<int?> slot = const Value.absent(),
   }) => MatchPlayer(
     id: id ?? this.id,
     createdAt: createdAt ?? this.createdAt,
@@ -6544,6 +6678,7 @@ class MatchPlayer extends DataClass implements Insertable<MatchPlayer> {
         : this.minutesPlayed,
     rpe: rpe.present ? rpe.value : this.rpe,
     remark: remark.present ? remark.value : this.remark,
+    slot: slot.present ? slot.value : this.slot,
   );
   MatchPlayer copyWithCompanion(MatchPlayersCompanion data) {
     return MatchPlayer(
@@ -6568,6 +6703,7 @@ class MatchPlayer extends DataClass implements Insertable<MatchPlayer> {
           : this.minutesPlayed,
       rpe: data.rpe.present ? data.rpe.value : this.rpe,
       remark: data.remark.present ? data.remark.value : this.remark,
+      slot: data.slot.present ? data.slot.value : this.slot,
     );
   }
 
@@ -6588,7 +6724,8 @@ class MatchPlayer extends DataClass implements Insertable<MatchPlayer> {
           ..write('role: $role, ')
           ..write('minutesPlayed: $minutesPlayed, ')
           ..write('rpe: $rpe, ')
-          ..write('remark: $remark')
+          ..write('remark: $remark, ')
+          ..write('slot: $slot')
           ..write(')'))
         .toString();
   }
@@ -6610,6 +6747,7 @@ class MatchPlayer extends DataClass implements Insertable<MatchPlayer> {
     minutesPlayed,
     rpe,
     remark,
+    slot,
   );
   @override
   bool operator ==(Object other) =>
@@ -6629,7 +6767,8 @@ class MatchPlayer extends DataClass implements Insertable<MatchPlayer> {
           other.role == this.role &&
           other.minutesPlayed == this.minutesPlayed &&
           other.rpe == this.rpe &&
-          other.remark == this.remark);
+          other.remark == this.remark &&
+          other.slot == this.slot);
 }
 
 class MatchPlayersCompanion extends UpdateCompanion<MatchPlayer> {
@@ -6648,6 +6787,7 @@ class MatchPlayersCompanion extends UpdateCompanion<MatchPlayer> {
   final Value<int?> minutesPlayed;
   final Value<int?> rpe;
   final Value<String?> remark;
+  final Value<int?> slot;
   final Value<int> rowid;
   const MatchPlayersCompanion({
     this.id = const Value.absent(),
@@ -6665,6 +6805,7 @@ class MatchPlayersCompanion extends UpdateCompanion<MatchPlayer> {
     this.minutesPlayed = const Value.absent(),
     this.rpe = const Value.absent(),
     this.remark = const Value.absent(),
+    this.slot = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   MatchPlayersCompanion.insert({
@@ -6683,6 +6824,7 @@ class MatchPlayersCompanion extends UpdateCompanion<MatchPlayer> {
     this.minutesPlayed = const Value.absent(),
     this.rpe = const Value.absent(),
     this.remark = const Value.absent(),
+    this.slot = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        createdAt = Value(createdAt),
@@ -6706,6 +6848,7 @@ class MatchPlayersCompanion extends UpdateCompanion<MatchPlayer> {
     Expression<int>? minutesPlayed,
     Expression<int>? rpe,
     Expression<String>? remark,
+    Expression<int>? slot,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -6724,6 +6867,7 @@ class MatchPlayersCompanion extends UpdateCompanion<MatchPlayer> {
       if (minutesPlayed != null) 'minutes_played': minutesPlayed,
       if (rpe != null) 'rpe': rpe,
       if (remark != null) 'remark': remark,
+      if (slot != null) 'slot': slot,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -6744,6 +6888,7 @@ class MatchPlayersCompanion extends UpdateCompanion<MatchPlayer> {
     Value<int?>? minutesPlayed,
     Value<int?>? rpe,
     Value<String?>? remark,
+    Value<int?>? slot,
     Value<int>? rowid,
   }) {
     return MatchPlayersCompanion(
@@ -6762,6 +6907,7 @@ class MatchPlayersCompanion extends UpdateCompanion<MatchPlayer> {
       minutesPlayed: minutesPlayed ?? this.minutesPlayed,
       rpe: rpe ?? this.rpe,
       remark: remark ?? this.remark,
+      slot: slot ?? this.slot,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -6814,6 +6960,9 @@ class MatchPlayersCompanion extends UpdateCompanion<MatchPlayer> {
     if (remark.present) {
       map['remark'] = Variable<String>(remark.value);
     }
+    if (slot.present) {
+      map['slot'] = Variable<int>(slot.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -6838,6 +6987,7 @@ class MatchPlayersCompanion extends UpdateCompanion<MatchPlayer> {
           ..write('minutesPlayed: $minutesPlayed, ')
           ..write('rpe: $rpe, ')
           ..write('remark: $remark, ')
+          ..write('slot: $slot, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -14330,6 +14480,2631 @@ class TacticLinksCompanion extends UpdateCompanion<TacticLink> {
   }
 }
 
+class $SessionExercisesTable extends SessionExercises
+    with TableInfo<$SessionExercisesTable, SessionExercise> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SessionExercisesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<String> createdAt = GeneratedColumn<String>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<String> updatedAt = GeneratedColumn<String>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _serverUpdatedAtMeta = const VerificationMeta(
+    'serverUpdatedAt',
+  );
+  @override
+  late final GeneratedColumn<String> serverUpdatedAt = GeneratedColumn<String>(
+    'server_updated_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deletedMeta = const VerificationMeta(
+    'deleted',
+  );
+  @override
+  late final GeneratedColumn<bool> deleted = GeneratedColumn<bool>(
+    'deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _isDirtyMeta = const VerificationMeta(
+    'isDirty',
+  );
+  @override
+  late final GeneratedColumn<bool> isDirty = GeneratedColumn<bool>(
+    'is_dirty',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_dirty" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _teamIdMeta = const VerificationMeta('teamId');
+  @override
+  late final GeneratedColumn<String> teamId = GeneratedColumn<String>(
+    'team_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sessionIdMeta = const VerificationMeta(
+    'sessionId',
+  );
+  @override
+  late final GeneratedColumn<String> sessionId = GeneratedColumn<String>(
+    'session_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sortOrderMeta = const VerificationMeta(
+    'sortOrder',
+  );
+  @override
+  late final GeneratedColumn<int> sortOrder = GeneratedColumn<int>(
+    'sort_order',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _descriptionMeta = const VerificationMeta(
+    'description',
+  );
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+    'description',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _durationMinMeta = const VerificationMeta(
+    'durationMin',
+  );
+  @override
+  late final GeneratedColumn<int> durationMin = GeneratedColumn<int>(
+    'duration_min',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _tacticIdMeta = const VerificationMeta(
+    'tacticId',
+  );
+  @override
+  late final GeneratedColumn<String> tacticId = GeneratedColumn<String>(
+    'tactic_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    createdAt,
+    updatedAt,
+    serverUpdatedAt,
+    deleted,
+    isDirty,
+    teamId,
+    sessionId,
+    sortOrder,
+    name,
+    description,
+    durationMin,
+    tacticId,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'session_exercises';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SessionExercise> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('server_updated_at')) {
+      context.handle(
+        _serverUpdatedAtMeta,
+        serverUpdatedAt.isAcceptableOrUnknown(
+          data['server_updated_at']!,
+          _serverUpdatedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('deleted')) {
+      context.handle(
+        _deletedMeta,
+        deleted.isAcceptableOrUnknown(data['deleted']!, _deletedMeta),
+      );
+    }
+    if (data.containsKey('is_dirty')) {
+      context.handle(
+        _isDirtyMeta,
+        isDirty.isAcceptableOrUnknown(data['is_dirty']!, _isDirtyMeta),
+      );
+    }
+    if (data.containsKey('team_id')) {
+      context.handle(
+        _teamIdMeta,
+        teamId.isAcceptableOrUnknown(data['team_id']!, _teamIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_teamIdMeta);
+    }
+    if (data.containsKey('session_id')) {
+      context.handle(
+        _sessionIdMeta,
+        sessionId.isAcceptableOrUnknown(data['session_id']!, _sessionIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_sessionIdMeta);
+    }
+    if (data.containsKey('sort_order')) {
+      context.handle(
+        _sortOrderMeta,
+        sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta),
+      );
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+        _descriptionMeta,
+        description.isAcceptableOrUnknown(
+          data['description']!,
+          _descriptionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('duration_min')) {
+      context.handle(
+        _durationMinMeta,
+        durationMin.isAcceptableOrUnknown(
+          data['duration_min']!,
+          _durationMinMeta,
+        ),
+      );
+    }
+    if (data.containsKey('tactic_id')) {
+      context.handle(
+        _tacticIdMeta,
+        tacticId.isAcceptableOrUnknown(data['tactic_id']!, _tacticIdMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  SessionExercise map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SessionExercise(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      serverUpdatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}server_updated_at'],
+      ),
+      deleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}deleted'],
+      )!,
+      isDirty: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_dirty'],
+      )!,
+      teamId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}team_id'],
+      )!,
+      sessionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}session_id'],
+      )!,
+      sortOrder: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sort_order'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      description: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}description'],
+      ),
+      durationMin: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}duration_min'],
+      ),
+      tacticId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tactic_id'],
+      ),
+    );
+  }
+
+  @override
+  $SessionExercisesTable createAlias(String alias) {
+    return $SessionExercisesTable(attachedDatabase, alias);
+  }
+}
+
+class SessionExercise extends DataClass implements Insertable<SessionExercise> {
+  final String id;
+  final String createdAt;
+  final String updatedAt;
+  final String? serverUpdatedAt;
+  final bool deleted;
+
+  /// Modifiée localement et pas encore envoyée. Jamais synchronisée.
+  final bool isDirty;
+  final String teamId;
+  final String sessionId;
+  final int sortOrder;
+  final String name;
+  final String? description;
+  final int? durationMin;
+  final String? tacticId;
+  const SessionExercise({
+    required this.id,
+    required this.createdAt,
+    required this.updatedAt,
+    this.serverUpdatedAt,
+    required this.deleted,
+    required this.isDirty,
+    required this.teamId,
+    required this.sessionId,
+    required this.sortOrder,
+    required this.name,
+    this.description,
+    this.durationMin,
+    this.tacticId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['created_at'] = Variable<String>(createdAt);
+    map['updated_at'] = Variable<String>(updatedAt);
+    if (!nullToAbsent || serverUpdatedAt != null) {
+      map['server_updated_at'] = Variable<String>(serverUpdatedAt);
+    }
+    map['deleted'] = Variable<bool>(deleted);
+    map['is_dirty'] = Variable<bool>(isDirty);
+    map['team_id'] = Variable<String>(teamId);
+    map['session_id'] = Variable<String>(sessionId);
+    map['sort_order'] = Variable<int>(sortOrder);
+    map['name'] = Variable<String>(name);
+    if (!nullToAbsent || description != null) {
+      map['description'] = Variable<String>(description);
+    }
+    if (!nullToAbsent || durationMin != null) {
+      map['duration_min'] = Variable<int>(durationMin);
+    }
+    if (!nullToAbsent || tacticId != null) {
+      map['tactic_id'] = Variable<String>(tacticId);
+    }
+    return map;
+  }
+
+  SessionExercisesCompanion toCompanion(bool nullToAbsent) {
+    return SessionExercisesCompanion(
+      id: Value(id),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      serverUpdatedAt: serverUpdatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(serverUpdatedAt),
+      deleted: Value(deleted),
+      isDirty: Value(isDirty),
+      teamId: Value(teamId),
+      sessionId: Value(sessionId),
+      sortOrder: Value(sortOrder),
+      name: Value(name),
+      description: description == null && nullToAbsent
+          ? const Value.absent()
+          : Value(description),
+      durationMin: durationMin == null && nullToAbsent
+          ? const Value.absent()
+          : Value(durationMin),
+      tacticId: tacticId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(tacticId),
+    );
+  }
+
+  factory SessionExercise.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SessionExercise(
+      id: serializer.fromJson<String>(json['id']),
+      createdAt: serializer.fromJson<String>(json['createdAt']),
+      updatedAt: serializer.fromJson<String>(json['updatedAt']),
+      serverUpdatedAt: serializer.fromJson<String?>(json['serverUpdatedAt']),
+      deleted: serializer.fromJson<bool>(json['deleted']),
+      isDirty: serializer.fromJson<bool>(json['isDirty']),
+      teamId: serializer.fromJson<String>(json['teamId']),
+      sessionId: serializer.fromJson<String>(json['sessionId']),
+      sortOrder: serializer.fromJson<int>(json['sortOrder']),
+      name: serializer.fromJson<String>(json['name']),
+      description: serializer.fromJson<String?>(json['description']),
+      durationMin: serializer.fromJson<int?>(json['durationMin']),
+      tacticId: serializer.fromJson<String?>(json['tacticId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'createdAt': serializer.toJson<String>(createdAt),
+      'updatedAt': serializer.toJson<String>(updatedAt),
+      'serverUpdatedAt': serializer.toJson<String?>(serverUpdatedAt),
+      'deleted': serializer.toJson<bool>(deleted),
+      'isDirty': serializer.toJson<bool>(isDirty),
+      'teamId': serializer.toJson<String>(teamId),
+      'sessionId': serializer.toJson<String>(sessionId),
+      'sortOrder': serializer.toJson<int>(sortOrder),
+      'name': serializer.toJson<String>(name),
+      'description': serializer.toJson<String?>(description),
+      'durationMin': serializer.toJson<int?>(durationMin),
+      'tacticId': serializer.toJson<String?>(tacticId),
+    };
+  }
+
+  SessionExercise copyWith({
+    String? id,
+    String? createdAt,
+    String? updatedAt,
+    Value<String?> serverUpdatedAt = const Value.absent(),
+    bool? deleted,
+    bool? isDirty,
+    String? teamId,
+    String? sessionId,
+    int? sortOrder,
+    String? name,
+    Value<String?> description = const Value.absent(),
+    Value<int?> durationMin = const Value.absent(),
+    Value<String?> tacticId = const Value.absent(),
+  }) => SessionExercise(
+    id: id ?? this.id,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    serverUpdatedAt: serverUpdatedAt.present
+        ? serverUpdatedAt.value
+        : this.serverUpdatedAt,
+    deleted: deleted ?? this.deleted,
+    isDirty: isDirty ?? this.isDirty,
+    teamId: teamId ?? this.teamId,
+    sessionId: sessionId ?? this.sessionId,
+    sortOrder: sortOrder ?? this.sortOrder,
+    name: name ?? this.name,
+    description: description.present ? description.value : this.description,
+    durationMin: durationMin.present ? durationMin.value : this.durationMin,
+    tacticId: tacticId.present ? tacticId.value : this.tacticId,
+  );
+  SessionExercise copyWithCompanion(SessionExercisesCompanion data) {
+    return SessionExercise(
+      id: data.id.present ? data.id.value : this.id,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      serverUpdatedAt: data.serverUpdatedAt.present
+          ? data.serverUpdatedAt.value
+          : this.serverUpdatedAt,
+      deleted: data.deleted.present ? data.deleted.value : this.deleted,
+      isDirty: data.isDirty.present ? data.isDirty.value : this.isDirty,
+      teamId: data.teamId.present ? data.teamId.value : this.teamId,
+      sessionId: data.sessionId.present ? data.sessionId.value : this.sessionId,
+      sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
+      name: data.name.present ? data.name.value : this.name,
+      description: data.description.present
+          ? data.description.value
+          : this.description,
+      durationMin: data.durationMin.present
+          ? data.durationMin.value
+          : this.durationMin,
+      tacticId: data.tacticId.present ? data.tacticId.value : this.tacticId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SessionExercise(')
+          ..write('id: $id, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('serverUpdatedAt: $serverUpdatedAt, ')
+          ..write('deleted: $deleted, ')
+          ..write('isDirty: $isDirty, ')
+          ..write('teamId: $teamId, ')
+          ..write('sessionId: $sessionId, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('name: $name, ')
+          ..write('description: $description, ')
+          ..write('durationMin: $durationMin, ')
+          ..write('tacticId: $tacticId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    createdAt,
+    updatedAt,
+    serverUpdatedAt,
+    deleted,
+    isDirty,
+    teamId,
+    sessionId,
+    sortOrder,
+    name,
+    description,
+    durationMin,
+    tacticId,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SessionExercise &&
+          other.id == this.id &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.serverUpdatedAt == this.serverUpdatedAt &&
+          other.deleted == this.deleted &&
+          other.isDirty == this.isDirty &&
+          other.teamId == this.teamId &&
+          other.sessionId == this.sessionId &&
+          other.sortOrder == this.sortOrder &&
+          other.name == this.name &&
+          other.description == this.description &&
+          other.durationMin == this.durationMin &&
+          other.tacticId == this.tacticId);
+}
+
+class SessionExercisesCompanion extends UpdateCompanion<SessionExercise> {
+  final Value<String> id;
+  final Value<String> createdAt;
+  final Value<String> updatedAt;
+  final Value<String?> serverUpdatedAt;
+  final Value<bool> deleted;
+  final Value<bool> isDirty;
+  final Value<String> teamId;
+  final Value<String> sessionId;
+  final Value<int> sortOrder;
+  final Value<String> name;
+  final Value<String?> description;
+  final Value<int?> durationMin;
+  final Value<String?> tacticId;
+  final Value<int> rowid;
+  const SessionExercisesCompanion({
+    this.id = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.serverUpdatedAt = const Value.absent(),
+    this.deleted = const Value.absent(),
+    this.isDirty = const Value.absent(),
+    this.teamId = const Value.absent(),
+    this.sessionId = const Value.absent(),
+    this.sortOrder = const Value.absent(),
+    this.name = const Value.absent(),
+    this.description = const Value.absent(),
+    this.durationMin = const Value.absent(),
+    this.tacticId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  SessionExercisesCompanion.insert({
+    required String id,
+    required String createdAt,
+    required String updatedAt,
+    this.serverUpdatedAt = const Value.absent(),
+    this.deleted = const Value.absent(),
+    this.isDirty = const Value.absent(),
+    required String teamId,
+    required String sessionId,
+    this.sortOrder = const Value.absent(),
+    required String name,
+    this.description = const Value.absent(),
+    this.durationMin = const Value.absent(),
+    this.tacticId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt),
+       teamId = Value(teamId),
+       sessionId = Value(sessionId),
+       name = Value(name);
+  static Insertable<SessionExercise> custom({
+    Expression<String>? id,
+    Expression<String>? createdAt,
+    Expression<String>? updatedAt,
+    Expression<String>? serverUpdatedAt,
+    Expression<bool>? deleted,
+    Expression<bool>? isDirty,
+    Expression<String>? teamId,
+    Expression<String>? sessionId,
+    Expression<int>? sortOrder,
+    Expression<String>? name,
+    Expression<String>? description,
+    Expression<int>? durationMin,
+    Expression<String>? tacticId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (serverUpdatedAt != null) 'server_updated_at': serverUpdatedAt,
+      if (deleted != null) 'deleted': deleted,
+      if (isDirty != null) 'is_dirty': isDirty,
+      if (teamId != null) 'team_id': teamId,
+      if (sessionId != null) 'session_id': sessionId,
+      if (sortOrder != null) 'sort_order': sortOrder,
+      if (name != null) 'name': name,
+      if (description != null) 'description': description,
+      if (durationMin != null) 'duration_min': durationMin,
+      if (tacticId != null) 'tactic_id': tacticId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  SessionExercisesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? createdAt,
+    Value<String>? updatedAt,
+    Value<String?>? serverUpdatedAt,
+    Value<bool>? deleted,
+    Value<bool>? isDirty,
+    Value<String>? teamId,
+    Value<String>? sessionId,
+    Value<int>? sortOrder,
+    Value<String>? name,
+    Value<String?>? description,
+    Value<int?>? durationMin,
+    Value<String?>? tacticId,
+    Value<int>? rowid,
+  }) {
+    return SessionExercisesCompanion(
+      id: id ?? this.id,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      serverUpdatedAt: serverUpdatedAt ?? this.serverUpdatedAt,
+      deleted: deleted ?? this.deleted,
+      isDirty: isDirty ?? this.isDirty,
+      teamId: teamId ?? this.teamId,
+      sessionId: sessionId ?? this.sessionId,
+      sortOrder: sortOrder ?? this.sortOrder,
+      name: name ?? this.name,
+      description: description ?? this.description,
+      durationMin: durationMin ?? this.durationMin,
+      tacticId: tacticId ?? this.tacticId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<String>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<String>(updatedAt.value);
+    }
+    if (serverUpdatedAt.present) {
+      map['server_updated_at'] = Variable<String>(serverUpdatedAt.value);
+    }
+    if (deleted.present) {
+      map['deleted'] = Variable<bool>(deleted.value);
+    }
+    if (isDirty.present) {
+      map['is_dirty'] = Variable<bool>(isDirty.value);
+    }
+    if (teamId.present) {
+      map['team_id'] = Variable<String>(teamId.value);
+    }
+    if (sessionId.present) {
+      map['session_id'] = Variable<String>(sessionId.value);
+    }
+    if (sortOrder.present) {
+      map['sort_order'] = Variable<int>(sortOrder.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (durationMin.present) {
+      map['duration_min'] = Variable<int>(durationMin.value);
+    }
+    if (tacticId.present) {
+      map['tactic_id'] = Variable<String>(tacticId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SessionExercisesCompanion(')
+          ..write('id: $id, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('serverUpdatedAt: $serverUpdatedAt, ')
+          ..write('deleted: $deleted, ')
+          ..write('isDirty: $isDirty, ')
+          ..write('teamId: $teamId, ')
+          ..write('sessionId: $sessionId, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('name: $name, ')
+          ..write('description: $description, ')
+          ..write('durationMin: $durationMin, ')
+          ..write('tacticId: $tacticId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $SessionCommentsTable extends SessionComments
+    with TableInfo<$SessionCommentsTable, SessionComment> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SessionCommentsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<String> createdAt = GeneratedColumn<String>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<String> updatedAt = GeneratedColumn<String>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _serverUpdatedAtMeta = const VerificationMeta(
+    'serverUpdatedAt',
+  );
+  @override
+  late final GeneratedColumn<String> serverUpdatedAt = GeneratedColumn<String>(
+    'server_updated_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deletedMeta = const VerificationMeta(
+    'deleted',
+  );
+  @override
+  late final GeneratedColumn<bool> deleted = GeneratedColumn<bool>(
+    'deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _isDirtyMeta = const VerificationMeta(
+    'isDirty',
+  );
+  @override
+  late final GeneratedColumn<bool> isDirty = GeneratedColumn<bool>(
+    'is_dirty',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_dirty" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _teamIdMeta = const VerificationMeta('teamId');
+  @override
+  late final GeneratedColumn<String> teamId = GeneratedColumn<String>(
+    'team_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sessionIdMeta = const VerificationMeta(
+    'sessionId',
+  );
+  @override
+  late final GeneratedColumn<String> sessionId = GeneratedColumn<String>(
+    'session_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _authorIdMeta = const VerificationMeta(
+    'authorId',
+  );
+  @override
+  late final GeneratedColumn<String> authorId = GeneratedColumn<String>(
+    'author_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _authorNameMeta = const VerificationMeta(
+    'authorName',
+  );
+  @override
+  late final GeneratedColumn<String> authorName = GeneratedColumn<String>(
+    'author_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _text_Meta = const VerificationMeta('text_');
+  @override
+  late final GeneratedColumn<String> text_ = GeneratedColumn<String>(
+    'text',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    createdAt,
+    updatedAt,
+    serverUpdatedAt,
+    deleted,
+    isDirty,
+    teamId,
+    sessionId,
+    authorId,
+    authorName,
+    text_,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'session_comments';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SessionComment> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('server_updated_at')) {
+      context.handle(
+        _serverUpdatedAtMeta,
+        serverUpdatedAt.isAcceptableOrUnknown(
+          data['server_updated_at']!,
+          _serverUpdatedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('deleted')) {
+      context.handle(
+        _deletedMeta,
+        deleted.isAcceptableOrUnknown(data['deleted']!, _deletedMeta),
+      );
+    }
+    if (data.containsKey('is_dirty')) {
+      context.handle(
+        _isDirtyMeta,
+        isDirty.isAcceptableOrUnknown(data['is_dirty']!, _isDirtyMeta),
+      );
+    }
+    if (data.containsKey('team_id')) {
+      context.handle(
+        _teamIdMeta,
+        teamId.isAcceptableOrUnknown(data['team_id']!, _teamIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_teamIdMeta);
+    }
+    if (data.containsKey('session_id')) {
+      context.handle(
+        _sessionIdMeta,
+        sessionId.isAcceptableOrUnknown(data['session_id']!, _sessionIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_sessionIdMeta);
+    }
+    if (data.containsKey('author_id')) {
+      context.handle(
+        _authorIdMeta,
+        authorId.isAcceptableOrUnknown(data['author_id']!, _authorIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_authorIdMeta);
+    }
+    if (data.containsKey('author_name')) {
+      context.handle(
+        _authorNameMeta,
+        authorName.isAcceptableOrUnknown(data['author_name']!, _authorNameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_authorNameMeta);
+    }
+    if (data.containsKey('text')) {
+      context.handle(
+        _text_Meta,
+        text_.isAcceptableOrUnknown(data['text']!, _text_Meta),
+      );
+    } else if (isInserting) {
+      context.missing(_text_Meta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  SessionComment map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SessionComment(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      serverUpdatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}server_updated_at'],
+      ),
+      deleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}deleted'],
+      )!,
+      isDirty: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_dirty'],
+      )!,
+      teamId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}team_id'],
+      )!,
+      sessionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}session_id'],
+      )!,
+      authorId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}author_id'],
+      )!,
+      authorName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}author_name'],
+      )!,
+      text_: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}text'],
+      )!,
+    );
+  }
+
+  @override
+  $SessionCommentsTable createAlias(String alias) {
+    return $SessionCommentsTable(attachedDatabase, alias);
+  }
+}
+
+class SessionComment extends DataClass implements Insertable<SessionComment> {
+  final String id;
+  final String createdAt;
+  final String updatedAt;
+  final String? serverUpdatedAt;
+  final bool deleted;
+
+  /// Modifiée localement et pas encore envoyée. Jamais synchronisée.
+  final bool isDirty;
+  final String teamId;
+  final String sessionId;
+  final String authorId;
+  final String authorName;
+  final String text_;
+  const SessionComment({
+    required this.id,
+    required this.createdAt,
+    required this.updatedAt,
+    this.serverUpdatedAt,
+    required this.deleted,
+    required this.isDirty,
+    required this.teamId,
+    required this.sessionId,
+    required this.authorId,
+    required this.authorName,
+    required this.text_,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['created_at'] = Variable<String>(createdAt);
+    map['updated_at'] = Variable<String>(updatedAt);
+    if (!nullToAbsent || serverUpdatedAt != null) {
+      map['server_updated_at'] = Variable<String>(serverUpdatedAt);
+    }
+    map['deleted'] = Variable<bool>(deleted);
+    map['is_dirty'] = Variable<bool>(isDirty);
+    map['team_id'] = Variable<String>(teamId);
+    map['session_id'] = Variable<String>(sessionId);
+    map['author_id'] = Variable<String>(authorId);
+    map['author_name'] = Variable<String>(authorName);
+    map['text'] = Variable<String>(text_);
+    return map;
+  }
+
+  SessionCommentsCompanion toCompanion(bool nullToAbsent) {
+    return SessionCommentsCompanion(
+      id: Value(id),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      serverUpdatedAt: serverUpdatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(serverUpdatedAt),
+      deleted: Value(deleted),
+      isDirty: Value(isDirty),
+      teamId: Value(teamId),
+      sessionId: Value(sessionId),
+      authorId: Value(authorId),
+      authorName: Value(authorName),
+      text_: Value(text_),
+    );
+  }
+
+  factory SessionComment.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SessionComment(
+      id: serializer.fromJson<String>(json['id']),
+      createdAt: serializer.fromJson<String>(json['createdAt']),
+      updatedAt: serializer.fromJson<String>(json['updatedAt']),
+      serverUpdatedAt: serializer.fromJson<String?>(json['serverUpdatedAt']),
+      deleted: serializer.fromJson<bool>(json['deleted']),
+      isDirty: serializer.fromJson<bool>(json['isDirty']),
+      teamId: serializer.fromJson<String>(json['teamId']),
+      sessionId: serializer.fromJson<String>(json['sessionId']),
+      authorId: serializer.fromJson<String>(json['authorId']),
+      authorName: serializer.fromJson<String>(json['authorName']),
+      text_: serializer.fromJson<String>(json['text_']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'createdAt': serializer.toJson<String>(createdAt),
+      'updatedAt': serializer.toJson<String>(updatedAt),
+      'serverUpdatedAt': serializer.toJson<String?>(serverUpdatedAt),
+      'deleted': serializer.toJson<bool>(deleted),
+      'isDirty': serializer.toJson<bool>(isDirty),
+      'teamId': serializer.toJson<String>(teamId),
+      'sessionId': serializer.toJson<String>(sessionId),
+      'authorId': serializer.toJson<String>(authorId),
+      'authorName': serializer.toJson<String>(authorName),
+      'text_': serializer.toJson<String>(text_),
+    };
+  }
+
+  SessionComment copyWith({
+    String? id,
+    String? createdAt,
+    String? updatedAt,
+    Value<String?> serverUpdatedAt = const Value.absent(),
+    bool? deleted,
+    bool? isDirty,
+    String? teamId,
+    String? sessionId,
+    String? authorId,
+    String? authorName,
+    String? text_,
+  }) => SessionComment(
+    id: id ?? this.id,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    serverUpdatedAt: serverUpdatedAt.present
+        ? serverUpdatedAt.value
+        : this.serverUpdatedAt,
+    deleted: deleted ?? this.deleted,
+    isDirty: isDirty ?? this.isDirty,
+    teamId: teamId ?? this.teamId,
+    sessionId: sessionId ?? this.sessionId,
+    authorId: authorId ?? this.authorId,
+    authorName: authorName ?? this.authorName,
+    text_: text_ ?? this.text_,
+  );
+  SessionComment copyWithCompanion(SessionCommentsCompanion data) {
+    return SessionComment(
+      id: data.id.present ? data.id.value : this.id,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      serverUpdatedAt: data.serverUpdatedAt.present
+          ? data.serverUpdatedAt.value
+          : this.serverUpdatedAt,
+      deleted: data.deleted.present ? data.deleted.value : this.deleted,
+      isDirty: data.isDirty.present ? data.isDirty.value : this.isDirty,
+      teamId: data.teamId.present ? data.teamId.value : this.teamId,
+      sessionId: data.sessionId.present ? data.sessionId.value : this.sessionId,
+      authorId: data.authorId.present ? data.authorId.value : this.authorId,
+      authorName: data.authorName.present
+          ? data.authorName.value
+          : this.authorName,
+      text_: data.text_.present ? data.text_.value : this.text_,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SessionComment(')
+          ..write('id: $id, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('serverUpdatedAt: $serverUpdatedAt, ')
+          ..write('deleted: $deleted, ')
+          ..write('isDirty: $isDirty, ')
+          ..write('teamId: $teamId, ')
+          ..write('sessionId: $sessionId, ')
+          ..write('authorId: $authorId, ')
+          ..write('authorName: $authorName, ')
+          ..write('text_: $text_')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    createdAt,
+    updatedAt,
+    serverUpdatedAt,
+    deleted,
+    isDirty,
+    teamId,
+    sessionId,
+    authorId,
+    authorName,
+    text_,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SessionComment &&
+          other.id == this.id &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.serverUpdatedAt == this.serverUpdatedAt &&
+          other.deleted == this.deleted &&
+          other.isDirty == this.isDirty &&
+          other.teamId == this.teamId &&
+          other.sessionId == this.sessionId &&
+          other.authorId == this.authorId &&
+          other.authorName == this.authorName &&
+          other.text_ == this.text_);
+}
+
+class SessionCommentsCompanion extends UpdateCompanion<SessionComment> {
+  final Value<String> id;
+  final Value<String> createdAt;
+  final Value<String> updatedAt;
+  final Value<String?> serverUpdatedAt;
+  final Value<bool> deleted;
+  final Value<bool> isDirty;
+  final Value<String> teamId;
+  final Value<String> sessionId;
+  final Value<String> authorId;
+  final Value<String> authorName;
+  final Value<String> text_;
+  final Value<int> rowid;
+  const SessionCommentsCompanion({
+    this.id = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.serverUpdatedAt = const Value.absent(),
+    this.deleted = const Value.absent(),
+    this.isDirty = const Value.absent(),
+    this.teamId = const Value.absent(),
+    this.sessionId = const Value.absent(),
+    this.authorId = const Value.absent(),
+    this.authorName = const Value.absent(),
+    this.text_ = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  SessionCommentsCompanion.insert({
+    required String id,
+    required String createdAt,
+    required String updatedAt,
+    this.serverUpdatedAt = const Value.absent(),
+    this.deleted = const Value.absent(),
+    this.isDirty = const Value.absent(),
+    required String teamId,
+    required String sessionId,
+    required String authorId,
+    required String authorName,
+    required String text_,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt),
+       teamId = Value(teamId),
+       sessionId = Value(sessionId),
+       authorId = Value(authorId),
+       authorName = Value(authorName),
+       text_ = Value(text_);
+  static Insertable<SessionComment> custom({
+    Expression<String>? id,
+    Expression<String>? createdAt,
+    Expression<String>? updatedAt,
+    Expression<String>? serverUpdatedAt,
+    Expression<bool>? deleted,
+    Expression<bool>? isDirty,
+    Expression<String>? teamId,
+    Expression<String>? sessionId,
+    Expression<String>? authorId,
+    Expression<String>? authorName,
+    Expression<String>? text_,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (serverUpdatedAt != null) 'server_updated_at': serverUpdatedAt,
+      if (deleted != null) 'deleted': deleted,
+      if (isDirty != null) 'is_dirty': isDirty,
+      if (teamId != null) 'team_id': teamId,
+      if (sessionId != null) 'session_id': sessionId,
+      if (authorId != null) 'author_id': authorId,
+      if (authorName != null) 'author_name': authorName,
+      if (text_ != null) 'text': text_,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  SessionCommentsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? createdAt,
+    Value<String>? updatedAt,
+    Value<String?>? serverUpdatedAt,
+    Value<bool>? deleted,
+    Value<bool>? isDirty,
+    Value<String>? teamId,
+    Value<String>? sessionId,
+    Value<String>? authorId,
+    Value<String>? authorName,
+    Value<String>? text_,
+    Value<int>? rowid,
+  }) {
+    return SessionCommentsCompanion(
+      id: id ?? this.id,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      serverUpdatedAt: serverUpdatedAt ?? this.serverUpdatedAt,
+      deleted: deleted ?? this.deleted,
+      isDirty: isDirty ?? this.isDirty,
+      teamId: teamId ?? this.teamId,
+      sessionId: sessionId ?? this.sessionId,
+      authorId: authorId ?? this.authorId,
+      authorName: authorName ?? this.authorName,
+      text_: text_ ?? this.text_,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<String>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<String>(updatedAt.value);
+    }
+    if (serverUpdatedAt.present) {
+      map['server_updated_at'] = Variable<String>(serverUpdatedAt.value);
+    }
+    if (deleted.present) {
+      map['deleted'] = Variable<bool>(deleted.value);
+    }
+    if (isDirty.present) {
+      map['is_dirty'] = Variable<bool>(isDirty.value);
+    }
+    if (teamId.present) {
+      map['team_id'] = Variable<String>(teamId.value);
+    }
+    if (sessionId.present) {
+      map['session_id'] = Variable<String>(sessionId.value);
+    }
+    if (authorId.present) {
+      map['author_id'] = Variable<String>(authorId.value);
+    }
+    if (authorName.present) {
+      map['author_name'] = Variable<String>(authorName.value);
+    }
+    if (text_.present) {
+      map['text'] = Variable<String>(text_.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SessionCommentsCompanion(')
+          ..write('id: $id, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('serverUpdatedAt: $serverUpdatedAt, ')
+          ..write('deleted: $deleted, ')
+          ..write('isDirty: $isDirty, ')
+          ..write('teamId: $teamId, ')
+          ..write('sessionId: $sessionId, ')
+          ..write('authorId: $authorId, ')
+          ..write('authorName: $authorName, ')
+          ..write('text_: $text_, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $WellnessSurveysTable extends WellnessSurveys
+    with TableInfo<$WellnessSurveysTable, WellnessSurvey> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $WellnessSurveysTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<String> createdAt = GeneratedColumn<String>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<String> updatedAt = GeneratedColumn<String>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _serverUpdatedAtMeta = const VerificationMeta(
+    'serverUpdatedAt',
+  );
+  @override
+  late final GeneratedColumn<String> serverUpdatedAt = GeneratedColumn<String>(
+    'server_updated_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deletedMeta = const VerificationMeta(
+    'deleted',
+  );
+  @override
+  late final GeneratedColumn<bool> deleted = GeneratedColumn<bool>(
+    'deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _isDirtyMeta = const VerificationMeta(
+    'isDirty',
+  );
+  @override
+  late final GeneratedColumn<bool> isDirty = GeneratedColumn<bool>(
+    'is_dirty',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_dirty" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _teamIdMeta = const VerificationMeta('teamId');
+  @override
+  late final GeneratedColumn<String> teamId = GeneratedColumn<String>(
+    'team_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _dateMeta = const VerificationMeta('date');
+  @override
+  late final GeneratedColumn<String> date = GeneratedColumn<String>(
+    'date',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+    'title',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _sessionIdMeta = const VerificationMeta(
+    'sessionId',
+  );
+  @override
+  late final GeneratedColumn<String> sessionId = GeneratedColumn<String>(
+    'session_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    createdAt,
+    updatedAt,
+    serverUpdatedAt,
+    deleted,
+    isDirty,
+    teamId,
+    date,
+    title,
+    sessionId,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'wellness_surveys';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<WellnessSurvey> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('server_updated_at')) {
+      context.handle(
+        _serverUpdatedAtMeta,
+        serverUpdatedAt.isAcceptableOrUnknown(
+          data['server_updated_at']!,
+          _serverUpdatedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('deleted')) {
+      context.handle(
+        _deletedMeta,
+        deleted.isAcceptableOrUnknown(data['deleted']!, _deletedMeta),
+      );
+    }
+    if (data.containsKey('is_dirty')) {
+      context.handle(
+        _isDirtyMeta,
+        isDirty.isAcceptableOrUnknown(data['is_dirty']!, _isDirtyMeta),
+      );
+    }
+    if (data.containsKey('team_id')) {
+      context.handle(
+        _teamIdMeta,
+        teamId.isAcceptableOrUnknown(data['team_id']!, _teamIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_teamIdMeta);
+    }
+    if (data.containsKey('date')) {
+      context.handle(
+        _dateMeta,
+        date.isAcceptableOrUnknown(data['date']!, _dateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_dateMeta);
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+        _titleMeta,
+        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
+      );
+    }
+    if (data.containsKey('session_id')) {
+      context.handle(
+        _sessionIdMeta,
+        sessionId.isAcceptableOrUnknown(data['session_id']!, _sessionIdMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  WellnessSurvey map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return WellnessSurvey(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      serverUpdatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}server_updated_at'],
+      ),
+      deleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}deleted'],
+      )!,
+      isDirty: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_dirty'],
+      )!,
+      teamId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}team_id'],
+      )!,
+      date: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}date'],
+      )!,
+      title: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}title'],
+      ),
+      sessionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}session_id'],
+      ),
+    );
+  }
+
+  @override
+  $WellnessSurveysTable createAlias(String alias) {
+    return $WellnessSurveysTable(attachedDatabase, alias);
+  }
+}
+
+class WellnessSurvey extends DataClass implements Insertable<WellnessSurvey> {
+  final String id;
+  final String createdAt;
+  final String updatedAt;
+  final String? serverUpdatedAt;
+  final bool deleted;
+
+  /// Modifiée localement et pas encore envoyée. Jamais synchronisée.
+  final bool isDirty;
+  final String teamId;
+  final String date;
+  final String? title;
+  final String? sessionId;
+  const WellnessSurvey({
+    required this.id,
+    required this.createdAt,
+    required this.updatedAt,
+    this.serverUpdatedAt,
+    required this.deleted,
+    required this.isDirty,
+    required this.teamId,
+    required this.date,
+    this.title,
+    this.sessionId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['created_at'] = Variable<String>(createdAt);
+    map['updated_at'] = Variable<String>(updatedAt);
+    if (!nullToAbsent || serverUpdatedAt != null) {
+      map['server_updated_at'] = Variable<String>(serverUpdatedAt);
+    }
+    map['deleted'] = Variable<bool>(deleted);
+    map['is_dirty'] = Variable<bool>(isDirty);
+    map['team_id'] = Variable<String>(teamId);
+    map['date'] = Variable<String>(date);
+    if (!nullToAbsent || title != null) {
+      map['title'] = Variable<String>(title);
+    }
+    if (!nullToAbsent || sessionId != null) {
+      map['session_id'] = Variable<String>(sessionId);
+    }
+    return map;
+  }
+
+  WellnessSurveysCompanion toCompanion(bool nullToAbsent) {
+    return WellnessSurveysCompanion(
+      id: Value(id),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      serverUpdatedAt: serverUpdatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(serverUpdatedAt),
+      deleted: Value(deleted),
+      isDirty: Value(isDirty),
+      teamId: Value(teamId),
+      date: Value(date),
+      title: title == null && nullToAbsent
+          ? const Value.absent()
+          : Value(title),
+      sessionId: sessionId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sessionId),
+    );
+  }
+
+  factory WellnessSurvey.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return WellnessSurvey(
+      id: serializer.fromJson<String>(json['id']),
+      createdAt: serializer.fromJson<String>(json['createdAt']),
+      updatedAt: serializer.fromJson<String>(json['updatedAt']),
+      serverUpdatedAt: serializer.fromJson<String?>(json['serverUpdatedAt']),
+      deleted: serializer.fromJson<bool>(json['deleted']),
+      isDirty: serializer.fromJson<bool>(json['isDirty']),
+      teamId: serializer.fromJson<String>(json['teamId']),
+      date: serializer.fromJson<String>(json['date']),
+      title: serializer.fromJson<String?>(json['title']),
+      sessionId: serializer.fromJson<String?>(json['sessionId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'createdAt': serializer.toJson<String>(createdAt),
+      'updatedAt': serializer.toJson<String>(updatedAt),
+      'serverUpdatedAt': serializer.toJson<String?>(serverUpdatedAt),
+      'deleted': serializer.toJson<bool>(deleted),
+      'isDirty': serializer.toJson<bool>(isDirty),
+      'teamId': serializer.toJson<String>(teamId),
+      'date': serializer.toJson<String>(date),
+      'title': serializer.toJson<String?>(title),
+      'sessionId': serializer.toJson<String?>(sessionId),
+    };
+  }
+
+  WellnessSurvey copyWith({
+    String? id,
+    String? createdAt,
+    String? updatedAt,
+    Value<String?> serverUpdatedAt = const Value.absent(),
+    bool? deleted,
+    bool? isDirty,
+    String? teamId,
+    String? date,
+    Value<String?> title = const Value.absent(),
+    Value<String?> sessionId = const Value.absent(),
+  }) => WellnessSurvey(
+    id: id ?? this.id,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    serverUpdatedAt: serverUpdatedAt.present
+        ? serverUpdatedAt.value
+        : this.serverUpdatedAt,
+    deleted: deleted ?? this.deleted,
+    isDirty: isDirty ?? this.isDirty,
+    teamId: teamId ?? this.teamId,
+    date: date ?? this.date,
+    title: title.present ? title.value : this.title,
+    sessionId: sessionId.present ? sessionId.value : this.sessionId,
+  );
+  WellnessSurvey copyWithCompanion(WellnessSurveysCompanion data) {
+    return WellnessSurvey(
+      id: data.id.present ? data.id.value : this.id,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      serverUpdatedAt: data.serverUpdatedAt.present
+          ? data.serverUpdatedAt.value
+          : this.serverUpdatedAt,
+      deleted: data.deleted.present ? data.deleted.value : this.deleted,
+      isDirty: data.isDirty.present ? data.isDirty.value : this.isDirty,
+      teamId: data.teamId.present ? data.teamId.value : this.teamId,
+      date: data.date.present ? data.date.value : this.date,
+      title: data.title.present ? data.title.value : this.title,
+      sessionId: data.sessionId.present ? data.sessionId.value : this.sessionId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WellnessSurvey(')
+          ..write('id: $id, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('serverUpdatedAt: $serverUpdatedAt, ')
+          ..write('deleted: $deleted, ')
+          ..write('isDirty: $isDirty, ')
+          ..write('teamId: $teamId, ')
+          ..write('date: $date, ')
+          ..write('title: $title, ')
+          ..write('sessionId: $sessionId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    createdAt,
+    updatedAt,
+    serverUpdatedAt,
+    deleted,
+    isDirty,
+    teamId,
+    date,
+    title,
+    sessionId,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is WellnessSurvey &&
+          other.id == this.id &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.serverUpdatedAt == this.serverUpdatedAt &&
+          other.deleted == this.deleted &&
+          other.isDirty == this.isDirty &&
+          other.teamId == this.teamId &&
+          other.date == this.date &&
+          other.title == this.title &&
+          other.sessionId == this.sessionId);
+}
+
+class WellnessSurveysCompanion extends UpdateCompanion<WellnessSurvey> {
+  final Value<String> id;
+  final Value<String> createdAt;
+  final Value<String> updatedAt;
+  final Value<String?> serverUpdatedAt;
+  final Value<bool> deleted;
+  final Value<bool> isDirty;
+  final Value<String> teamId;
+  final Value<String> date;
+  final Value<String?> title;
+  final Value<String?> sessionId;
+  final Value<int> rowid;
+  const WellnessSurveysCompanion({
+    this.id = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.serverUpdatedAt = const Value.absent(),
+    this.deleted = const Value.absent(),
+    this.isDirty = const Value.absent(),
+    this.teamId = const Value.absent(),
+    this.date = const Value.absent(),
+    this.title = const Value.absent(),
+    this.sessionId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  WellnessSurveysCompanion.insert({
+    required String id,
+    required String createdAt,
+    required String updatedAt,
+    this.serverUpdatedAt = const Value.absent(),
+    this.deleted = const Value.absent(),
+    this.isDirty = const Value.absent(),
+    required String teamId,
+    required String date,
+    this.title = const Value.absent(),
+    this.sessionId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt),
+       teamId = Value(teamId),
+       date = Value(date);
+  static Insertable<WellnessSurvey> custom({
+    Expression<String>? id,
+    Expression<String>? createdAt,
+    Expression<String>? updatedAt,
+    Expression<String>? serverUpdatedAt,
+    Expression<bool>? deleted,
+    Expression<bool>? isDirty,
+    Expression<String>? teamId,
+    Expression<String>? date,
+    Expression<String>? title,
+    Expression<String>? sessionId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (serverUpdatedAt != null) 'server_updated_at': serverUpdatedAt,
+      if (deleted != null) 'deleted': deleted,
+      if (isDirty != null) 'is_dirty': isDirty,
+      if (teamId != null) 'team_id': teamId,
+      if (date != null) 'date': date,
+      if (title != null) 'title': title,
+      if (sessionId != null) 'session_id': sessionId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  WellnessSurveysCompanion copyWith({
+    Value<String>? id,
+    Value<String>? createdAt,
+    Value<String>? updatedAt,
+    Value<String?>? serverUpdatedAt,
+    Value<bool>? deleted,
+    Value<bool>? isDirty,
+    Value<String>? teamId,
+    Value<String>? date,
+    Value<String?>? title,
+    Value<String?>? sessionId,
+    Value<int>? rowid,
+  }) {
+    return WellnessSurveysCompanion(
+      id: id ?? this.id,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      serverUpdatedAt: serverUpdatedAt ?? this.serverUpdatedAt,
+      deleted: deleted ?? this.deleted,
+      isDirty: isDirty ?? this.isDirty,
+      teamId: teamId ?? this.teamId,
+      date: date ?? this.date,
+      title: title ?? this.title,
+      sessionId: sessionId ?? this.sessionId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<String>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<String>(updatedAt.value);
+    }
+    if (serverUpdatedAt.present) {
+      map['server_updated_at'] = Variable<String>(serverUpdatedAt.value);
+    }
+    if (deleted.present) {
+      map['deleted'] = Variable<bool>(deleted.value);
+    }
+    if (isDirty.present) {
+      map['is_dirty'] = Variable<bool>(isDirty.value);
+    }
+    if (teamId.present) {
+      map['team_id'] = Variable<String>(teamId.value);
+    }
+    if (date.present) {
+      map['date'] = Variable<String>(date.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (sessionId.present) {
+      map['session_id'] = Variable<String>(sessionId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WellnessSurveysCompanion(')
+          ..write('id: $id, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('serverUpdatedAt: $serverUpdatedAt, ')
+          ..write('deleted: $deleted, ')
+          ..write('isDirty: $isDirty, ')
+          ..write('teamId: $teamId, ')
+          ..write('date: $date, ')
+          ..write('title: $title, ')
+          ..write('sessionId: $sessionId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $WellnessSurveyPlayersTable extends WellnessSurveyPlayers
+    with TableInfo<$WellnessSurveyPlayersTable, WellnessSurveyPlayer> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $WellnessSurveyPlayersTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<String> createdAt = GeneratedColumn<String>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<String> updatedAt = GeneratedColumn<String>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _serverUpdatedAtMeta = const VerificationMeta(
+    'serverUpdatedAt',
+  );
+  @override
+  late final GeneratedColumn<String> serverUpdatedAt = GeneratedColumn<String>(
+    'server_updated_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deletedMeta = const VerificationMeta(
+    'deleted',
+  );
+  @override
+  late final GeneratedColumn<bool> deleted = GeneratedColumn<bool>(
+    'deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _isDirtyMeta = const VerificationMeta(
+    'isDirty',
+  );
+  @override
+  late final GeneratedColumn<bool> isDirty = GeneratedColumn<bool>(
+    'is_dirty',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_dirty" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _teamIdMeta = const VerificationMeta('teamId');
+  @override
+  late final GeneratedColumn<String> teamId = GeneratedColumn<String>(
+    'team_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _surveyIdMeta = const VerificationMeta(
+    'surveyId',
+  );
+  @override
+  late final GeneratedColumn<String> surveyId = GeneratedColumn<String>(
+    'survey_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _playerIdMeta = const VerificationMeta(
+    'playerId',
+  );
+  @override
+  late final GeneratedColumn<String> playerId = GeneratedColumn<String>(
+    'player_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    createdAt,
+    updatedAt,
+    serverUpdatedAt,
+    deleted,
+    isDirty,
+    teamId,
+    surveyId,
+    playerId,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'wellness_survey_players';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<WellnessSurveyPlayer> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('server_updated_at')) {
+      context.handle(
+        _serverUpdatedAtMeta,
+        serverUpdatedAt.isAcceptableOrUnknown(
+          data['server_updated_at']!,
+          _serverUpdatedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('deleted')) {
+      context.handle(
+        _deletedMeta,
+        deleted.isAcceptableOrUnknown(data['deleted']!, _deletedMeta),
+      );
+    }
+    if (data.containsKey('is_dirty')) {
+      context.handle(
+        _isDirtyMeta,
+        isDirty.isAcceptableOrUnknown(data['is_dirty']!, _isDirtyMeta),
+      );
+    }
+    if (data.containsKey('team_id')) {
+      context.handle(
+        _teamIdMeta,
+        teamId.isAcceptableOrUnknown(data['team_id']!, _teamIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_teamIdMeta);
+    }
+    if (data.containsKey('survey_id')) {
+      context.handle(
+        _surveyIdMeta,
+        surveyId.isAcceptableOrUnknown(data['survey_id']!, _surveyIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_surveyIdMeta);
+    }
+    if (data.containsKey('player_id')) {
+      context.handle(
+        _playerIdMeta,
+        playerId.isAcceptableOrUnknown(data['player_id']!, _playerIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_playerIdMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  WellnessSurveyPlayer map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return WellnessSurveyPlayer(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      serverUpdatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}server_updated_at'],
+      ),
+      deleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}deleted'],
+      )!,
+      isDirty: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_dirty'],
+      )!,
+      teamId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}team_id'],
+      )!,
+      surveyId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}survey_id'],
+      )!,
+      playerId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}player_id'],
+      )!,
+    );
+  }
+
+  @override
+  $WellnessSurveyPlayersTable createAlias(String alias) {
+    return $WellnessSurveyPlayersTable(attachedDatabase, alias);
+  }
+}
+
+class WellnessSurveyPlayer extends DataClass
+    implements Insertable<WellnessSurveyPlayer> {
+  final String id;
+  final String createdAt;
+  final String updatedAt;
+  final String? serverUpdatedAt;
+  final bool deleted;
+
+  /// Modifiée localement et pas encore envoyée. Jamais synchronisée.
+  final bool isDirty;
+  final String teamId;
+  final String surveyId;
+  final String playerId;
+  const WellnessSurveyPlayer({
+    required this.id,
+    required this.createdAt,
+    required this.updatedAt,
+    this.serverUpdatedAt,
+    required this.deleted,
+    required this.isDirty,
+    required this.teamId,
+    required this.surveyId,
+    required this.playerId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['created_at'] = Variable<String>(createdAt);
+    map['updated_at'] = Variable<String>(updatedAt);
+    if (!nullToAbsent || serverUpdatedAt != null) {
+      map['server_updated_at'] = Variable<String>(serverUpdatedAt);
+    }
+    map['deleted'] = Variable<bool>(deleted);
+    map['is_dirty'] = Variable<bool>(isDirty);
+    map['team_id'] = Variable<String>(teamId);
+    map['survey_id'] = Variable<String>(surveyId);
+    map['player_id'] = Variable<String>(playerId);
+    return map;
+  }
+
+  WellnessSurveyPlayersCompanion toCompanion(bool nullToAbsent) {
+    return WellnessSurveyPlayersCompanion(
+      id: Value(id),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      serverUpdatedAt: serverUpdatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(serverUpdatedAt),
+      deleted: Value(deleted),
+      isDirty: Value(isDirty),
+      teamId: Value(teamId),
+      surveyId: Value(surveyId),
+      playerId: Value(playerId),
+    );
+  }
+
+  factory WellnessSurveyPlayer.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return WellnessSurveyPlayer(
+      id: serializer.fromJson<String>(json['id']),
+      createdAt: serializer.fromJson<String>(json['createdAt']),
+      updatedAt: serializer.fromJson<String>(json['updatedAt']),
+      serverUpdatedAt: serializer.fromJson<String?>(json['serverUpdatedAt']),
+      deleted: serializer.fromJson<bool>(json['deleted']),
+      isDirty: serializer.fromJson<bool>(json['isDirty']),
+      teamId: serializer.fromJson<String>(json['teamId']),
+      surveyId: serializer.fromJson<String>(json['surveyId']),
+      playerId: serializer.fromJson<String>(json['playerId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'createdAt': serializer.toJson<String>(createdAt),
+      'updatedAt': serializer.toJson<String>(updatedAt),
+      'serverUpdatedAt': serializer.toJson<String?>(serverUpdatedAt),
+      'deleted': serializer.toJson<bool>(deleted),
+      'isDirty': serializer.toJson<bool>(isDirty),
+      'teamId': serializer.toJson<String>(teamId),
+      'surveyId': serializer.toJson<String>(surveyId),
+      'playerId': serializer.toJson<String>(playerId),
+    };
+  }
+
+  WellnessSurveyPlayer copyWith({
+    String? id,
+    String? createdAt,
+    String? updatedAt,
+    Value<String?> serverUpdatedAt = const Value.absent(),
+    bool? deleted,
+    bool? isDirty,
+    String? teamId,
+    String? surveyId,
+    String? playerId,
+  }) => WellnessSurveyPlayer(
+    id: id ?? this.id,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    serverUpdatedAt: serverUpdatedAt.present
+        ? serverUpdatedAt.value
+        : this.serverUpdatedAt,
+    deleted: deleted ?? this.deleted,
+    isDirty: isDirty ?? this.isDirty,
+    teamId: teamId ?? this.teamId,
+    surveyId: surveyId ?? this.surveyId,
+    playerId: playerId ?? this.playerId,
+  );
+  WellnessSurveyPlayer copyWithCompanion(WellnessSurveyPlayersCompanion data) {
+    return WellnessSurveyPlayer(
+      id: data.id.present ? data.id.value : this.id,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      serverUpdatedAt: data.serverUpdatedAt.present
+          ? data.serverUpdatedAt.value
+          : this.serverUpdatedAt,
+      deleted: data.deleted.present ? data.deleted.value : this.deleted,
+      isDirty: data.isDirty.present ? data.isDirty.value : this.isDirty,
+      teamId: data.teamId.present ? data.teamId.value : this.teamId,
+      surveyId: data.surveyId.present ? data.surveyId.value : this.surveyId,
+      playerId: data.playerId.present ? data.playerId.value : this.playerId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WellnessSurveyPlayer(')
+          ..write('id: $id, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('serverUpdatedAt: $serverUpdatedAt, ')
+          ..write('deleted: $deleted, ')
+          ..write('isDirty: $isDirty, ')
+          ..write('teamId: $teamId, ')
+          ..write('surveyId: $surveyId, ')
+          ..write('playerId: $playerId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    createdAt,
+    updatedAt,
+    serverUpdatedAt,
+    deleted,
+    isDirty,
+    teamId,
+    surveyId,
+    playerId,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is WellnessSurveyPlayer &&
+          other.id == this.id &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.serverUpdatedAt == this.serverUpdatedAt &&
+          other.deleted == this.deleted &&
+          other.isDirty == this.isDirty &&
+          other.teamId == this.teamId &&
+          other.surveyId == this.surveyId &&
+          other.playerId == this.playerId);
+}
+
+class WellnessSurveyPlayersCompanion
+    extends UpdateCompanion<WellnessSurveyPlayer> {
+  final Value<String> id;
+  final Value<String> createdAt;
+  final Value<String> updatedAt;
+  final Value<String?> serverUpdatedAt;
+  final Value<bool> deleted;
+  final Value<bool> isDirty;
+  final Value<String> teamId;
+  final Value<String> surveyId;
+  final Value<String> playerId;
+  final Value<int> rowid;
+  const WellnessSurveyPlayersCompanion({
+    this.id = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.serverUpdatedAt = const Value.absent(),
+    this.deleted = const Value.absent(),
+    this.isDirty = const Value.absent(),
+    this.teamId = const Value.absent(),
+    this.surveyId = const Value.absent(),
+    this.playerId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  WellnessSurveyPlayersCompanion.insert({
+    required String id,
+    required String createdAt,
+    required String updatedAt,
+    this.serverUpdatedAt = const Value.absent(),
+    this.deleted = const Value.absent(),
+    this.isDirty = const Value.absent(),
+    required String teamId,
+    required String surveyId,
+    required String playerId,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt),
+       teamId = Value(teamId),
+       surveyId = Value(surveyId),
+       playerId = Value(playerId);
+  static Insertable<WellnessSurveyPlayer> custom({
+    Expression<String>? id,
+    Expression<String>? createdAt,
+    Expression<String>? updatedAt,
+    Expression<String>? serverUpdatedAt,
+    Expression<bool>? deleted,
+    Expression<bool>? isDirty,
+    Expression<String>? teamId,
+    Expression<String>? surveyId,
+    Expression<String>? playerId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (serverUpdatedAt != null) 'server_updated_at': serverUpdatedAt,
+      if (deleted != null) 'deleted': deleted,
+      if (isDirty != null) 'is_dirty': isDirty,
+      if (teamId != null) 'team_id': teamId,
+      if (surveyId != null) 'survey_id': surveyId,
+      if (playerId != null) 'player_id': playerId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  WellnessSurveyPlayersCompanion copyWith({
+    Value<String>? id,
+    Value<String>? createdAt,
+    Value<String>? updatedAt,
+    Value<String?>? serverUpdatedAt,
+    Value<bool>? deleted,
+    Value<bool>? isDirty,
+    Value<String>? teamId,
+    Value<String>? surveyId,
+    Value<String>? playerId,
+    Value<int>? rowid,
+  }) {
+    return WellnessSurveyPlayersCompanion(
+      id: id ?? this.id,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      serverUpdatedAt: serverUpdatedAt ?? this.serverUpdatedAt,
+      deleted: deleted ?? this.deleted,
+      isDirty: isDirty ?? this.isDirty,
+      teamId: teamId ?? this.teamId,
+      surveyId: surveyId ?? this.surveyId,
+      playerId: playerId ?? this.playerId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<String>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<String>(updatedAt.value);
+    }
+    if (serverUpdatedAt.present) {
+      map['server_updated_at'] = Variable<String>(serverUpdatedAt.value);
+    }
+    if (deleted.present) {
+      map['deleted'] = Variable<bool>(deleted.value);
+    }
+    if (isDirty.present) {
+      map['is_dirty'] = Variable<bool>(isDirty.value);
+    }
+    if (teamId.present) {
+      map['team_id'] = Variable<String>(teamId.value);
+    }
+    if (surveyId.present) {
+      map['survey_id'] = Variable<String>(surveyId.value);
+    }
+    if (playerId.present) {
+      map['player_id'] = Variable<String>(playerId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WellnessSurveyPlayersCompanion(')
+          ..write('id: $id, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('serverUpdatedAt: $serverUpdatedAt, ')
+          ..write('deleted: $deleted, ')
+          ..write('isDirty: $isDirty, ')
+          ..write('teamId: $teamId, ')
+          ..write('surveyId: $surveyId, ')
+          ..write('playerId: $playerId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $SyncStateTable extends SyncState
     with TableInfo<$SyncStateTable, SyncStateData> {
   @override
@@ -14774,6 +17549,17 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $PlayerMedicalTable playerMedical = $PlayerMedicalTable(this);
   late final $TacticsTable tactics = $TacticsTable(this);
   late final $TacticLinksTable tacticLinks = $TacticLinksTable(this);
+  late final $SessionExercisesTable sessionExercises = $SessionExercisesTable(
+    this,
+  );
+  late final $SessionCommentsTable sessionComments = $SessionCommentsTable(
+    this,
+  );
+  late final $WellnessSurveysTable wellnessSurveys = $WellnessSurveysTable(
+    this,
+  );
+  late final $WellnessSurveyPlayersTable wellnessSurveyPlayers =
+      $WellnessSurveyPlayersTable(this);
   late final $SyncStateTable syncState = $SyncStateTable(this);
   late final $LocalSettingsTable localSettings = $LocalSettingsTable(this);
   @override
@@ -14797,6 +17583,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     playerMedical,
     tactics,
     tacticLinks,
+    sessionExercises,
+    sessionComments,
+    wellnessSurveys,
+    wellnessSurveyPlayers,
     syncState,
     localSettings,
   ];
@@ -16662,7 +19452,8 @@ typedef $$WellnessTableCreateCompanionBuilder = WellnessCompanion Function({
   Value<bool> deleted,
   Value<bool> isDirty,
   required String teamId,
-  required String sessionId,
+  Value<String?> sessionId,
+  Value<String?> surveyId,
   required String playerId,
   required double sleepHours,
   required int sleepQuality,
@@ -16681,7 +19472,8 @@ typedef $$WellnessTableUpdateCompanionBuilder = WellnessCompanion Function({
   Value<bool> deleted,
   Value<bool> isDirty,
   Value<String> teamId,
-  Value<String> sessionId,
+  Value<String?> sessionId,
+  Value<String?> surveyId,
   Value<String> playerId,
   Value<double> sleepHours,
   Value<int> sleepQuality,
@@ -16739,6 +19531,11 @@ class $$WellnessTableFilterComposer
 
   ColumnFilters<String> get sessionId => $composableBuilder(
     column: $table.sessionId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get surveyId => $composableBuilder(
+    column: $table.surveyId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -16832,6 +19629,11 @@ class $$WellnessTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get surveyId => $composableBuilder(
+    column: $table.surveyId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get playerId => $composableBuilder(
     column: $table.playerId,
     builder: (column) => ColumnOrderings(column),
@@ -16908,6 +19710,9 @@ class $$WellnessTableAnnotationComposer
   GeneratedColumn<String> get sessionId =>
       $composableBuilder(column: $table.sessionId, builder: (column) => column);
 
+  GeneratedColumn<String> get surveyId =>
+      $composableBuilder(column: $table.surveyId, builder: (column) => column);
+
   GeneratedColumn<String> get playerId =>
       $composableBuilder(column: $table.playerId, builder: (column) => column);
 
@@ -16975,7 +19780,8 @@ class $$WellnessTableTableManager
                 Value<bool> deleted = const Value.absent(),
                 Value<bool> isDirty = const Value.absent(),
                 Value<String> teamId = const Value.absent(),
-                Value<String> sessionId = const Value.absent(),
+                Value<String?> sessionId = const Value.absent(),
+                Value<String?> surveyId = const Value.absent(),
                 Value<String> playerId = const Value.absent(),
                 Value<double> sleepHours = const Value.absent(),
                 Value<int> sleepQuality = const Value.absent(),
@@ -16994,6 +19800,7 @@ class $$WellnessTableTableManager
                 isDirty: isDirty,
                 teamId: teamId,
                 sessionId: sessionId,
+                surveyId: surveyId,
                 playerId: playerId,
                 sleepHours: sleepHours,
                 sleepQuality: sleepQuality,
@@ -17013,7 +19820,8 @@ class $$WellnessTableTableManager
                 Value<bool> deleted = const Value.absent(),
                 Value<bool> isDirty = const Value.absent(),
                 required String teamId,
-                required String sessionId,
+                Value<String?> sessionId = const Value.absent(),
+                Value<String?> surveyId = const Value.absent(),
                 required String playerId,
                 required double sleepHours,
                 required int sleepQuality,
@@ -17032,6 +19840,7 @@ class $$WellnessTableTableManager
                 isDirty: isDirty,
                 teamId: teamId,
                 sessionId: sessionId,
+                surveyId: surveyId,
                 playerId: playerId,
                 sleepHours: sleepHours,
                 sleepQuality: sleepQuality,
@@ -17097,6 +19906,7 @@ typedef $$MatchesTableCreateCompanionBuilder = MatchesCompanion Function({
   Value<String?> phase,
   Value<int?> matchday,
   Value<String?> forfeitBy,
+  Value<String?> formation,
   Value<int> rowid,
 });
 typedef $$MatchesTableUpdateCompanionBuilder = MatchesCompanion Function({
@@ -17120,6 +19930,7 @@ typedef $$MatchesTableUpdateCompanionBuilder = MatchesCompanion Function({
   Value<String?> phase,
   Value<int?> matchday,
   Value<String?> forfeitBy,
+  Value<String?> formation,
   Value<int> rowid,
 });
 
@@ -17229,6 +20040,11 @@ class $$MatchesTableFilterComposer
 
   ColumnFilters<String> get forfeitBy => $composableBuilder(
     column: $table.forfeitBy,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get formation => $composableBuilder(
+    column: $table.formation,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -17341,6 +20157,11 @@ class $$MatchesTableOrderingComposer
     column: $table.forfeitBy,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get formation => $composableBuilder(
+    column: $table.formation,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$MatchesTableAnnotationComposer
@@ -17421,6 +20242,9 @@ class $$MatchesTableAnnotationComposer
 
   GeneratedColumn<String> get forfeitBy =>
       $composableBuilder(column: $table.forfeitBy, builder: (column) => column);
+
+  GeneratedColumn<String> get formation =>
+      $composableBuilder(column: $table.formation, builder: (column) => column);
 }
 
 class $$MatchesTableTableManager
@@ -17474,6 +20298,7 @@ class $$MatchesTableTableManager
                 Value<String?> phase = const Value.absent(),
                 Value<int?> matchday = const Value.absent(),
                 Value<String?> forfeitBy = const Value.absent(),
+                Value<String?> formation = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => MatchesCompanion(
                 id: id,
@@ -17496,6 +20321,7 @@ class $$MatchesTableTableManager
                 phase: phase,
                 matchday: matchday,
                 forfeitBy: forfeitBy,
+                formation: formation,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -17520,6 +20346,7 @@ class $$MatchesTableTableManager
                 Value<String?> phase = const Value.absent(),
                 Value<int?> matchday = const Value.absent(),
                 Value<String?> forfeitBy = const Value.absent(),
+                Value<String?> formation = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => MatchesCompanion.insert(
                 id: id,
@@ -17542,6 +20369,7 @@ class $$MatchesTableTableManager
                 phase: phase,
                 matchday: matchday,
                 forfeitBy: forfeitBy,
+                formation: formation,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -17595,6 +20423,7 @@ typedef $$MatchPlayersTableCreateCompanionBuilder =
       Value<int?> minutesPlayed,
       Value<int?> rpe,
       Value<String?> remark,
+      Value<int?> slot,
       Value<int> rowid,
     });
 typedef $$MatchPlayersTableUpdateCompanionBuilder =
@@ -17614,6 +20443,7 @@ typedef $$MatchPlayersTableUpdateCompanionBuilder =
       Value<int?> minutesPlayed,
       Value<int?> rpe,
       Value<String?> remark,
+      Value<int?> slot,
       Value<int> rowid,
     });
 
@@ -17698,6 +20528,11 @@ class $$MatchPlayersTableFilterComposer
 
   ColumnFilters<String> get remark => $composableBuilder(
     column: $table.remark,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get slot => $composableBuilder(
+    column: $table.slot,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -17785,6 +20620,11 @@ class $$MatchPlayersTableOrderingComposer
     column: $table.remark,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<int> get slot => $composableBuilder(
+    column: $table.slot,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$MatchPlayersTableAnnotationComposer
@@ -17846,6 +20686,9 @@ class $$MatchPlayersTableAnnotationComposer
 
   GeneratedColumn<String> get remark =>
       $composableBuilder(column: $table.remark, builder: (column) => column);
+
+  GeneratedColumn<int> get slot =>
+      $composableBuilder(column: $table.slot, builder: (column) => column);
 }
 
 class $$MatchPlayersTableTableManager
@@ -17894,6 +20737,7 @@ class $$MatchPlayersTableTableManager
                 Value<int?> minutesPlayed = const Value.absent(),
                 Value<int?> rpe = const Value.absent(),
                 Value<String?> remark = const Value.absent(),
+                Value<int?> slot = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => MatchPlayersCompanion(
                 id: id,
@@ -17911,6 +20755,7 @@ class $$MatchPlayersTableTableManager
                 minutesPlayed: minutesPlayed,
                 rpe: rpe,
                 remark: remark,
+                slot: slot,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -17930,6 +20775,7 @@ class $$MatchPlayersTableTableManager
                 Value<int?> minutesPlayed = const Value.absent(),
                 Value<int?> rpe = const Value.absent(),
                 Value<String?> remark = const Value.absent(),
+                Value<int?> slot = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => MatchPlayersCompanion.insert(
                 id: id,
@@ -17947,6 +20793,7 @@ class $$MatchPlayersTableTableManager
                 minutesPlayed: minutesPlayed,
                 rpe: rpe,
                 remark: remark,
+                slot: slot,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -21411,6 +24258,1333 @@ typedef $$TacticLinksTableProcessedTableManager =
       TacticLink,
       PrefetchHooks Function()
     >;
+typedef $$SessionExercisesTableCreateCompanionBuilder =
+    SessionExercisesCompanion Function({
+      required String id,
+      required String createdAt,
+      required String updatedAt,
+      Value<String?> serverUpdatedAt,
+      Value<bool> deleted,
+      Value<bool> isDirty,
+      required String teamId,
+      required String sessionId,
+      Value<int> sortOrder,
+      required String name,
+      Value<String?> description,
+      Value<int?> durationMin,
+      Value<String?> tacticId,
+      Value<int> rowid,
+    });
+typedef $$SessionExercisesTableUpdateCompanionBuilder =
+    SessionExercisesCompanion Function({
+      Value<String> id,
+      Value<String> createdAt,
+      Value<String> updatedAt,
+      Value<String?> serverUpdatedAt,
+      Value<bool> deleted,
+      Value<bool> isDirty,
+      Value<String> teamId,
+      Value<String> sessionId,
+      Value<int> sortOrder,
+      Value<String> name,
+      Value<String?> description,
+      Value<int?> durationMin,
+      Value<String?> tacticId,
+      Value<int> rowid,
+    });
+
+class $$SessionExercisesTableFilterComposer
+    extends Composer<_$AppDatabase, $SessionExercisesTable> {
+  $$SessionExercisesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get serverUpdatedAt => $composableBuilder(
+    column: $table.serverUpdatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get deleted => $composableBuilder(
+    column: $table.deleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDirty => $composableBuilder(
+    column: $table.isDirty,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get teamId => $composableBuilder(
+    column: $table.teamId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sessionId => $composableBuilder(
+    column: $table.sessionId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get durationMin => $composableBuilder(
+    column: $table.durationMin,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tacticId => $composableBuilder(
+    column: $table.tacticId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$SessionExercisesTableOrderingComposer
+    extends Composer<_$AppDatabase, $SessionExercisesTable> {
+  $$SessionExercisesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get serverUpdatedAt => $composableBuilder(
+    column: $table.serverUpdatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get deleted => $composableBuilder(
+    column: $table.deleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDirty => $composableBuilder(
+    column: $table.isDirty,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get teamId => $composableBuilder(
+    column: $table.teamId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sessionId => $composableBuilder(
+    column: $table.sessionId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get durationMin => $composableBuilder(
+    column: $table.durationMin,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get tacticId => $composableBuilder(
+    column: $table.tacticId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$SessionExercisesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SessionExercisesTable> {
+  $$SessionExercisesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get serverUpdatedAt => $composableBuilder(
+    column: $table.serverUpdatedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get deleted =>
+      $composableBuilder(column: $table.deleted, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDirty =>
+      $composableBuilder(column: $table.isDirty, builder: (column) => column);
+
+  GeneratedColumn<String> get teamId =>
+      $composableBuilder(column: $table.teamId, builder: (column) => column);
+
+  GeneratedColumn<String> get sessionId =>
+      $composableBuilder(column: $table.sessionId, builder: (column) => column);
+
+  GeneratedColumn<int> get sortOrder =>
+      $composableBuilder(column: $table.sortOrder, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get durationMin => $composableBuilder(
+    column: $table.durationMin,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get tacticId =>
+      $composableBuilder(column: $table.tacticId, builder: (column) => column);
+}
+
+class $$SessionExercisesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SessionExercisesTable,
+          SessionExercise,
+          $$SessionExercisesTableFilterComposer,
+          $$SessionExercisesTableOrderingComposer,
+          $$SessionExercisesTableAnnotationComposer,
+          $$SessionExercisesTableCreateCompanionBuilder,
+          $$SessionExercisesTableUpdateCompanionBuilder,
+          (
+            SessionExercise,
+            BaseReferences<
+              _$AppDatabase,
+              $SessionExercisesTable,
+              SessionExercise
+            >,
+          ),
+          SessionExercise,
+          PrefetchHooks Function()
+        > {
+  $$SessionExercisesTableTableManager(
+    _$AppDatabase db,
+    $SessionExercisesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SessionExercisesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SessionExercisesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SessionExercisesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> createdAt = const Value.absent(),
+                Value<String> updatedAt = const Value.absent(),
+                Value<String?> serverUpdatedAt = const Value.absent(),
+                Value<bool> deleted = const Value.absent(),
+                Value<bool> isDirty = const Value.absent(),
+                Value<String> teamId = const Value.absent(),
+                Value<String> sessionId = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String?> description = const Value.absent(),
+                Value<int?> durationMin = const Value.absent(),
+                Value<String?> tacticId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SessionExercisesCompanion(
+                id: id,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                serverUpdatedAt: serverUpdatedAt,
+                deleted: deleted,
+                isDirty: isDirty,
+                teamId: teamId,
+                sessionId: sessionId,
+                sortOrder: sortOrder,
+                name: name,
+                description: description,
+                durationMin: durationMin,
+                tacticId: tacticId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String createdAt,
+                required String updatedAt,
+                Value<String?> serverUpdatedAt = const Value.absent(),
+                Value<bool> deleted = const Value.absent(),
+                Value<bool> isDirty = const Value.absent(),
+                required String teamId,
+                required String sessionId,
+                Value<int> sortOrder = const Value.absent(),
+                required String name,
+                Value<String?> description = const Value.absent(),
+                Value<int?> durationMin = const Value.absent(),
+                Value<String?> tacticId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SessionExercisesCompanion.insert(
+                id: id,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                serverUpdatedAt: serverUpdatedAt,
+                deleted: deleted,
+                isDirty: isDirty,
+                teamId: teamId,
+                sessionId: sessionId,
+                sortOrder: sortOrder,
+                name: name,
+                description: description,
+                durationMin: durationMin,
+                tacticId: tacticId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$SessionExercisesTable, SessionExercise>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $SessionExercisesTable,
+                    SessionExercise
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$SessionExercisesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SessionExercisesTable,
+      SessionExercise,
+      $$SessionExercisesTableFilterComposer,
+      $$SessionExercisesTableOrderingComposer,
+      $$SessionExercisesTableAnnotationComposer,
+      $$SessionExercisesTableCreateCompanionBuilder,
+      $$SessionExercisesTableUpdateCompanionBuilder,
+      (
+        SessionExercise,
+        BaseReferences<_$AppDatabase, $SessionExercisesTable, SessionExercise>,
+      ),
+      SessionExercise,
+      PrefetchHooks Function()
+    >;
+typedef $$SessionCommentsTableCreateCompanionBuilder =
+    SessionCommentsCompanion Function({
+      required String id,
+      required String createdAt,
+      required String updatedAt,
+      Value<String?> serverUpdatedAt,
+      Value<bool> deleted,
+      Value<bool> isDirty,
+      required String teamId,
+      required String sessionId,
+      required String authorId,
+      required String authorName,
+      required String text_,
+      Value<int> rowid,
+    });
+typedef $$SessionCommentsTableUpdateCompanionBuilder =
+    SessionCommentsCompanion Function({
+      Value<String> id,
+      Value<String> createdAt,
+      Value<String> updatedAt,
+      Value<String?> serverUpdatedAt,
+      Value<bool> deleted,
+      Value<bool> isDirty,
+      Value<String> teamId,
+      Value<String> sessionId,
+      Value<String> authorId,
+      Value<String> authorName,
+      Value<String> text_,
+      Value<int> rowid,
+    });
+
+class $$SessionCommentsTableFilterComposer
+    extends Composer<_$AppDatabase, $SessionCommentsTable> {
+  $$SessionCommentsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get serverUpdatedAt => $composableBuilder(
+    column: $table.serverUpdatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get deleted => $composableBuilder(
+    column: $table.deleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDirty => $composableBuilder(
+    column: $table.isDirty,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get teamId => $composableBuilder(
+    column: $table.teamId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sessionId => $composableBuilder(
+    column: $table.sessionId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get authorId => $composableBuilder(
+    column: $table.authorId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get authorName => $composableBuilder(
+    column: $table.authorName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get text_ => $composableBuilder(
+    column: $table.text_,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$SessionCommentsTableOrderingComposer
+    extends Composer<_$AppDatabase, $SessionCommentsTable> {
+  $$SessionCommentsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get serverUpdatedAt => $composableBuilder(
+    column: $table.serverUpdatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get deleted => $composableBuilder(
+    column: $table.deleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDirty => $composableBuilder(
+    column: $table.isDirty,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get teamId => $composableBuilder(
+    column: $table.teamId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sessionId => $composableBuilder(
+    column: $table.sessionId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get authorId => $composableBuilder(
+    column: $table.authorId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get authorName => $composableBuilder(
+    column: $table.authorName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get text_ => $composableBuilder(
+    column: $table.text_,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$SessionCommentsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SessionCommentsTable> {
+  $$SessionCommentsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get serverUpdatedAt => $composableBuilder(
+    column: $table.serverUpdatedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get deleted =>
+      $composableBuilder(column: $table.deleted, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDirty =>
+      $composableBuilder(column: $table.isDirty, builder: (column) => column);
+
+  GeneratedColumn<String> get teamId =>
+      $composableBuilder(column: $table.teamId, builder: (column) => column);
+
+  GeneratedColumn<String> get sessionId =>
+      $composableBuilder(column: $table.sessionId, builder: (column) => column);
+
+  GeneratedColumn<String> get authorId =>
+      $composableBuilder(column: $table.authorId, builder: (column) => column);
+
+  GeneratedColumn<String> get authorName => $composableBuilder(
+    column: $table.authorName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get text_ =>
+      $composableBuilder(column: $table.text_, builder: (column) => column);
+}
+
+class $$SessionCommentsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SessionCommentsTable,
+          SessionComment,
+          $$SessionCommentsTableFilterComposer,
+          $$SessionCommentsTableOrderingComposer,
+          $$SessionCommentsTableAnnotationComposer,
+          $$SessionCommentsTableCreateCompanionBuilder,
+          $$SessionCommentsTableUpdateCompanionBuilder,
+          (
+            SessionComment,
+            BaseReferences<
+              _$AppDatabase,
+              $SessionCommentsTable,
+              SessionComment
+            >,
+          ),
+          SessionComment,
+          PrefetchHooks Function()
+        > {
+  $$SessionCommentsTableTableManager(
+    _$AppDatabase db,
+    $SessionCommentsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SessionCommentsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SessionCommentsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SessionCommentsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> createdAt = const Value.absent(),
+                Value<String> updatedAt = const Value.absent(),
+                Value<String?> serverUpdatedAt = const Value.absent(),
+                Value<bool> deleted = const Value.absent(),
+                Value<bool> isDirty = const Value.absent(),
+                Value<String> teamId = const Value.absent(),
+                Value<String> sessionId = const Value.absent(),
+                Value<String> authorId = const Value.absent(),
+                Value<String> authorName = const Value.absent(),
+                Value<String> text_ = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SessionCommentsCompanion(
+                id: id,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                serverUpdatedAt: serverUpdatedAt,
+                deleted: deleted,
+                isDirty: isDirty,
+                teamId: teamId,
+                sessionId: sessionId,
+                authorId: authorId,
+                authorName: authorName,
+                text_: text_,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String createdAt,
+                required String updatedAt,
+                Value<String?> serverUpdatedAt = const Value.absent(),
+                Value<bool> deleted = const Value.absent(),
+                Value<bool> isDirty = const Value.absent(),
+                required String teamId,
+                required String sessionId,
+                required String authorId,
+                required String authorName,
+                required String text_,
+                Value<int> rowid = const Value.absent(),
+              }) => SessionCommentsCompanion.insert(
+                id: id,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                serverUpdatedAt: serverUpdatedAt,
+                deleted: deleted,
+                isDirty: isDirty,
+                teamId: teamId,
+                sessionId: sessionId,
+                authorId: authorId,
+                authorName: authorName,
+                text_: text_,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$SessionCommentsTable, SessionComment>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $SessionCommentsTable,
+                    SessionComment
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$SessionCommentsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SessionCommentsTable,
+      SessionComment,
+      $$SessionCommentsTableFilterComposer,
+      $$SessionCommentsTableOrderingComposer,
+      $$SessionCommentsTableAnnotationComposer,
+      $$SessionCommentsTableCreateCompanionBuilder,
+      $$SessionCommentsTableUpdateCompanionBuilder,
+      (
+        SessionComment,
+        BaseReferences<_$AppDatabase, $SessionCommentsTable, SessionComment>,
+      ),
+      SessionComment,
+      PrefetchHooks Function()
+    >;
+typedef $$WellnessSurveysTableCreateCompanionBuilder =
+    WellnessSurveysCompanion Function({
+      required String id,
+      required String createdAt,
+      required String updatedAt,
+      Value<String?> serverUpdatedAt,
+      Value<bool> deleted,
+      Value<bool> isDirty,
+      required String teamId,
+      required String date,
+      Value<String?> title,
+      Value<String?> sessionId,
+      Value<int> rowid,
+    });
+typedef $$WellnessSurveysTableUpdateCompanionBuilder =
+    WellnessSurveysCompanion Function({
+      Value<String> id,
+      Value<String> createdAt,
+      Value<String> updatedAt,
+      Value<String?> serverUpdatedAt,
+      Value<bool> deleted,
+      Value<bool> isDirty,
+      Value<String> teamId,
+      Value<String> date,
+      Value<String?> title,
+      Value<String?> sessionId,
+      Value<int> rowid,
+    });
+
+class $$WellnessSurveysTableFilterComposer
+    extends Composer<_$AppDatabase, $WellnessSurveysTable> {
+  $$WellnessSurveysTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get serverUpdatedAt => $composableBuilder(
+    column: $table.serverUpdatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get deleted => $composableBuilder(
+    column: $table.deleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDirty => $composableBuilder(
+    column: $table.isDirty,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get teamId => $composableBuilder(
+    column: $table.teamId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get date => $composableBuilder(
+    column: $table.date,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sessionId => $composableBuilder(
+    column: $table.sessionId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$WellnessSurveysTableOrderingComposer
+    extends Composer<_$AppDatabase, $WellnessSurveysTable> {
+  $$WellnessSurveysTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get serverUpdatedAt => $composableBuilder(
+    column: $table.serverUpdatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get deleted => $composableBuilder(
+    column: $table.deleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDirty => $composableBuilder(
+    column: $table.isDirty,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get teamId => $composableBuilder(
+    column: $table.teamId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get date => $composableBuilder(
+    column: $table.date,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sessionId => $composableBuilder(
+    column: $table.sessionId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$WellnessSurveysTableAnnotationComposer
+    extends Composer<_$AppDatabase, $WellnessSurveysTable> {
+  $$WellnessSurveysTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get serverUpdatedAt => $composableBuilder(
+    column: $table.serverUpdatedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get deleted =>
+      $composableBuilder(column: $table.deleted, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDirty =>
+      $composableBuilder(column: $table.isDirty, builder: (column) => column);
+
+  GeneratedColumn<String> get teamId =>
+      $composableBuilder(column: $table.teamId, builder: (column) => column);
+
+  GeneratedColumn<String> get date =>
+      $composableBuilder(column: $table.date, builder: (column) => column);
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get sessionId =>
+      $composableBuilder(column: $table.sessionId, builder: (column) => column);
+}
+
+class $$WellnessSurveysTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $WellnessSurveysTable,
+          WellnessSurvey,
+          $$WellnessSurveysTableFilterComposer,
+          $$WellnessSurveysTableOrderingComposer,
+          $$WellnessSurveysTableAnnotationComposer,
+          $$WellnessSurveysTableCreateCompanionBuilder,
+          $$WellnessSurveysTableUpdateCompanionBuilder,
+          (
+            WellnessSurvey,
+            BaseReferences<
+              _$AppDatabase,
+              $WellnessSurveysTable,
+              WellnessSurvey
+            >,
+          ),
+          WellnessSurvey,
+          PrefetchHooks Function()
+        > {
+  $$WellnessSurveysTableTableManager(
+    _$AppDatabase db,
+    $WellnessSurveysTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$WellnessSurveysTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$WellnessSurveysTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$WellnessSurveysTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> createdAt = const Value.absent(),
+                Value<String> updatedAt = const Value.absent(),
+                Value<String?> serverUpdatedAt = const Value.absent(),
+                Value<bool> deleted = const Value.absent(),
+                Value<bool> isDirty = const Value.absent(),
+                Value<String> teamId = const Value.absent(),
+                Value<String> date = const Value.absent(),
+                Value<String?> title = const Value.absent(),
+                Value<String?> sessionId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => WellnessSurveysCompanion(
+                id: id,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                serverUpdatedAt: serverUpdatedAt,
+                deleted: deleted,
+                isDirty: isDirty,
+                teamId: teamId,
+                date: date,
+                title: title,
+                sessionId: sessionId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String createdAt,
+                required String updatedAt,
+                Value<String?> serverUpdatedAt = const Value.absent(),
+                Value<bool> deleted = const Value.absent(),
+                Value<bool> isDirty = const Value.absent(),
+                required String teamId,
+                required String date,
+                Value<String?> title = const Value.absent(),
+                Value<String?> sessionId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => WellnessSurveysCompanion.insert(
+                id: id,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                serverUpdatedAt: serverUpdatedAt,
+                deleted: deleted,
+                isDirty: isDirty,
+                teamId: teamId,
+                date: date,
+                title: title,
+                sessionId: sessionId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$WellnessSurveysTable, WellnessSurvey>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $WellnessSurveysTable,
+                    WellnessSurvey
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$WellnessSurveysTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $WellnessSurveysTable,
+      WellnessSurvey,
+      $$WellnessSurveysTableFilterComposer,
+      $$WellnessSurveysTableOrderingComposer,
+      $$WellnessSurveysTableAnnotationComposer,
+      $$WellnessSurveysTableCreateCompanionBuilder,
+      $$WellnessSurveysTableUpdateCompanionBuilder,
+      (
+        WellnessSurvey,
+        BaseReferences<_$AppDatabase, $WellnessSurveysTable, WellnessSurvey>,
+      ),
+      WellnessSurvey,
+      PrefetchHooks Function()
+    >;
+typedef $$WellnessSurveyPlayersTableCreateCompanionBuilder =
+    WellnessSurveyPlayersCompanion Function({
+      required String id,
+      required String createdAt,
+      required String updatedAt,
+      Value<String?> serverUpdatedAt,
+      Value<bool> deleted,
+      Value<bool> isDirty,
+      required String teamId,
+      required String surveyId,
+      required String playerId,
+      Value<int> rowid,
+    });
+typedef $$WellnessSurveyPlayersTableUpdateCompanionBuilder =
+    WellnessSurveyPlayersCompanion Function({
+      Value<String> id,
+      Value<String> createdAt,
+      Value<String> updatedAt,
+      Value<String?> serverUpdatedAt,
+      Value<bool> deleted,
+      Value<bool> isDirty,
+      Value<String> teamId,
+      Value<String> surveyId,
+      Value<String> playerId,
+      Value<int> rowid,
+    });
+
+class $$WellnessSurveyPlayersTableFilterComposer
+    extends Composer<_$AppDatabase, $WellnessSurveyPlayersTable> {
+  $$WellnessSurveyPlayersTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get serverUpdatedAt => $composableBuilder(
+    column: $table.serverUpdatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get deleted => $composableBuilder(
+    column: $table.deleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDirty => $composableBuilder(
+    column: $table.isDirty,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get teamId => $composableBuilder(
+    column: $table.teamId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get surveyId => $composableBuilder(
+    column: $table.surveyId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get playerId => $composableBuilder(
+    column: $table.playerId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$WellnessSurveyPlayersTableOrderingComposer
+    extends Composer<_$AppDatabase, $WellnessSurveyPlayersTable> {
+  $$WellnessSurveyPlayersTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get serverUpdatedAt => $composableBuilder(
+    column: $table.serverUpdatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get deleted => $composableBuilder(
+    column: $table.deleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDirty => $composableBuilder(
+    column: $table.isDirty,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get teamId => $composableBuilder(
+    column: $table.teamId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get surveyId => $composableBuilder(
+    column: $table.surveyId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get playerId => $composableBuilder(
+    column: $table.playerId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$WellnessSurveyPlayersTableAnnotationComposer
+    extends Composer<_$AppDatabase, $WellnessSurveyPlayersTable> {
+  $$WellnessSurveyPlayersTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get serverUpdatedAt => $composableBuilder(
+    column: $table.serverUpdatedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get deleted =>
+      $composableBuilder(column: $table.deleted, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDirty =>
+      $composableBuilder(column: $table.isDirty, builder: (column) => column);
+
+  GeneratedColumn<String> get teamId =>
+      $composableBuilder(column: $table.teamId, builder: (column) => column);
+
+  GeneratedColumn<String> get surveyId =>
+      $composableBuilder(column: $table.surveyId, builder: (column) => column);
+
+  GeneratedColumn<String> get playerId =>
+      $composableBuilder(column: $table.playerId, builder: (column) => column);
+}
+
+class $$WellnessSurveyPlayersTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $WellnessSurveyPlayersTable,
+          WellnessSurveyPlayer,
+          $$WellnessSurveyPlayersTableFilterComposer,
+          $$WellnessSurveyPlayersTableOrderingComposer,
+          $$WellnessSurveyPlayersTableAnnotationComposer,
+          $$WellnessSurveyPlayersTableCreateCompanionBuilder,
+          $$WellnessSurveyPlayersTableUpdateCompanionBuilder,
+          (
+            WellnessSurveyPlayer,
+            BaseReferences<
+              _$AppDatabase,
+              $WellnessSurveyPlayersTable,
+              WellnessSurveyPlayer
+            >,
+          ),
+          WellnessSurveyPlayer,
+          PrefetchHooks Function()
+        > {
+  $$WellnessSurveyPlayersTableTableManager(
+    _$AppDatabase db,
+    $WellnessSurveyPlayersTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$WellnessSurveyPlayersTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$WellnessSurveyPlayersTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$WellnessSurveyPlayersTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> createdAt = const Value.absent(),
+                Value<String> updatedAt = const Value.absent(),
+                Value<String?> serverUpdatedAt = const Value.absent(),
+                Value<bool> deleted = const Value.absent(),
+                Value<bool> isDirty = const Value.absent(),
+                Value<String> teamId = const Value.absent(),
+                Value<String> surveyId = const Value.absent(),
+                Value<String> playerId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => WellnessSurveyPlayersCompanion(
+                id: id,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                serverUpdatedAt: serverUpdatedAt,
+                deleted: deleted,
+                isDirty: isDirty,
+                teamId: teamId,
+                surveyId: surveyId,
+                playerId: playerId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String createdAt,
+                required String updatedAt,
+                Value<String?> serverUpdatedAt = const Value.absent(),
+                Value<bool> deleted = const Value.absent(),
+                Value<bool> isDirty = const Value.absent(),
+                required String teamId,
+                required String surveyId,
+                required String playerId,
+                Value<int> rowid = const Value.absent(),
+              }) => WellnessSurveyPlayersCompanion.insert(
+                id: id,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                serverUpdatedAt: serverUpdatedAt,
+                deleted: deleted,
+                isDirty: isDirty,
+                teamId: teamId,
+                surveyId: surveyId,
+                playerId: playerId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<
+                    $WellnessSurveyPlayersTable,
+                    WellnessSurveyPlayer
+                  >(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $WellnessSurveyPlayersTable,
+                    WellnessSurveyPlayer
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$WellnessSurveyPlayersTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $WellnessSurveyPlayersTable,
+      WellnessSurveyPlayer,
+      $$WellnessSurveyPlayersTableFilterComposer,
+      $$WellnessSurveyPlayersTableOrderingComposer,
+      $$WellnessSurveyPlayersTableAnnotationComposer,
+      $$WellnessSurveyPlayersTableCreateCompanionBuilder,
+      $$WellnessSurveyPlayersTableUpdateCompanionBuilder,
+      (
+        WellnessSurveyPlayer,
+        BaseReferences<
+          _$AppDatabase,
+          $WellnessSurveyPlayersTable,
+          WellnessSurveyPlayer
+        >,
+      ),
+      WellnessSurveyPlayer,
+      PrefetchHooks Function()
+    >;
 typedef $$SyncStateTableCreateCompanionBuilder = SyncStateCompanion Function({
   required String tableName_,
   required String cursor,
@@ -21746,6 +25920,14 @@ class $AppDatabaseManager {
       $$TacticsTableTableManager(_db, _db.tactics);
   $$TacticLinksTableTableManager get tacticLinks =>
       $$TacticLinksTableTableManager(_db, _db.tacticLinks);
+  $$SessionExercisesTableTableManager get sessionExercises =>
+      $$SessionExercisesTableTableManager(_db, _db.sessionExercises);
+  $$SessionCommentsTableTableManager get sessionComments =>
+      $$SessionCommentsTableTableManager(_db, _db.sessionComments);
+  $$WellnessSurveysTableTableManager get wellnessSurveys =>
+      $$WellnessSurveysTableTableManager(_db, _db.wellnessSurveys);
+  $$WellnessSurveyPlayersTableTableManager get wellnessSurveyPlayers =>
+      $$WellnessSurveyPlayersTableTableManager(_db, _db.wellnessSurveyPlayers);
   $$SyncStateTableTableManager get syncState =>
       $$SyncStateTableTableManager(_db, _db.syncState);
   $$LocalSettingsTableTableManager get localSettings =>

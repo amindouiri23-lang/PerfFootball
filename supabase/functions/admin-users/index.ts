@@ -7,6 +7,8 @@
 //        permissions : { "matchs.delete": false, ... } — écarts du compte par rapport à son rôle
 //                                                                             -> { id, temporary_password }
 // POST { action: "set_role", user_id, role, player_id? }                      -> rôle du compte
+// POST { action: "create_player_accounts", team_id }                           -> un compte par joueur de
+//        l'équipe qui n'en a pas : [{ player_id, first_name, last_name, email, temporary_password }]
 // POST { action: "set_teams", user_id, team_ids }                             -> équipes où il est « staff »
 // POST { action: "reset_password", user_id }                                  -> { temporary_password }
 // POST { action: "disable" | "enable", user_id }
@@ -147,6 +149,47 @@ async function setRole(userId: string, body: Record<string, unknown>) {
   return { ok: true };
 }
 
+// Identifiant d'un compte joueur : prenom.nom@joueurs.perffoot.tn (sans accents), numéroté si déjà pris.
+function playerEmail(first: string, last: string, taken: Set<string>): string {
+  const slug = (s: string) => s.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
+    .replace(/[^a-z0-9]+/g, ".").replace(/^\.+|\.+$/g, "");
+  const base = [slug(first), slug(last)].filter((x) => x).join(".") || "joueur";
+  let email = `${base}@joueurs.perffoot.tn`;
+  for (let n = 2; taken.has(email); n++) email = `${base}${n}@joueurs.perffoot.tn`;
+  taken.add(email);
+  return email;
+}
+
+// Un compte joueur pour chaque joueur de l'équipe qui n'en a pas encore. Mot de passe temporaire à changer
+// à la première connexion ; renvoyé une seule fois (fiche des identifiants).
+async function createPlayerAccounts(teamId: unknown) {
+  if (typeof teamId !== "string") throw new HttpError(400, "team_id manquant.");
+  const { data: players, error } = await admin.from("players").select("id, team_id, first_name, last_name")
+    .eq("team_id", teamId).eq("deleted", false).order("last_name");
+  if (error) throw error;
+  const { data: users, error: uErr } = await admin.auth.admin.listUsers({ perPage: 1000 });
+  if (uErr) throw uErr;
+  const linked = new Set(users.users.map((u) => u.app_metadata?.player_id).filter((x) => x));
+  const taken = new Set(users.users.map((u) => (u.email ?? "").toLowerCase()));
+  const created = [];
+  for (const p of players.filter((x) => !linked.has(x.id))) {
+    const email = playerEmail(p.first_name, p.last_name, taken);
+    const password = temporaryPassword();
+    const { data, error: cErr } = await admin.auth.admin.createUser({
+      email, password, email_confirm: true,
+      app_metadata: { role: "player", player_id: p.id },
+      user_metadata: { must_change_password: true },
+    });
+    if (cErr) throw cErr;
+    const { error: pErr } = await admin.from("staff_profiles")
+      .insert({ id: data.user.id, first_name: p.first_name, last_name: p.last_name });
+    if (pErr) throw pErr;
+    await setPlayerTeam(data.user.id, p.team_id);
+    created.push({ player_id: p.id, first_name: p.first_name, last_name: p.last_name, email, temporary_password: password });
+  }
+  return created;
+}
+
 async function listPlayers() {
   const { data, error } = await admin.from("players").select("id, team_id, first_name, last_name, shirt_number")
     .eq("deleted", false).order("last_name");
@@ -276,6 +319,7 @@ Deno.serve(async (req) => {
       case "create": result = await create(body); break;
       case "list_teams": result = await listTeams(); break;
       case "list_players": result = await listPlayers(); break;
+      case "create_player_accounts": result = await createPlayerAccounts(body.team_id); break;
       case "set_role": result = await setRole(targetId(body, me), body); break;
       case "set_teams": result = await setTeams(targetId(body, me), body.team_ids); break;
       case "reset_password": result = await resetPassword(targetId(body, me)); break;

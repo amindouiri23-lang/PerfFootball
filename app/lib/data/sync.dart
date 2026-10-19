@@ -31,7 +31,10 @@ const _tables = [
   _SyncTable('players'),
   _SyncTable('sessions'),
   _SyncTable('session_players', booleans: {'present'}),
-  _SyncTable('wellness'),
+  _SyncTable('wellness_surveys'),
+  _SyncTable('wellness_survey_players'),
+  _SyncTable('wellness'), // après les questionnaires, qu'elle référence
+  _SyncTable('session_comments'),
   _SyncTable('matches'),
   _SyncTable('match_players', booleans: {'present'}),
   _SyncTable('match_events'),
@@ -42,6 +45,7 @@ const _tables = [
   _SyncTable('player_medical'), // vide pour qui n'est pas propriétaire de l'équipe (RLS)
   _SyncTable('tactics'),
   _SyncTable('tactic_links'), // après tactics, sessions et matches, qu'elle référence
+  _SyncTable('session_exercises'), // après tactics
 ];
 
 /// Synchronisation hors ligne d'abord (docs/01 §6) :

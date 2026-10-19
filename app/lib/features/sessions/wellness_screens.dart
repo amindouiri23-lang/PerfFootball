@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/router.dart';
 import '../../data/database.dart';
 import '../team/team_repository.dart';
+import '../wellness/wellness_repository.dart';
 import 'session_repository.dart';
 
 /// Les cinq questions, notées de 1 à 5 — 5 est toujours le meilleur état (specs §4.3).
@@ -97,9 +98,12 @@ class WellnessListScreen extends ConsumerWidget {
 
 /// E18 — Questionnaire d'un joueur, en plein écran, pensé pour être tendu au joueur.
 class WellnessFormScreen extends ConsumerStatefulWidget {
-  const WellnessFormScreen({super.key, required this.sessionId, required this.playerId, this.single = false});
+  const WellnessFormScreen({super.key, this.sessionId, this.surveyId, required this.playerId, this.single = false})
+      : assert(sessionId != null || surveyId != null);
 
-  final String sessionId;
+  /// Questionnaire d'une séance (ancien parcours) ou questionnaire lancé seul ([surveyId]).
+  final String? sessionId;
+  final String? surveyId;
   final String playerId;
   /// Rempli par le joueur lui-même (espace joueur) : pas de « joueur suivant », retour à l'accueil.
   final bool single;
@@ -127,20 +131,47 @@ class _WellnessFormScreenState extends ConsumerState<WellnessFormScreen> {
   Future<void> _save({required bool next}) async {
     setState(() => _submitted = true);
     if (_answers.length < wellnessQuestions.length) return;
-    final s = ref.read(sessionProvider(widget.sessionId)).value!;
     final remark = _remark.text.trim();
-    await ref.read(sessionRepositoryProvider).saveWellness(
-          s, widget.playerId,
-          sleepHours: _sleep, sleepQuality: _answers['sleep_quality']!, fatigue: _answers['fatigue']!,
-          soreness: _answers['soreness']!, stress: _answers['stress']!, mood: _answers['mood']!,
-          remark: remark.isEmpty ? null : remark,
-        );
+    final surveyId = widget.surveyId;
+    if (surveyId != null) {
+      final survey = ref.read(surveyProvider(surveyId)).value!;
+      await ref.read(wellnessRepositoryProvider).saveAnswer(
+            survey, widget.playerId,
+            sleepHours: _sleep, sleepQuality: _answers['sleep_quality']!, fatigue: _answers['fatigue']!,
+            soreness: _answers['soreness']!, stress: _answers['stress']!, mood: _answers['mood']!,
+            remark: remark.isEmpty ? null : remark,
+          );
+    } else {
+      await ref.read(sessionRepositoryProvider).saveWellness(
+            ref.read(sessionProvider(widget.sessionId!)).value!, widget.playerId,
+            sleepHours: _sleep, sleepQuality: _answers['sleep_quality']!, fatigue: _answers['fatigue']!,
+            soreness: _answers['soreness']!, stress: _answers['stress']!, mood: _answers['mood']!,
+            remark: remark.isEmpty ? null : remark,
+          );
+    }
     if (!mounted) return;
     if (widget.single) {
       showMessage(context, 'Questionnaire enregistré, merci !');
       context.go('/home');
       return;
     }
+    if (surveyId != null) {
+      // Joueur suivant du questionnaire, dans l'ordre de la liste.
+      final done = {for (final w in ref.read(surveyAnswersOfProvider(surveyId)).value ?? const <WellnessEntry>[]) w.playerId};
+      final following = next
+          ? (ref.read(surveyPlayersOfProvider(surveyId)).value ?? const <WellnessSurveyPlayer>[])
+              .where((p) => p.playerId != widget.playerId && !done.contains(p.playerId))
+              .firstOrNull
+          : null;
+      if (following != null) {
+        context.go('/sessions/wellness/$surveyId/${following.playerId}');
+      } else {
+        if (next) showMessage(context, 'Tous les questionnaires sont remplis');
+        context.go('/sessions/wellness/$surveyId');
+      }
+      return;
+    }
+    final s = ref.read(sessionProvider(widget.sessionId!)).value!;
     if (next) {
       final players = {for (final p in ref.read(playersProvider(s.teamId)).value ?? const <Player>[]) p.id: p};
       final done = {for (final w in ref.read(sessionWellnessProvider(s.id)).value ?? const <WellnessEntry>[]) w.playerId};
@@ -164,7 +195,9 @@ class _WellnessFormScreenState extends ConsumerState<WellnessFormScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final existing = ref.watch(sessionWellnessProvider(widget.sessionId));
+    final existing = widget.surveyId != null
+        ? ref.watch(surveyAnswersOfProvider(widget.surveyId!))
+        : ref.watch(sessionWellnessProvider(widget.sessionId!));
     final player = ref.watch(playerProvider(widget.playerId)).value;
     if (!existing.hasValue) return const Scaffold(body: Center(child: CircularProgressIndicator()));
     _load(existing.value!.where((w) => w.playerId == widget.playerId).firstOrNull);

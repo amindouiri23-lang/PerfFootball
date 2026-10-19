@@ -7,6 +7,7 @@ import '../../core/widgets/sync_indicator.dart';
 import '../../data/database.dart';
 import '../tactics/tactic_screens.dart' show LinkedTactics;
 import '../team/team_repository.dart';
+import 'session_prep.dart';
 import 'session_repository.dart';
 import 'sessions_list_screen.dart';
 
@@ -134,7 +135,9 @@ class SessionScreen extends ConsumerWidget {
               ],
             ),
         ],
+        SessionProgram(session: s),
         LinkedTactics(teamId: s.teamId, sessionId: s.id, title: 'Tactiques travaillées', basePath: '/sessions/${s.id}'),
+        SessionCommentsSection(session: s),
       ]),
       bottomNavigationBar: !perms.can(s.status == 'completed' ? 'bienetre.view' : 'seances.appel') ? null : SafeArea(
         child: Padding(
