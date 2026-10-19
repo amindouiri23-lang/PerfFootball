@@ -11,6 +11,7 @@ import '../sessions/sessions_list_screen.dart' show StatusChip;
 import '../team/team_repository.dart';
 import '../team/team_screen.dart';
 import 'match_repository.dart';
+import '../team/team_filter.dart';
 
 /// E20 — Liste des matchs : résumé de la saison, « À venir » puis « Passés ».
 class MatchesListScreen extends ConsumerStatefulWidget {
@@ -45,7 +46,7 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
         );
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Matchs'), actions: const [SyncIndicator()]),
+      appBar: AppBar(title: const Text('Matchs'), actions: const [SyncIndicator()], bottom: teamFilterBar(ref)),
       floatingActionButton: !ref.watch(permsProvider).can('matchs.add') ? null : FloatingActionButton.extended(
         onPressed: () => context.go('/matches/new'),
         icon: const Icon(Icons.add),
