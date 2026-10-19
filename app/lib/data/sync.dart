@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:drift/drift.dart';
@@ -59,6 +60,21 @@ class SyncEngine {
   Future<void> run() async {
     await _push();
     await _pull();
+    await _pullPermissions();
+  }
+
+  /// Matrice du rôle et exceptions du compte, gardées sur l'appareil (core/permissions.dart).
+  Future<void> _pullPermissions() async {
+    final user = _client.auth.currentUser;
+    if (user == null) return;
+    final role = user.appMetadata['role'] as String? ?? 'observer';
+    final rolePerms = await _client.from('role_permissions').select('permission, allowed').eq('role', role);
+    final overrides = await _client.from('account_permissions').select('permission, allowed').eq('user_id', user.id);
+    await _db.setSetting('permissions', jsonEncode({
+      'role': role,
+      'role_perms': {for (final r in rolePerms) r['permission']: r['allowed']},
+      'overrides': {for (final r in overrides) r['permission']: r['allowed']},
+    }));
   }
 
   TableInfo<Table, dynamic> _info(String name) => _db.allTables.firstWhere((t) => t.actualTableName == name);
@@ -68,9 +84,44 @@ class SyncEngine {
       final rows = await _db.customSelect('SELECT * FROM ${t.name} WHERE is_dirty = 1').get();
       if (rows.isEmpty) continue;
       final payload = [for (final r in rows) _toRemote(t, r.data)];
-      await _client.from(t.name).upsert(payload);
-      // Ne marquer « propre » que si la ligne n'a pas été modifiée pendant l'envoi.
-      await _db.transaction(() async {
+      try {
+        await _client.from(t.name).upsert(payload);
+      } on PostgrestException catch (e) {
+        if (e.code != _forbidden) rethrow;
+        await _pushOneByOne(t, rows);
+        continue;
+      }
+      await _markClean(t, rows);
+    }
+  }
+
+  /// Code renvoyé quand le serveur refuse une écriture (droits du rôle, migration 20261019000001).
+  static const _forbidden = '42501';
+
+  /// Un lot contient une écriture refusée : envoi ligne par ligne. Une ligne refusée n'est pas renvoyée
+  /// indéfiniment : elle est oubliée et la table relue, pour retrouver la version du serveur.
+  Future<void> _pushOneByOne(_SyncTable t, List<QueryRow> rows) async {
+    var refused = false;
+    for (final r in rows) {
+      try {
+        await _client.from(t.name).upsert(_toRemote(t, r.data));
+      } on PostgrestException catch (e) {
+        if (e.code != _forbidden) rethrow;
+        refused = true;
+      }
+    }
+    await _markClean(t, rows);
+    if (refused) {
+      await (_db.delete(_db.syncState)..where((s) => s.tableName_.equals(t.name))).go();
+      refusedChanges = true;
+    }
+  }
+
+  /// Vrai si une modification faite sur l'appareil a été refusée par le serveur pendant cette synchronisation.
+  bool refusedChanges = false;
+
+  /// Ne marquer « propre » que si la ligne n'a pas été modifiée pendant l'envoi.
+  Future<void> _markClean(_SyncTable t, List<QueryRow> rows) => _db.transaction(() async {
         for (final r in rows) {
           await _db.customUpdate(
             'UPDATE ${t.name} SET is_dirty = 0 WHERE id = ? AND updated_at = ?',
@@ -79,8 +130,6 @@ class SyncEngine {
           );
         }
       });
-    }
-  }
 
   /// Équipes dont l'utilisateur connecté est membre, d'après la base locale.
   Future<Set<String>> _myTeams() async => {
@@ -156,9 +205,11 @@ class SyncEngine {
 }
 
 class SyncStatus {
-  const SyncStatus({this.syncing = false, this.lastSuccess, this.error});
+  const SyncStatus({this.syncing = false, this.lastSuccess, this.error, this.notice});
   final bool syncing;
   final DateTime? lastSuccess;
+  /// Information sans erreur (ex. modification refusée par le serveur et annulée sur l'appareil).
+  final String? notice;
   /// Dernière erreur ; null si la dernière synchronisation a réussi.
   final String? error;
 }
@@ -168,6 +219,7 @@ final syncControllerProvider = NotifierProvider<SyncController, SyncStatus>(Sync
 class SyncController extends Notifier<SyncStatus> {
   Timer? _debounce;
   bool _again = false;
+  DateTime? _tokenRefreshed;
 
   @override
   SyncStatus build() {
@@ -195,8 +247,18 @@ class SyncController extends Notifier<SyncStatus> {
     }
     state = SyncStatus(syncing: true, lastSuccess: state.lastSuccess, error: state.error);
     try {
-      await SyncEngine(ref.read(databaseProvider), ref.read(supabaseProvider)).run();
-      state = SyncStatus(lastSuccess: DateTime.now());
+      final client = ref.read(supabaseProvider);
+      // Un rôle changé par l'administrateur arrive avec un nouveau jeton.
+      if (_tokenRefreshed == null || DateTime.now().difference(_tokenRefreshed!) > const Duration(minutes: 10)) {
+        _tokenRefreshed = DateTime.now();
+        await client.auth.refreshSession();
+      }
+      final engine = SyncEngine(ref.read(databaseProvider), client);
+      await engine.run();
+      state = SyncStatus(
+        lastSuccess: DateTime.now(),
+        notice: engine.refusedChanges ? 'Une modification a été annulée : votre rôle ne permet pas cette action.' : null,
+      );
     } on PostgrestException catch (e) {
       state = SyncStatus(lastSuccess: state.lastSuccess, error: 'Erreur du serveur : ${e.message}');
     } catch (e) {

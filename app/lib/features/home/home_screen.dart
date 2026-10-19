@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/permissions.dart';
 import '../../core/photos.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/sync_indicator.dart';
@@ -14,6 +15,7 @@ import '../sessions/session_repository.dart';
 import '../sessions/sessions_list_screen.dart';
 import '../tactics/tactic_screens.dart' show showTacticInfoSheet;
 import '../team/team_repository.dart';
+import 'player_space.dart';
 
 /// E10 — Accueil, façon « centre du club » d'un jeu de foot : identité de l'équipe, prochain match,
 /// état de l'effectif, charge de la semaine, séances du jour, infirmerie.
@@ -26,6 +28,13 @@ class HomeScreen extends ConsumerWidget {
     final team = ref.watch(activeTeamProvider);
     final theme = Theme.of(context);
     final today = DateFormat('EEEE d MMMM', 'fr_FR').format(DateTime.now());
+    final perms = ref.watch(permsProvider);
+    if (perms.isPlayer) {
+      return Scaffold(
+        appBar: AppBar(title: Text(profile == null ? 'Bonjour' : 'Bonjour ${profile.firstName}'), actions: const [SyncIndicator()]),
+        body: PlayerSpace(playerId: perms.playerId),
+      );
+    }
     return Scaffold(
       appBar: AppBar(
         title: Text(profile == null ? 'Bonjour' : 'Bonjour ${profile.firstName}'),
@@ -58,6 +67,7 @@ class HomeScreen extends ConsumerWidget {
     final sessions = (ref.watch(sessionsProvider(teamId)).value ?? const <TrainingSession>[]).where((s) => s.date == today).toList()
       ..sort((a, b) => a.startTime.compareTo(b.startTime));
     final theme = Theme.of(context);
+    final perms = ref.watch(permsProvider);
     return [
       ..._nextMatch(context, ref, teamId),
       ..._squadAndLoad(context, ref, teamId),
@@ -79,6 +89,7 @@ class HomeScreen extends ConsumerWidget {
                 if (s.objective != null) s.objective!,
               ].join(' · ')),
               const SizedBox(height: 8),
+              if (perms.can('seances.appel'))
               switch (s.status) {
                 'planned' => FilledButton(
                     onPressed: () => context.go('/sessions/${s.id}/attendance'), child: const Text("Démarrer l'appel")),
@@ -91,6 +102,7 @@ class HomeScreen extends ConsumerWidget {
       ..._infirmary(context, ref, teamId),
       const SizedBox(height: 8),
       Row(children: [
+        if (perms.can('seances.add'))
         Expanded(
           child: OutlinedButton.icon(
             onPressed: () => context.go('/sessions/new'),
@@ -99,7 +111,8 @@ class HomeScreen extends ConsumerWidget {
             style: _compact,
           ),
         ),
-        const SizedBox(width: 12),
+        if (perms.can('seances.add') && perms.can('matchs.add')) const SizedBox(width: 12),
+        if (perms.can('matchs.add'))
         Expanded(
           child: OutlinedButton.icon(
             onPressed: () => context.go('/matches/new'),
@@ -108,7 +121,8 @@ class HomeScreen extends ConsumerWidget {
             style: _compact,
           ),
         ),
-        const SizedBox(width: 12),
+        if ((perms.can('seances.add') || perms.can('matchs.add')) && perms.can('tactiques.add')) const SizedBox(width: 12),
+        if (perms.can('tactiques.add'))
         Expanded(
           child: OutlinedButton.icon(
             onPressed: () async {

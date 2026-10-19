@@ -2,8 +2,10 @@
 //
 // POST { action: "list" }                                                     -> comptes + team_ids
 // POST { action: "list_teams" }                                               -> toutes les équipes du projet
-// POST { action: "create", email, first_name, last_name, job_title, is_admin?, team_ids? }
+// POST { action: "list_players" }                                             -> joueurs de toutes les équipes
+// POST { action: "create", email, first_name, last_name, job_title, role, player_id?, team_ids? }
 //                                                                             -> { id, temporary_password }
+// POST { action: "set_role", user_id, role, player_id? }                      -> rôle du compte
 // POST { action: "set_teams", user_id, team_ids }                             -> équipes où il est « staff »
 // POST { action: "reset_password", user_id }                                  -> { temporary_password }
 // POST { action: "disable" | "enable", user_id }
@@ -26,6 +28,8 @@ const CORS = {
 };
 
 const JOB_TITLES = ["fitness_coach", "head_coach", "assistant_coach", "physio", "doctor", "other"];
+// Rôle du compte (app_metadata.role) : il fixe ses permissions (migration 20261019000001).
+const ROLES = ["admin", "technical_director", "head_coach", "fitness_coach", "assistant_coach", "medical", "observer", "player"];
 const BANNED = "876000h"; // ~100 ans
 
 class HttpError extends Error {
@@ -86,10 +90,69 @@ async function list() {
     last_name: byId.get(u.id)?.last_name ?? null,
     job_title: byId.get(u.id)?.job_title ?? null,
     is_admin: u.app_metadata?.role === "admin",
+    role: u.app_metadata?.role ?? "observer",
+    player_id: u.app_metadata?.player_id ?? null,
     is_disabled: !!u.banned_until && new Date(u.banned_until) > new Date(),
     must_change_password: u.user_metadata?.must_change_password === true,
     last_sign_in_at: u.last_sign_in_at ?? null,
   }));
+}
+
+// Rôle et joueur lié, vérifiés : un compte joueur doit désigner un joueur existant.
+async function roleOf(body: Record<string, unknown>): Promise<{ role: string; player?: { id: string; team_id: string } }> {
+  const role = String(body.role ?? "");
+  if (!ROLES.includes(role)) throw new HttpError(400, "Rôle invalide.");
+  if (role !== "player") return { role };
+  if (typeof body.player_id !== "string") throw new HttpError(400, "Choisissez le joueur du compte.");
+  const { data, error } = await admin.from("players").select("id, team_id").eq("id", body.player_id).eq("deleted", false)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) throw new HttpError(400, "Joueur introuvable.");
+  return { role, player: data };
+}
+
+function roleMetadata(r: { role: string; player?: { id: string } }) {
+  return r.player ? { role: r.role, player_id: r.player.id } : { role: r.role };
+}
+
+// Compte joueur : membre « player » de l'équipe de son joueur et d'aucune autre (ses appartenances
+// « staff » sont retirées). Sans joueur (teamId null), ses appartenances « player » sont retirées.
+// Une seule ligne par équipe et par compte : une appartenance existante change de rôle.
+async function setPlayerTeam(userId: string, teamId: string | null) {
+  const { data: current, error } = await admin.from("team_members").select("id, team_id, role, deleted").eq("user_id", userId);
+  if (error) throw error;
+  const now = new Date().toISOString();
+  for (const m of current) {
+    if (m.role === "owner") continue;
+    const update = m.team_id === teamId
+      ? (m.role !== "player" || m.deleted ? { role: "player", deleted: false } : null)
+      : ((teamId !== null || m.role === "player") && !m.deleted ? { deleted: true } : null);
+    if (!update) continue;
+    const { error: uErr } = await admin.from("team_members").update({ ...update, updated_at: now }).eq("id", m.id);
+    if (uErr) throw uErr;
+  }
+  if (teamId && !current.some((m) => m.team_id === teamId)) {
+    const { error: iErr } = await admin.from("team_members").insert({ team_id: teamId, user_id: userId, role: "player" });
+    if (iErr) throw iErr;
+  }
+}
+
+async function setRole(userId: string, body: Record<string, unknown>) {
+  const r = await roleOf(body);
+  const { data: existing, error: gErr } = await admin.auth.admin.getUserById(userId);
+  if (gErr) throw new HttpError(404, "Compte introuvable.");
+  const { player_id: _old, ...rest } = existing.user.app_metadata ?? {};
+  const { error } = await admin.auth.admin.updateUserById(userId, { app_metadata: { ...rest, ...roleMetadata(r) } });
+  if (error) throw error;
+  await setPlayerTeam(userId, r.player?.team_id ?? null);
+  return { ok: true };
+}
+
+async function listPlayers() {
+  const { data, error } = await admin.from("players").select("id, team_id, first_name, last_name, shirt_number")
+    .eq("deleted", false).order("last_name");
+  if (error) throw error;
+  return data;
 }
 
 async function create(body: Record<string, unknown>) {
@@ -100,13 +163,14 @@ async function create(body: Record<string, unknown>) {
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw new HttpError(400, "Adresse e-mail invalide.");
   if (!firstName || !lastName) throw new HttpError(400, "Prénom et nom obligatoires.");
   if (!JOB_TITLES.includes(jobTitle)) throw new HttpError(400, "Fonction invalide.");
+  const role = await roleOf(body);
 
   const password = temporaryPassword();
   const { data, error } = await admin.auth.admin.createUser({
     email,
     password,
     email_confirm: true, // aucun e-mail de confirmation
-    app_metadata: body.is_admin === true ? { role: "admin" } : {},
+    app_metadata: roleMetadata(role),
     user_metadata: { must_change_password: true },
   });
   if (error) {
@@ -120,7 +184,11 @@ async function create(body: Record<string, unknown>) {
     await admin.auth.admin.deleteUser(data.user.id); // pas de compte sans profil
     throw pErr;
   }
-  if (Array.isArray(body.team_ids) && body.team_ids.length > 0) await setTeams(data.user.id, body.team_ids);
+  if (role.player) {
+    await setPlayerTeam(data.user.id, role.player.team_id);
+  } else if (Array.isArray(body.team_ids) && body.team_ids.length > 0) {
+    await setTeams(data.user.id, body.team_ids);
+  }
   return { id: data.user.id, temporary_password: password };
 }
 
@@ -146,7 +214,7 @@ async function setTeams(userId: string, rawIds: unknown) {
   if (cErr) throw cErr;
   const now = new Date().toISOString();
   for (const m of current) {
-    if (m.role === "owner") continue;
+    if (m.role !== "staff") continue;
     const keep = wanted.has(m.team_id);
     if (keep === !m.deleted) continue;
     const { error } = await admin.from("team_members").update({ deleted: !keep, updated_at: now }).eq("id", m.id);
@@ -193,6 +261,8 @@ Deno.serve(async (req) => {
       case "list": result = await list(); break;
       case "create": result = await create(body); break;
       case "list_teams": result = await listTeams(); break;
+      case "list_players": result = await listPlayers(); break;
+      case "set_role": result = await setRole(targetId(body, me), body); break;
       case "set_teams": result = await setTeams(targetId(body, me), body.team_ids); break;
       case "reset_password": result = await resetPassword(targetId(body, me)); break;
       case "disable": result = await setDisabled(targetId(body, me), true); break;

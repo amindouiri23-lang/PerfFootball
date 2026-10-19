@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../features/admin/admin_screens.dart';
+import '../features/admin/roles_screens.dart';
 import '../features/auth/auth_repository.dart';
 import '../features/auth/auth_screens.dart';
 import '../features/home/home_screen.dart';
@@ -27,6 +28,7 @@ import '../features/tactics/tactic_screens.dart';
 import '../features/tests/test_screens.dart';
 import '../features/team/team_form_screen.dart';
 import '../features/team/team_screen.dart';
+import 'permissions.dart';
 import 'widgets/app_shell.dart';
 import 'widgets/sync_indicator.dart';
 
@@ -44,6 +46,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (user.mustChangePassword) return location == '/new-password' ? null : '/new-password';
       if (_publicRoutes.contains(location) || location == '/new-password') return '/home';
       if (location.startsWith('/profile/admin') && !user.isAdmin) return '/profile';
+      final perms = ref.read(permsProvider);
+      if (perms.isPlayer) return _playerRoutes.hasMatch(location) ? null : '/home';
+      final need = requiredPermission(location);
+      if (need != null && !perms.can(need)) return '/home';
       return null;
     },
     routes: [
@@ -54,7 +60,24 @@ final routerProvider = Provider<GoRouter>((ref) {
       StatefulShellRoute.indexedStack(
         builder: (_, _, shell) => AppShell(shell: shell),
         branches: [
-          StatefulShellBranch(routes: [GoRoute(path: '/home', builder: (_, _) => const HomeScreen())]),
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: '/home',
+              builder: (_, _) => const HomeScreen(),
+              routes: [
+                // Espace joueur : son dossier et ses questionnaires de bien-être.
+                GoRoute(path: 'dossier/:playerId', builder: (_, s) => PlayerProfileFormScreen(playerId: s.pathParameters['playerId']!)),
+                GoRoute(
+                  path: 'wellness/:sessionId/:playerId',
+                  builder: (_, s) => WellnessFormScreen(
+                    sessionId: s.pathParameters['sessionId']!,
+                    playerId: s.pathParameters['playerId']!,
+                    single: true,
+                  ),
+                ),
+              ],
+            ),
+          ]),
           StatefulShellBranch(routes: [
             GoRoute(
               path: '/sessions',
@@ -168,7 +191,11 @@ final routerProvider = Provider<GoRouter>((ref) {
                 GoRoute(
                   path: 'admin',
                   builder: (_, _) => const StaffAccountsScreen(),
-                  routes: [GoRoute(path: 'new', builder: (_, _) => const CreateAccountScreen())],
+                  routes: [
+                    GoRoute(path: 'new', builder: (_, _) => const CreateAccountScreen()),
+                    GoRoute(path: 'roles', builder: (_, _) => const RolesScreen()),
+                    GoRoute(path: 'account/:id', builder: (_, s) => AccountScreen(userId: s.pathParameters['id']!)),
+                  ],
                 ),
               ],
             ),
@@ -178,6 +205,39 @@ final routerProvider = Provider<GoRouter>((ref) {
     ],
   );
 });
+
+/// Écrans ouverts à un compte joueur : son espace (accueil), son profil, la synchronisation.
+final _playerRoutes = RegExp(r'^/(home(/dossier/[^/]+|/wellness/[^/]+/[^/]+)?|profile(/edit|/password)?|sync)$');
+
+/// Permission nécessaire pour ouvrir un écran (null : écran ouvert à tout le staff).
+String? requiredPermission(String location) {
+  final rules = <(RegExp, String)>[
+    (RegExp(r'^/sessions/new$'), 'seances.add'),
+    (RegExp(r'^/sessions/[^/]+/edit$'), 'seances.edit'),
+    (RegExp(r'^/sessions/[^/]+/(attendance|close)$'), 'seances.appel'),
+    (RegExp(r'^/sessions/[^/]+/wellness'), 'bienetre.view'),
+    (RegExp(r'^/(sessions|matches)/[^/]+/injury/'), 'blessures.add'),
+    (RegExp(r'/tactic/'), 'tactiques.view'),
+    (RegExp(r'^/sessions'), 'seances.view'),
+    (RegExp(r'^/matches/new$'), 'matchs.add'),
+    (RegExp(r'^/matches/[^/]+/edit$'), 'matchs.edit'),
+    (RegExp(r'^/matches/[^/]+/(squad|end)$'), 'matchs.jouer'),
+    (RegExp(r'^/matches'), 'matchs.view'),
+    (RegExp(r'^/team/new$'), 'equipes.add'),
+    (RegExp(r'^/team/edit$'), 'equipes.edit'),
+    (RegExp(r'^/team/import$'), 'import.use'),
+    (RegExp(r'^/team/tests'), 'tests.view'),
+    (RegExp(r'^/team/tactics'), 'tactiques.view'),
+    (RegExp(r'^/team/injuries/new$'), 'blessures.add'),
+    (RegExp(r'^/team/injuries'), 'blessures.view'),
+    (RegExp(r'^/team/players/new$'), 'effectif.add'),
+    (RegExp(r'^/team/players/[^/]+/edit$'), 'effectif.edit'),
+    (RegExp(r'^/team/players/[^/]+/profile$'), 'dossier.edit'),
+    (RegExp(r'^/team/players/[^/]+/medical$'), 'medical.edit'),
+    (RegExp(r'^/team'), 'effectif.view'),
+  ];
+  return rules.where((r) => r.$1.hasMatch(location)).firstOrNull?.$2;
+}
 
 /// Raccourci pour afficher un message court en bas de l'écran (specs §4.2).
 void showMessage(BuildContext context, String message) {

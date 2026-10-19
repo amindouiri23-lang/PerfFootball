@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/permissions.dart';
 import '../../core/router.dart';
 import '../../core/photos.dart';
 import '../../core/widgets/player_card.dart';
@@ -79,18 +80,21 @@ class _TeamScreenState extends ConsumerState<TeamScreen> {
               'import' => context.go('/team/import'),
               _ => context.go('/team/new'),
             },
-            itemBuilder: (_) => const [
-              PopupMenuItem(value: 'edit', child: Text('Modifier l\'équipe')),
-              PopupMenuItem(value: 'switch', child: Text('Changer d\'équipe')),
-              PopupMenuItem(value: 'new', child: Text('Créer une autre équipe')),
-              PopupMenuItem(value: 'injuries', child: Text('Infirmerie')),
-              PopupMenuItem(value: 'tests', child: Text('Tests physiques')),
-              PopupMenuItem(value: 'import', child: Text('Importer un fichier Excel')),
-            ],
+            itemBuilder: (_) {
+              final perms = ref.read(permsProvider);
+              return [
+                if (perms.can('equipes.edit')) const PopupMenuItem(value: 'edit', child: Text('Modifier l\'équipe')),
+                const PopupMenuItem(value: 'switch', child: Text('Changer d\'équipe')),
+                if (perms.can('equipes.add')) const PopupMenuItem(value: 'new', child: Text('Créer une autre équipe')),
+                if (perms.can('blessures.view')) const PopupMenuItem(value: 'injuries', child: Text('Infirmerie')),
+                if (perms.can('tests.view')) const PopupMenuItem(value: 'tests', child: Text('Tests physiques')),
+                if (perms.can('import.use')) const PopupMenuItem(value: 'import', child: Text('Importer un fichier Excel')),
+              ];
+            },
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: !ref.watch(permsProvider).can('effectif.add') ? null : FloatingActionButton.extended(
         onPressed: () => context.go('/team/players/new'),
         icon: const Icon(Icons.person_add_alt),
         label: const Text('Ajouter un joueur'),
@@ -98,6 +102,7 @@ class _TeamScreenState extends ConsumerState<TeamScreen> {
       body: players.isEmpty
           ? const _EmptyRoster()
           : ListView(padding: const EdgeInsets.only(bottom: 88), children: [
+              if (ref.watch(permsProvider).can('tactiques.view'))
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                 child: OutlinedButton.icon(

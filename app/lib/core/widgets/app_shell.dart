@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../data/sync.dart';
+import '../permissions.dart';
 import '../settings.dart';
 import '../../features/auth/auth_repository.dart';
 
@@ -49,15 +50,32 @@ class _AppShellState extends ConsumerState<AppShell> {
 
   @override
   Widget build(BuildContext context) {
+    // Une écriture refusée par le serveur (droits du rôle) a été annulée : le dire.
+    ref.listen(syncControllerProvider, (prev, next) {
+      if (next.notice != null && next.notice != prev?.notice) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(next.notice!)));
+      }
+    });
+    // Onglets visibles selon le rôle : Accueil et Profil toujours.
+    final perms = ref.watch(permsProvider);
+    final visible = [
+      0,
+      if (perms.can('seances.view')) 1,
+      if (perms.can('matchs.view')) 2,
+      if (perms.can('effectif.view')) 3,
+      4,
+    ];
+    final selected = visible.indexOf(shell.currentIndex).clamp(0, visible.length - 1);
+    void go(int i) => _go(visible[i]);
     final compact = MediaQuery.sizeOf(context).width < 600;
     if (compact) {
       return Scaffold(
         body: shell,
         bottomNavigationBar: NavigationBar(
-          selectedIndex: shell.currentIndex,
-          onDestinationSelected: _go,
+          selectedIndex: selected,
+          onDestinationSelected: go,
           destinations: [
-            for (final d in _destinations)
+            for (final d in [for (final i in visible) _destinations[i]])
               NavigationDestination(icon: Icon(d.icon), selectedIcon: Icon(d.selected), label: d.label),
           ],
         ),
@@ -66,11 +84,11 @@ class _AppShellState extends ConsumerState<AppShell> {
     return Scaffold(
       body: Row(children: [
         NavigationRail(
-          selectedIndex: shell.currentIndex,
-          onDestinationSelected: _go,
+          selectedIndex: selected,
+          onDestinationSelected: go,
           labelType: NavigationRailLabelType.all,
           destinations: [
-            for (final d in _destinations)
+            for (final d in [for (final i in visible) _destinations[i]])
               NavigationRailDestination(icon: Icon(d.icon), selectedIcon: Icon(d.selected), label: Text(d.label)),
           ],
         ),

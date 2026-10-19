@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/permissions.dart';
 import '../../core/photos.dart';
 import '../../core/router.dart';
 import '../../data/database.dart';
@@ -43,7 +44,7 @@ class InjuriesScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Infirmerie')),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: !ref.watch(permsProvider).can('blessures.add') ? null : FloatingActionButton.extended(
         onPressed: () => context.go('/team/injuries/new'),
         icon: const Icon(Icons.healing),
         label: const Text('Blessure'),

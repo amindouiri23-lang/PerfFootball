@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/permissions.dart';
 import '../../core/widgets/sync_indicator.dart';
 import '../../data/database.dart';
 import '../tactics/tactic_screens.dart' show LinkedTactics;
@@ -35,6 +36,7 @@ class SessionScreen extends ConsumerWidget {
     final present = rows.where((r) => r.present).toList()..sort(byNumber);
     final absent = rows.where((r) => !r.present).toList()..sort(byNumber);
     final completed = s.status == 'completed';
+    final perms = ref.watch(permsProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Séance'), actions: [
@@ -55,13 +57,14 @@ class SessionScreen extends ConsumerWidget {
             }
           },
           itemBuilder: (_) => [
-            const PopupMenuItem(value: 'edit', child: Text('Modifier les informations')),
+            if (perms.can('seances.edit')) const PopupMenuItem(value: 'edit', child: Text('Modifier les informations')),
             if (s.status != 'planned') ...[
-              const PopupMenuItem(value: 'call', child: Text('Modifier l\'appel')),
-              if (completed) const PopupMenuItem(value: 'close', child: Text('Modifier les durées et RPE')),
-              const PopupMenuItem(value: 'wellness', child: Text('Bien-être')),
+              if (perms.can('seances.appel')) const PopupMenuItem(value: 'call', child: Text('Modifier l\'appel')),
+              if (completed && perms.can('seances.appel'))
+                const PopupMenuItem(value: 'close', child: Text('Modifier les durées et RPE')),
+              if (perms.can('bienetre.view')) const PopupMenuItem(value: 'wellness', child: Text('Bien-être')),
             ],
-            const PopupMenuItem(value: 'delete', child: Text('Supprimer la séance')),
+            if (perms.can('seances.delete')) const PopupMenuItem(value: 'delete', child: Text('Supprimer la séance')),
           ],
         ),
       ]),
@@ -133,7 +136,7 @@ class SessionScreen extends ConsumerWidget {
         ],
         LinkedTactics(teamId: s.teamId, sessionId: s.id, title: 'Tactiques travaillées', basePath: '/sessions/${s.id}'),
       ]),
-      bottomNavigationBar: SafeArea(
+      bottomNavigationBar: !perms.can(s.status == 'completed' ? 'bienetre.view' : 'seances.appel') ? null : SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: switch (s.status) {

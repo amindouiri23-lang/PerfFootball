@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/permissions.dart';
 import '../../core/router.dart';
 import '../../core/widgets/sync_indicator.dart';
 import '../../data/database.dart';
@@ -34,7 +35,7 @@ class TestDaysScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Tests physiques'), actions: const [SyncIndicator()]),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: !ref.watch(permsProvider).can('tests.add') ? null : FloatingActionButton.extended(
         icon: const Icon(Icons.add),
         label: const Text('Nouvelle journée de tests'),
         onPressed: () async {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/permissions.dart';
 import '../../core/router.dart';
 import '../../core/widgets/sync_indicator.dart';
 import '../../data/database.dart';
@@ -45,7 +46,7 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Matchs'), actions: const [SyncIndicator()]),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: !ref.watch(permsProvider).can('matchs.add') ? null : FloatingActionButton.extended(
         onPressed: () => context.go('/matches/new'),
         icon: const Icon(Icons.add),
         label: const Text('Nouveau match'),
@@ -115,9 +116,9 @@ class _MatchTile extends ConsumerWidget {
         PopupMenuButton<String>(
           tooltip: 'Actions',
           onSelected: (v) => v == 'edit' ? context.go('/matches/${m.id}/edit') : confirmDeleteMatch(context, ref, m),
-          itemBuilder: (_) => const [
-            PopupMenuItem(value: 'edit', child: Text('Modifier')),
-            PopupMenuItem(value: 'delete', child: Text('Supprimer')),
+          itemBuilder: (_) => [
+            if (ref.read(permsProvider).can('matchs.edit')) const PopupMenuItem(value: 'edit', child: Text('Modifier')),
+            if (ref.read(permsProvider).can('matchs.delete')) const PopupMenuItem(value: 'delete', child: Text('Supprimer')),
           ],
         ),
       ]),
