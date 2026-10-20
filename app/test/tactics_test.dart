@@ -7,7 +7,7 @@ import 'package:perffoot/features/tactics/tactic_repository.dart';
 FootballMatch _match(String status, int? gf, int? ga) => FootballMatch(
       id: 'm', createdAt: 'x', updatedAt: 'x', deleted: false, isDirty: false, teamId: 't', date: '2026-10-18',
       kickOffTime: '15:00:00', opponent: 'EST', homeAway: 'H', competition: 'league', durationMin: 90,
-      goalsFor: gf, goalsAgainst: ga, status: status,
+      goalsFor: gf, goalsAgainst: ga, status: status, rpeRequested: false,
     );
 
 void main() {

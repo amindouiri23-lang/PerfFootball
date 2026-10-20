@@ -30,12 +30,19 @@ class _EndMatchScreenState extends ConsumerState<EndMatchScreen> {
   final Map<String, int> _minutes = {};
   final Map<String, int?> _rpes = {};
 
+  /// Minutes par défaut : de l'entrée (coup d'envoi pour un titulaire, minute du changement pour un
+  /// remplaçant) à la sortie (changement, carton rouge, blessure, sinon fin du match).
   int _default(int end, MatchPlayer r, List<MatchEvent> events, List<Injury> injuries) {
-    final red = events.where((e) => e.type == 'red_card' && e.playerId == r.playerId).firstOrNull;
-    if (red != null && r.role == 'starter') return red.minute.clamp(0, end);
-    final injury = injuries.where((i) => i.playerId == r.playerId && i.minute != null).firstOrNull;
-    if (injury != null && r.role == 'starter') return injury.minute!.clamp(0, end);
-    return r.role == 'starter' ? end : 0;
+    final entered = events.where((e) => e.type == 'substitution' && e.playerId == r.playerId).firstOrNull;
+    final start = r.role == 'starter' ? 0 : entered?.minute;
+    if (start == null) return 0; // remplaçant resté sur le banc
+    final exits = [
+      ...events.where((e) => e.type == 'substitution' && e.assistPlayerId == r.playerId).map((e) => e.minute),
+      ...events.where((e) => e.type == 'red_card' && e.playerId == r.playerId).map((e) => e.minute),
+      ...injuries.where((i) => i.playerId == r.playerId && i.minute != null).map((i) => i.minute!),
+    ].where((x) => x >= start);
+    final stop = exits.isEmpty ? end : exits.reduce((a, b) => a < b ? a : b);
+    return (stop - start).clamp(0, end);
   }
 
   @override
@@ -97,7 +104,22 @@ class _EndMatchScreenState extends ConsumerState<EndMatchScreen> {
             style: theme.textTheme.bodySmall),
         const SizedBox(height: 16),
         Text('Temps de jeu et RPE', style: theme.textTheme.titleSmall),
-        Text('Touchez les minutes pour saisir la valeur exacte. RPE facultatif.', style: theme.textTheme.bodySmall),
+        Text('Minutes calculées avec les changements ; touchez-les pour corriger. RPE facultatif : saisissez-le, '
+            'ou envoyez le match aux joueurs pour qu\'ils le donnent depuis leur compte.', style: theme.textTheme.bodySmall),
+        const SizedBox(height: 8),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: m.rpeRequested
+              ? const Chip(avatar: Icon(Icons.check, size: 18), label: Text('Envoyé aux joueurs pour leur RPE'))
+              : OutlinedButton.icon(
+                  onPressed: () async {
+                    await repo.requestRpe(m);
+                    if (context.mounted) showMessage(context, 'Envoyé : chaque joueur donne son RPE depuis son compte');
+                  },
+                  icon: const Icon(Icons.send_outlined),
+                  label: const Text('Envoyer aux joueurs pour leur RPE'),
+                ),
+        ),
         const SizedBox(height: 8),
         for (final r in present)
           Card(

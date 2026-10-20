@@ -25,9 +25,14 @@ const matchAbsenceReasons = {
 };
 const phases = {'first_leg': 'Aller', 'second_leg': 'Retour'};
 const matchRoles = {'starter': 'Titulaire', 'sub': 'Remplaçant'};
-const eventTypes = {'goal': 'But', 'yellow_card': 'Carton jaune', 'red_card': 'Carton rouge'};
-const eventIcons = {'goal': Icons.sports_soccer, 'yellow_card': Icons.style, 'red_card': Icons.style};
-const eventColors = {'goal': Color(0xFF1B5E20), 'yellow_card': Color(0xFFF9A825), 'red_card': Color(0xFFC62828)};
+const eventTypes = {'goal': 'But', 'yellow_card': 'Carton jaune', 'red_card': 'Carton rouge', 'substitution': 'Changement'};
+const eventIcons = {
+  'goal': Icons.sports_soccer, 'yellow_card': Icons.style, 'red_card': Icons.style, 'substitution': Icons.swap_horiz,
+};
+const eventColors = {
+  'goal': Color(0xFF1B5E20), 'yellow_card': Color(0xFFF9A825), 'red_card': Color(0xFFC62828),
+  'substitution': Color(0xFF1565C0),
+};
 
 extension FootballMatchLabels on FootballMatch {
   DateTime get day => DateTime.parse(date);
@@ -246,6 +251,26 @@ class MatchRepository {
     });
     _sync();
   }
+
+  /// Changement : [inId] entre à la place de [outId] (événement « substitution », id null pour en créer un).
+  Future<void> saveSubstitution({String? id, required FootballMatch m, required int minute, required String inId,
+      required String outId}) async {
+    final now = nowIso();
+    final fields = MatchEventsCompanion(
+      type: const Value('substitution'), minute: Value(minute), playerId: Value(inId), assistPlayerId: Value(outId),
+      updatedAt: Value(now), isDirty: const Value(true),
+    );
+    if (id == null) {
+      await _db.into(_db.matchEvents).insert(fields.copyWith(
+            id: Value(_uuid.v4()), teamId: Value(m.teamId), matchId: Value(m.id), createdAt: Value(now)));
+    } else {
+      await (_db.update(_db.matchEvents)..where((e) => e.id.equals(id))).write(fields);
+    }
+    _sync();
+  }
+
+  /// Envoie le match aux joueurs : chacun donne son RPE depuis son compte (le staff peut aussi le saisir).
+  Future<void> requestRpe(FootballMatch m) => _updateMatch(m.id, const MatchesCompanion(rpeRequested: Value(true)));
 
   /// E24 — crée (id null) ou modifie un événement.
   Future<void> saveEvent({

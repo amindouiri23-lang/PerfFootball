@@ -35,7 +35,7 @@ const _tables = [
   _SyncTable('wellness_survey_players'),
   _SyncTable('wellness'), // après les questionnaires, qu'elle référence
   _SyncTable('session_comments'),
-  _SyncTable('matches'),
+  _SyncTable('matches', booleans: {'rpe_requested'}),
   _SyncTable('match_players', booleans: {'present'}),
   _SyncTable('match_events'),
   _SyncTable('injuries'), // après sessions et matches, qu'elle référence
