@@ -62,6 +62,8 @@ class PlayerSpace extends ConsumerWidget {
         .toList();
     final answered = {for (final w in ref.watch(_myWellnessProvider(id)).value ?? const <WellnessEntry>[]) w.surveyId};
     final pending = mine.where((s) => !answered.contains(s.id)).toList();
+    // Matchs envoyés par le staff dont je n'ai pas encore donné le RPE.
+    final rpeToDo = matchRows.where((r) => matches[r.matchId]!.rpeRequested && r.rpe == null).toList();
 
     Widget rpeCard(String title, int? rpe, VoidCallback onTap) => Card(
           child: ListTile(
@@ -76,9 +78,21 @@ class PlayerSpace extends ConsumerWidget {
       Text(player.fullName.toUpperCase(), style: gameTitle(context, size: 28)),
       Text('Votre espace joueur', style: theme.textTheme.bodyMedium),
       const SizedBox(height: 16),
-      Text('QUESTIONNAIRES DE BIEN-ÊTRE', style: sectionLabel(context)),
+      Text('À FAIRE', style: sectionLabel(context)),
       const SizedBox(height: 8),
-      if (pending.isEmpty) const Text('Aucun questionnaire en attente.'),
+      if (pending.isEmpty && rpeToDo.isEmpty) const Text('Rien à remplir pour l\'instant.'),
+      for (final r in rpeToDo)
+        Card(
+          child: ListTile(
+            leading: Icon(Icons.speed, color: theme.colorScheme.primary),
+            title: Text('RPE du match · ${matches[r.matchId]!.opponent}'),
+            subtitle: Text(matches[r.matchId]!.dayLabel),
+            trailing: FilledButton(
+              onPressed: () => _askRpe(context, 'pendant le match', r.rpe, (v) => ref.read(matchRepositoryProvider).setRpe(r.id, v)),
+              child: const Text('Répondre'),
+            ),
+          ),
+        ),
       for (final s in pending)
         Card(
           child: ListTile(

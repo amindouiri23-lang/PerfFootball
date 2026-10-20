@@ -5147,6 +5147,21 @@ class $MatchesTable extends Matches
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _rpeRequestedMeta = const VerificationMeta(
+    'rpeRequested',
+  );
+  @override
+  late final GeneratedColumn<bool> rpeRequested = GeneratedColumn<bool>(
+    'rpe_requested',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("rpe_requested" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -5170,6 +5185,7 @@ class $MatchesTable extends Matches
     matchday,
     forfeitBy,
     formation,
+    rpeRequested,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -5339,6 +5355,15 @@ class $MatchesTable extends Matches
         formation.isAcceptableOrUnknown(data['formation']!, _formationMeta),
       );
     }
+    if (data.containsKey('rpe_requested')) {
+      context.handle(
+        _rpeRequestedMeta,
+        rpeRequested.isAcceptableOrUnknown(
+          data['rpe_requested']!,
+          _rpeRequestedMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -5432,6 +5457,10 @@ class $MatchesTable extends Matches
         DriftSqlType.string,
         data['${effectivePrefix}formation'],
       ),
+      rpeRequested: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}rpe_requested'],
+      )!,
     );
   }
 
@@ -5471,6 +5500,9 @@ class FootballMatch extends DataClass implements Insertable<FootballMatch> {
 
   /// Dispositif préparé : '4-4-2', '4-3-3'…
   final String? formation;
+
+  /// Match envoyé aux joueurs : chacun donne son RPE depuis son compte.
+  final bool rpeRequested;
   const FootballMatch({
     required this.id,
     required this.createdAt,
@@ -5493,6 +5525,7 @@ class FootballMatch extends DataClass implements Insertable<FootballMatch> {
     this.matchday,
     this.forfeitBy,
     this.formation,
+    required this.rpeRequested,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -5534,6 +5567,7 @@ class FootballMatch extends DataClass implements Insertable<FootballMatch> {
     if (!nullToAbsent || formation != null) {
       map['formation'] = Variable<String>(formation);
     }
+    map['rpe_requested'] = Variable<bool>(rpeRequested);
     return map;
   }
 
@@ -5576,6 +5610,7 @@ class FootballMatch extends DataClass implements Insertable<FootballMatch> {
       formation: formation == null && nullToAbsent
           ? const Value.absent()
           : Value(formation),
+      rpeRequested: Value(rpeRequested),
     );
   }
 
@@ -5606,6 +5641,7 @@ class FootballMatch extends DataClass implements Insertable<FootballMatch> {
       matchday: serializer.fromJson<int?>(json['matchday']),
       forfeitBy: serializer.fromJson<String?>(json['forfeitBy']),
       formation: serializer.fromJson<String?>(json['formation']),
+      rpeRequested: serializer.fromJson<bool>(json['rpeRequested']),
     );
   }
   @override
@@ -5633,6 +5669,7 @@ class FootballMatch extends DataClass implements Insertable<FootballMatch> {
       'matchday': serializer.toJson<int?>(matchday),
       'forfeitBy': serializer.toJson<String?>(forfeitBy),
       'formation': serializer.toJson<String?>(formation),
+      'rpeRequested': serializer.toJson<bool>(rpeRequested),
     };
   }
 
@@ -5658,6 +5695,7 @@ class FootballMatch extends DataClass implements Insertable<FootballMatch> {
     Value<int?> matchday = const Value.absent(),
     Value<String?> forfeitBy = const Value.absent(),
     Value<String?> formation = const Value.absent(),
+    bool? rpeRequested,
   }) => FootballMatch(
     id: id ?? this.id,
     createdAt: createdAt ?? this.createdAt,
@@ -5682,6 +5720,7 @@ class FootballMatch extends DataClass implements Insertable<FootballMatch> {
     matchday: matchday.present ? matchday.value : this.matchday,
     forfeitBy: forfeitBy.present ? forfeitBy.value : this.forfeitBy,
     formation: formation.present ? formation.value : this.formation,
+    rpeRequested: rpeRequested ?? this.rpeRequested,
   );
   FootballMatch copyWithCompanion(MatchesCompanion data) {
     return FootballMatch(
@@ -5716,6 +5755,9 @@ class FootballMatch extends DataClass implements Insertable<FootballMatch> {
       matchday: data.matchday.present ? data.matchday.value : this.matchday,
       forfeitBy: data.forfeitBy.present ? data.forfeitBy.value : this.forfeitBy,
       formation: data.formation.present ? data.formation.value : this.formation,
+      rpeRequested: data.rpeRequested.present
+          ? data.rpeRequested.value
+          : this.rpeRequested,
     );
   }
 
@@ -5742,7 +5784,8 @@ class FootballMatch extends DataClass implements Insertable<FootballMatch> {
           ..write('phase: $phase, ')
           ..write('matchday: $matchday, ')
           ..write('forfeitBy: $forfeitBy, ')
-          ..write('formation: $formation')
+          ..write('formation: $formation, ')
+          ..write('rpeRequested: $rpeRequested')
           ..write(')'))
         .toString();
   }
@@ -5770,6 +5813,7 @@ class FootballMatch extends DataClass implements Insertable<FootballMatch> {
     matchday,
     forfeitBy,
     formation,
+    rpeRequested,
   ]);
   @override
   bool operator ==(Object other) =>
@@ -5795,7 +5839,8 @@ class FootballMatch extends DataClass implements Insertable<FootballMatch> {
           other.phase == this.phase &&
           other.matchday == this.matchday &&
           other.forfeitBy == this.forfeitBy &&
-          other.formation == this.formation);
+          other.formation == this.formation &&
+          other.rpeRequested == this.rpeRequested);
 }
 
 class MatchesCompanion extends UpdateCompanion<FootballMatch> {
@@ -5820,6 +5865,7 @@ class MatchesCompanion extends UpdateCompanion<FootballMatch> {
   final Value<int?> matchday;
   final Value<String?> forfeitBy;
   final Value<String?> formation;
+  final Value<bool> rpeRequested;
   final Value<int> rowid;
   const MatchesCompanion({
     this.id = const Value.absent(),
@@ -5843,6 +5889,7 @@ class MatchesCompanion extends UpdateCompanion<FootballMatch> {
     this.matchday = const Value.absent(),
     this.forfeitBy = const Value.absent(),
     this.formation = const Value.absent(),
+    this.rpeRequested = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   MatchesCompanion.insert({
@@ -5867,6 +5914,7 @@ class MatchesCompanion extends UpdateCompanion<FootballMatch> {
     this.matchday = const Value.absent(),
     this.forfeitBy = const Value.absent(),
     this.formation = const Value.absent(),
+    this.rpeRequested = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        createdAt = Value(createdAt),
@@ -5899,6 +5947,7 @@ class MatchesCompanion extends UpdateCompanion<FootballMatch> {
     Expression<int>? matchday,
     Expression<String>? forfeitBy,
     Expression<String>? formation,
+    Expression<bool>? rpeRequested,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -5923,6 +5972,7 @@ class MatchesCompanion extends UpdateCompanion<FootballMatch> {
       if (matchday != null) 'matchday': matchday,
       if (forfeitBy != null) 'forfeit_by': forfeitBy,
       if (formation != null) 'formation': formation,
+      if (rpeRequested != null) 'rpe_requested': rpeRequested,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -5949,6 +5999,7 @@ class MatchesCompanion extends UpdateCompanion<FootballMatch> {
     Value<int?>? matchday,
     Value<String?>? forfeitBy,
     Value<String?>? formation,
+    Value<bool>? rpeRequested,
     Value<int>? rowid,
   }) {
     return MatchesCompanion(
@@ -5973,6 +6024,7 @@ class MatchesCompanion extends UpdateCompanion<FootballMatch> {
       matchday: matchday ?? this.matchday,
       forfeitBy: forfeitBy ?? this.forfeitBy,
       formation: formation ?? this.formation,
+      rpeRequested: rpeRequested ?? this.rpeRequested,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -6043,6 +6095,9 @@ class MatchesCompanion extends UpdateCompanion<FootballMatch> {
     if (formation.present) {
       map['formation'] = Variable<String>(formation.value);
     }
+    if (rpeRequested.present) {
+      map['rpe_requested'] = Variable<bool>(rpeRequested.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -6073,6 +6128,7 @@ class MatchesCompanion extends UpdateCompanion<FootballMatch> {
           ..write('matchday: $matchday, ')
           ..write('forfeitBy: $forfeitBy, ')
           ..write('formation: $formation, ')
+          ..write('rpeRequested: $rpeRequested, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -19907,6 +19963,7 @@ typedef $$MatchesTableCreateCompanionBuilder = MatchesCompanion Function({
   Value<int?> matchday,
   Value<String?> forfeitBy,
   Value<String?> formation,
+  Value<bool> rpeRequested,
   Value<int> rowid,
 });
 typedef $$MatchesTableUpdateCompanionBuilder = MatchesCompanion Function({
@@ -19931,6 +19988,7 @@ typedef $$MatchesTableUpdateCompanionBuilder = MatchesCompanion Function({
   Value<int?> matchday,
   Value<String?> forfeitBy,
   Value<String?> formation,
+  Value<bool> rpeRequested,
   Value<int> rowid,
 });
 
@@ -20045,6 +20103,11 @@ class $$MatchesTableFilterComposer
 
   ColumnFilters<String> get formation => $composableBuilder(
     column: $table.formation,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get rpeRequested => $composableBuilder(
+    column: $table.rpeRequested,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -20162,6 +20225,11 @@ class $$MatchesTableOrderingComposer
     column: $table.formation,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<bool> get rpeRequested => $composableBuilder(
+    column: $table.rpeRequested,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$MatchesTableAnnotationComposer
@@ -20245,6 +20313,11 @@ class $$MatchesTableAnnotationComposer
 
   GeneratedColumn<String> get formation =>
       $composableBuilder(column: $table.formation, builder: (column) => column);
+
+  GeneratedColumn<bool> get rpeRequested => $composableBuilder(
+    column: $table.rpeRequested,
+    builder: (column) => column,
+  );
 }
 
 class $$MatchesTableTableManager
@@ -20299,6 +20372,7 @@ class $$MatchesTableTableManager
                 Value<int?> matchday = const Value.absent(),
                 Value<String?> forfeitBy = const Value.absent(),
                 Value<String?> formation = const Value.absent(),
+                Value<bool> rpeRequested = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => MatchesCompanion(
                 id: id,
@@ -20322,6 +20396,7 @@ class $$MatchesTableTableManager
                 matchday: matchday,
                 forfeitBy: forfeitBy,
                 formation: formation,
+                rpeRequested: rpeRequested,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -20347,6 +20422,7 @@ class $$MatchesTableTableManager
                 Value<int?> matchday = const Value.absent(),
                 Value<String?> forfeitBy = const Value.absent(),
                 Value<String?> formation = const Value.absent(),
+                Value<bool> rpeRequested = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => MatchesCompanion.insert(
                 id: id,
@@ -20370,6 +20446,7 @@ class $$MatchesTableTableManager
                 matchday: matchday,
                 forfeitBy: forfeitBy,
                 formation: formation,
+                rpeRequested: rpeRequested,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

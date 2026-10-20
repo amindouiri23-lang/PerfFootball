@@ -53,11 +53,11 @@ class _MatchFormScreenState extends ConsumerState<MatchFormScreen> {
     _matchday = m.matchday;
   }
 
-  Future<void> _save({required bool squad}) async {
+  Future<void> _save({required String? next}) async {
     if (_saving) return;
     _saving = true;
     try {
-      await _saveUnguarded(squad: squad);
+      await _saveUnguarded(next: next);
     } finally {
       // Verrou gardé un instant : l'enregistrement local prend quelques millisecondes, la seconde
       // frappe d'un double appui arrive souvent après — elle doit aussi être ignorée.
@@ -65,7 +65,7 @@ class _MatchFormScreenState extends ConsumerState<MatchFormScreen> {
     }
   }
 
-  Future<void> _saveUnguarded({required bool squad}) async {
+  Future<void> _saveUnguarded({required String? next}) async {
     setState(() => _submitted = true);
     if (_opponent.text.trim().isEmpty || _homeAway == null || _competition == null) return;
     final team = ref.read(activeTeamProvider).value!;
@@ -85,8 +85,9 @@ class _MatchFormScreenState extends ConsumerState<MatchFormScreen> {
     if (widget.id != null) {
       showMessage(context, 'Match modifié');
       context.go('/matches/$id');
-    } else if (squad) {
-      context.go('/matches/$id/squad');
+    } else if (next != null) {
+      // Composition (avant le match) ou feuille de match (le jour du match).
+      context.go('/matches/$id/$next');
     } else {
       showMessage(context, 'Match enregistré');
       context.go('/matches');
@@ -240,11 +241,13 @@ class _MatchFormScreenState extends ConsumerState<MatchFormScreen> {
       ],
       const SizedBox(height: 24),
       if (create) ...[
-        FilledButton(onPressed: () => _save(squad: true), child: const Text('Choisir les joueurs présents')),
+        FilledButton(onPressed: () => _save(next: 'lineup'), child: const Text('Préparer le match (composition)')),
         const SizedBox(height: 12),
-        OutlinedButton(onPressed: () => _save(squad: false), child: const Text('Enregistrer pour plus tard')),
+        OutlinedButton(onPressed: () => _save(next: 'squad'), child: const Text('Choisir les joueurs présents')),
+        const SizedBox(height: 12),
+        TextButton(onPressed: () => _save(next: null), child: const Text('Enregistrer pour plus tard')),
       ] else
-        FilledButton(onPressed: () => _save(squad: false), child: const Text('Enregistrer')),
+        FilledButton(onPressed: () => _save(next: null), child: const Text('Enregistrer')),
     ]);
   }
 }

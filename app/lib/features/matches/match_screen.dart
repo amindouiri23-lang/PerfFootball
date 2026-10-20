@@ -54,14 +54,17 @@ class MatchScreen extends ConsumerWidget {
             title: Row(children: [
               Icon(eventIcons[e.type], color: eventColors[e.type], size: 20),
               const SizedBox(width: 8),
-              Expanded(child: Text(name(e.playerId))),
+              Expanded(child: Text(e.type == 'substitution' ? '${name(e.playerId)} ↔ ${name(e.assistPlayerId)}' : name(e.playerId))),
             ]),
             subtitle: Text([
-              eventTypes[e.type]!,
-              if (e.assistPlayerId != null) 'passe de ${name(e.assistPlayerId)}',
+              if (e.type == 'substitution') 'Changement : entre ${name(e.playerId)}, sort ${name(e.assistPlayerId)}'
+              else eventTypes[e.type]!,
+              if (e.type == 'goal' && e.assistPlayerId != null) 'passe de ${name(e.assistPlayerId)}',
               if (e.remark != null) e.remark!,
             ].join(' · ')),
-            onTap: () => showEventSheet(context, ref, m, present, players, event: e),
+            onTap: () => e.type == 'substitution'
+                ? showSubstitutionSheet(context, ref, m, present, players, events, event: e)
+                : showEventSheet(context, ref, m, present, players, event: e),
           ),
         ),
       for (final i in injuries)
@@ -94,6 +97,11 @@ class MatchScreen extends ConsumerWidget {
                 context.go('/matches/${m.id}/end');
               case 'abandon':
                 context.go('/matches/${m.id}/end?abandoned=1');
+              case 'lineup':
+                context.go('/matches/${m.id}/lineup');
+              case 'rpe':
+                await repo.requestRpe(m);
+                if (context.mounted) showMessage(context, 'Envoyé : chaque joueur donne son RPE depuis son compte');
               case 'forfeit':
                 await _declareForfeit(context, ref, m);
               case 'postpone':
@@ -116,8 +124,11 @@ class MatchScreen extends ConsumerWidget {
             if ((m.status == 'in_progress' || completed) && play)
               const PopupMenuItem(value: 'squad', child: Text('Modifier la feuille de match')),
             if (completed && play)
-              PopupMenuItem(value: m.status == 'abandoned' ? 'abandon' : 'end', child: const Text('Modifier temps de jeu et RPE')),
+              PopupMenuItem(value: m.status == 'abandoned' ? 'abandon' : 'end', child: const Text('Modifier le temps de jeu')),
+            if (open && play) const PopupMenuItem(value: 'lineup', child: Text('Composition (dispositif et titulaires)')),
             if (m.status == 'in_progress' && play) const PopupMenuItem(value: 'abandon', child: Text('Match arrêté')),
+            if (completed && play && !m.rpeRequested)
+              const PopupMenuItem(value: 'rpe', child: Text('Demander le RPE aux joueurs')),
             if (open && perms.can('matchs.issues')) ...const [
               PopupMenuItem(value: 'forfeit', child: Text('Déclarer un forfait')),
               PopupMenuItem(value: 'postpone', child: Text('Reporter le match')),
@@ -183,18 +194,12 @@ class MatchScreen extends ConsumerWidget {
             child: Text('Le match n\'a pas encore commencé : préparez la composition, puis le jour du match '
                 'confirmez les joueurs présents.'),
           ),
-          if (play)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-              child: OutlinedButton.icon(
-                onPressed: () => context.go('/matches/${m.id}/lineup'),
-                icon: const Icon(Icons.groups_outlined),
-                label: Text(m.formation == null ? 'Préparer le match (dispositif et titulaires)' : 'Modifier la composition'),
-              ),
-            ),
+          if (play) _lineupButton(context, m),
           LineupPreview(match: m),
         ]
         else ...[
+          if (m.status == 'in_progress' && play) _lineupButton(context, m),
+          if (m.status == 'in_progress') LineupPreview(match: m),
           if (m.status == 'abandoned')
             const Padding(
               padding: EdgeInsets.fromLTRB(16, 0, 16, 8),
@@ -211,6 +216,12 @@ class MatchScreen extends ConsumerWidget {
                   label: switch (t) { 'goal' => 'But', 'yellow_card' => 'Jaune', _ => 'Rouge' },
                   onPressed: () => showEventSheet(context, ref, m, present, players, type: t),
                 ),
+              _QuickAction(
+                icon: eventIcons['substitution']!,
+                color: eventColors['substitution']!,
+                label: 'Changer',
+                onPressed: () => showSubstitutionSheet(context, ref, m, present, players, events),
+              ),
               _QuickAction(
                 icon: Icons.healing,
                 color: theme.colorScheme.error,
@@ -354,6 +365,15 @@ class MatchScreen extends ConsumerWidget {
     if (context.mounted) showMessage(context, 'Match reporté au ${DateFormat('d MMMM', 'fr_FR').format(date)}');
   }
 
+  Widget _lineupButton(BuildContext context, FootballMatch m) => Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+        child: OutlinedButton.icon(
+          onPressed: () => context.go('/matches/${m.id}/lineup'),
+          icon: const Icon(Icons.groups_outlined),
+          label: Text(m.formation == null ? 'Préparer le match (dispositif et titulaires)' : 'Modifier la composition'),
+        ),
+      );
+
   Widget _title(BuildContext context, String text) => Padding(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
         child: Text(text, style: Theme.of(context).textTheme.titleSmall),
@@ -380,7 +400,10 @@ class _QuickAction extends StatelessWidget {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
             onPressed: onPressed,
-            child: Column(mainAxisSize: MainAxisSize.min, children: [Icon(icon, color: color), Text(label)]),
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              Icon(icon, color: color),
+              FittedBox(fit: BoxFit.scaleDown, child: Text(label, maxLines: 1)),
+            ]),
           ),
         ),
       );
@@ -405,7 +428,9 @@ class _PlayerRow extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final goals = events.where((e) => e.type == 'goal' && e.playerId == row.playerId).length;
-    final assists = events.where((e) => e.assistPlayerId == row.playerId).length;
+    final assists = events.where((e) => e.type == 'goal' && e.assistPlayerId == row.playerId).length;
+    final entered = events.where((e) => e.type == 'substitution' && e.playerId == row.playerId).firstOrNull;
+    final left = events.where((e) => e.type == 'substitution' && e.assistPlayerId == row.playerId).firstOrNull;
     final yellows = events.where((e) => e.type == 'yellow_card' && e.playerId == row.playerId).length;
     final reds = events.where((e) => e.type == 'red_card' && e.playerId == row.playerId).length;
     final details = [
@@ -414,6 +439,8 @@ class _PlayerRow extends ConsumerWidget {
       if (assists > 0) '$assists passe${assists > 1 ? 's' : ''} déc.',
       if (yellows > 0) '$yellows jaune${yellows > 1 ? 's' : ''}',
       if (reds > 0) 'rouge',
+      if (entered != null) "entré à la ${entered.minute}'",
+      if (left != null) "sorti à la ${left.minute}'",
       if (injured) 'blessé',
       if (m.status == 'completed' || m.status == 'abandoned') "${row.minutesPlayed ?? '—'}' · RPE ${row.rpe ?? '—'}",
       if (row.remark != null) 'Remarque : ${row.remark}',
@@ -456,6 +483,101 @@ Future<String?> pickPlayer(BuildContext context, String title, List<MatchPlayer>
   );
 }
 
+/// Changement : minute, joueur qui sort (sur le terrain), joueur qui entre (sur le banc). Les joueurs sur
+/// le terrain se déduisent des titulaires et des changements déjà saisis (hors exclus).
+Future<void> showSubstitutionSheet(BuildContext context, WidgetRef ref, FootballMatch m, List<MatchPlayer> present,
+    Map<String, Player> players, List<MatchEvent> events, {MatchEvent? event}) async {
+  final repo = ref.read(matchRepositoryProvider);
+  final others = events.where((e) => e.type == 'substitution' && e.id != event?.id).toList()
+    ..sort((a, b) => a.minute.compareTo(b.minute));
+  final onField = {for (final r in present) if (r.role == 'starter') r.playerId};
+  final used = <String>{};
+  for (final s in others) {
+    onField.remove(s.assistPlayerId);
+    onField.add(s.playerId);
+    used..add(s.playerId)..add(s.assistPlayerId!);
+  }
+  onField.removeAll(events.where((e) => e.type == 'red_card').map((e) => e.playerId));
+  final bench = [for (final r in present) if (!onField.contains(r.playerId) && !used.contains(r.playerId)) r.playerId];
+  final minute = TextEditingController(text: event?.minute.toString() ?? '');
+  String? out = event?.assistPlayerId;
+  String? inn = event?.playerId;
+  var submitted = false;
+  String label(String id) => '${players[id]?.shirtNumber ?? ''} ${players[id]?.lastName ?? ''}'.trim();
+
+  await showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    builder: (context) => StatefulBuilder(builder: (context, setState) {
+      final theme = Theme.of(context);
+      final min = int.tryParse(minute.text);
+      final minuteOk = min != null && min >= 1 && min <= 130;
+      return Padding(
+        padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + MediaQuery.viewInsetsOf(context).bottom),
+        child: SingleChildScrollView(
+          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            Text(event == null ? 'Changement' : 'Modifier le changement', style: theme.textTheme.titleMedium),
+            const SizedBox(height: 12),
+            TextField(
+              controller: minute,
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              autofocus: event == null,
+              onChanged: (_) => setState(() {}),
+              decoration: InputDecoration(labelText: 'Minute *', errorText: submitted && !minuteOk ? 'Entre 1 et 130' : null),
+            ),
+            const SizedBox(height: 12),
+            Text('Sort *', style: theme.textTheme.labelLarge),
+            const SizedBox(height: 6),
+            Wrap(spacing: 6, runSpacing: 6, children: [
+              for (final id in {...onField, ?event?.assistPlayerId})
+                ChoiceChip(label: Text(label(id)), selected: out == id, onSelected: (_) => setState(() => out = id)),
+            ]),
+            if (submitted && out == null) Text('Obligatoire', style: TextStyle(color: theme.colorScheme.error, fontSize: 12)),
+            const SizedBox(height: 12),
+            Text('Entre *', style: theme.textTheme.labelLarge),
+            const SizedBox(height: 6),
+            if (bench.isEmpty && event == null)
+              const Text('Aucun remplaçant disponible sur la feuille de match.'),
+            Wrap(spacing: 6, runSpacing: 6, children: [
+              for (final id in {...bench, ?event?.playerId})
+                ChoiceChip(label: Text(label(id)), selected: inn == id, onSelected: (_) => setState(() => inn = id)),
+            ]),
+            if (submitted && inn == null) Text('Obligatoire', style: TextStyle(color: theme.colorScheme.error, fontSize: 12)),
+            const SizedBox(height: 16),
+            Row(children: [
+              if (event != null) ...[
+                Expanded(
+                  child: OutlinedButton(
+                    style: OutlinedButton.styleFrom(foregroundColor: theme.colorScheme.error),
+                    onPressed: () async {
+                      await repo.deleteEvent(event.id);
+                      if (context.mounted) Navigator.of(context).pop();
+                    },
+                    child: const Text('Supprimer'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+              ],
+              Expanded(
+                child: FilledButton(
+                  onPressed: () async {
+                    setState(() => submitted = true);
+                    if (!minuteOk || out == null || inn == null) return;
+                    await repo.saveSubstitution(id: event?.id, m: m, minute: min, inId: inn!, outId: out!);
+                    if (context.mounted) Navigator.of(context).pop();
+                  },
+                  child: const Text('Enregistrer'),
+                ),
+              ),
+            ]),
+          ]),
+        ),
+      );
+    }),
+  );
+}
+
 /// E24 — Ajouter ou modifier un but / carton, dans un panneau par-dessus le match.
 Future<void> showEventSheet(BuildContext context, WidgetRef ref, FootballMatch m, List<MatchPlayer> present,
     Map<String, Player> players, {String? type, MatchEvent? event}) async {
@@ -483,7 +605,7 @@ Future<void> showEventSheet(BuildContext context, WidgetRef ref, FootballMatch m
             Text(event == null ? 'Ajouter un événement' : 'Modifier l\'événement', style: theme.textTheme.titleMedium),
             const SizedBox(height: 12),
             Wrap(spacing: 8, children: [
-              for (final e in eventTypes.entries)
+              for (final e in eventTypes.entries.where((e) => e.key != 'substitution'))
                 ChoiceChip(label: Text(e.value), selected: kind == e.key, onSelected: (_) => setState(() => kind = e.key)),
             ]),
             const SizedBox(height: 12),

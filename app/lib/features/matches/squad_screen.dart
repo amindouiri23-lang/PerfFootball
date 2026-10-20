@@ -77,7 +77,13 @@ class _SquadScreenState extends ConsumerState<SquadScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Feuille de match')),
+      appBar: AppBar(title: const Text('Feuille de match'), actions: [
+        TextButton.icon(
+          onPressed: () => context.go('/matches/${m.id}/lineup'),
+          icon: const Icon(Icons.groups_outlined),
+          label: Text(m.formation ?? 'Composition'),
+        ),
+      ]),
       body: Column(children: [
         ListTile(
           title: Text('${m.opponent} · ${m.dayLabel} · ${m.time}'),

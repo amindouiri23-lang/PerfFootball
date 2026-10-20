@@ -115,6 +115,8 @@ class Matches extends Table with SyncColumns {
   TextColumn get forfeitBy => text().nullable()();
   /// Dispositif préparé : '4-4-2', '4-3-3'…
   TextColumn get formation => text().nullable()();
+  /// Match envoyé aux joueurs : chacun donne son RPE depuis son compte.
+  BoolColumn get rpeRequested => boolean().withDefault(const Constant(false))();
 }
 
 /// Feuille de match d'un joueur (id déterministe : match + joueur).
@@ -132,7 +134,8 @@ class MatchPlayers extends Table with SyncColumns {
   IntColumn get slot => integer().nullable()();
 }
 
-/// But (avec passeur éventuel) ou carton. Les blessures de match sont dans Injuries.
+/// But (avec passeur éventuel), carton ou changement (joueur qui entre ; [assistPlayerId] : joueur qui
+/// sort). Les blessures de match sont dans Injuries.
 class MatchEvents extends Table with SyncColumns {
   TextColumn get teamId => text()();
   TextColumn get matchId => text()();
@@ -311,7 +314,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? openConnection());
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -378,6 +381,13 @@ class AppDatabase extends _$AppDatabase {
             // Matchs et feuilles relus pour recevoir dispositif et places.
             for (final name in ['matches', 'match_players']) {
               await (delete(syncState)..where((s) => s.tableName_.equals(name))).go();
+            }
+          }
+          if (from < 8) {
+            // v8 : RPE demandé aux joueurs.
+            final cols = await customSelect('PRAGMA table_info(matches)').get();
+            if (!cols.any((c) => c.read<String>('name') == 'rpe_requested')) {
+              await m.addColumn(matches, matches.rpeRequested);
             }
           }
         },
