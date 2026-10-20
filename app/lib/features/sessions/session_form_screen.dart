@@ -106,7 +106,7 @@ class _SessionFormScreenState extends ConsumerState<SessionFormScreen> {
     } else if (startCall) {
       context.go('/sessions/$id/attendance');
     } else {
-      showMessage(context, 'Séance enregistrée');
+      showMessage(context, 'Séance planifiée');
       context.go('/sessions');
     }
   }
@@ -230,7 +230,7 @@ class _SessionFormScreenState extends ConsumerState<SessionFormScreen> {
       if (create) ...[
         FilledButton(onPressed: () => _save(startCall: true), child: const Text('Démarrer l\'appel')),
         const SizedBox(height: 12),
-        OutlinedButton(onPressed: () => _save(startCall: false), child: const Text('Enregistrer pour plus tard')),
+        OutlinedButton(onPressed: () => _save(startCall: false), child: const Text('Planifier la séance')),
       ] else
         FilledButton(onPressed: () => _save(startCall: false), child: const Text('Enregistrer')),
     ]);

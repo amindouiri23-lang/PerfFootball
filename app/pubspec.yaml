@@ -1,7 +1,7 @@
 name: perffoot
 description: "A new Flutter project."
 publish_to: 'none'
-version: 0.6.2+15
+version: 0.6.3+16
 
 environment:
   sdk: ^3.13.4
