@@ -39,7 +39,7 @@ LABELS = {
     "competition": {"league": "Championnat", "cup": "Coupe", "friendly": "Amical", "tournament": "Tournoi"},
     "result": {"W": "Victoire", "D": "Nul", "L": "Défaite"},
     "role": {"starter": "Titulaire", "sub": "Remplaçant"},
-    "event": {"goal": "But", "yellow_card": "Carton jaune", "red_card": "Carton rouge"},
+    "event": {"goal": "But", "yellow_card": "Carton jaune", "red_card": "Carton rouge", "substitution": "Changement"},
     "body_area": {"head": "Tête", "neck": "Cou", "shoulder": "Épaule", "arm": "Bras", "back": "Dos",
                   "hip_groin": "Hanche/aine", "thigh_front": "Cuisse avant", "thigh_back": "Cuisse arrière",
                   "knee": "Genou", "calf": "Mollet", "ankle": "Cheville", "foot": "Pied", "other": "Autre"},

@@ -55,6 +55,6 @@ table 'Événements'
 				let
 				    Source = PostgreSQL.Database(Serveur, BaseDeDonnees),
 				    Data = Source{[Schema = "reporting", Item = "match_events"]}[Data],
-				    Libelles_type = Table.TransformColumns(Data, {{"type", each if _ = null then null else Record.FieldOrDefault([#"goal" = "But", #"yellow_card" = "Carton jaune", #"red_card" = "Carton rouge"], _, _), type text}})
+				    Libelles_type = Table.TransformColumns(Data, {{"type", each if _ = null then null else Record.FieldOrDefault([#"goal" = "But", #"yellow_card" = "Carton jaune", #"red_card" = "Carton rouge", #"substitution" = "Changement"], _, _), type text}})
 				in
 				    Libelles_type
