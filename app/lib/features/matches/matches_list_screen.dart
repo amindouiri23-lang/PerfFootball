@@ -46,7 +46,14 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen> {
         );
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Matchs'), actions: const [SyncIndicator()], bottom: teamFilterBar(ref)),
+      appBar: AppBar(title: const Text('Matchs'), bottom: teamFilterBar(ref), actions: [
+        TextButton.icon(
+          onPressed: () => context.go('/home/results'),
+          icon: const Icon(Icons.emoji_events_outlined),
+          label: const Text('Club'),
+        ),
+        const SyncIndicator(),
+      ]),
       floatingActionButton: !ref.watch(permsProvider).can('matchs.add') ? null : FloatingActionButton.extended(
         onPressed: () => context.go('/matches/new'),
         icon: const Icon(Icons.add),

@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/permissions.dart';
+import '../../core/photos.dart';
 import '../auth/auth_repository.dart';
 import 'team_filter.dart';
 import 'team_repository.dart';
 import 'team_screen.dart' show NoTeamScreen;
 
 /// Membre du staff d'une équipe (fonction serveur team_staff, migration 20261022000001).
-typedef StaffMember = ({String userId, String name, String role, bool owner, bool disabled});
+typedef StaffMember = ({String userId, String name, String role, bool owner, bool disabled, String? photoPath});
 
 /// Staff de l'équipe : lu en ligne (les profils du staff ne sont pas sur l'appareil).
 final teamStaffProvider = FutureProvider.family<List<StaffMember>, String>((ref, teamId) async {
@@ -22,6 +23,7 @@ final teamStaffProvider = FutureProvider.family<List<StaffMember>, String>((ref,
           role: r['app_role'] as String,
           owner: r['member_role'] == 'owner',
           disabled: r['disabled'] == true,
+          photoPath: r['photo_path'] as String?,
         ),
     ];
   } catch (_) {
@@ -60,8 +62,9 @@ class TeamStaffScreen extends ConsumerWidget {
             for (final m in list)
               ListTile(
                 enabled: !m.disabled,
-                leading: CircleAvatar(
-                  child: Text(m.name.isEmpty ? '?' : m.name.split(' ').map((w) => w.isEmpty ? '' : w[0]).take(2).join().toUpperCase()),
+                leading: PhotoAvatar(
+                  path: m.photoPath,
+                  initials: m.name.isEmpty ? '?' : m.name.split(' ').map((w) => w.isEmpty ? '' : w[0]).take(2).join().toUpperCase(),
                 ),
                 title: Text(m.name.isEmpty ? 'Compte sans nom' : m.name),
                 subtitle: Text([

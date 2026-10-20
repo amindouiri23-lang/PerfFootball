@@ -71,6 +71,15 @@ class HomeScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     final perms = ref.watch(permsProvider);
     return [
+      Card(
+        child: ListTile(
+          leading: const Icon(Icons.emoji_events_outlined),
+          title: const Text('Résultats du club'),
+          subtitle: const Text('Scores et matchs en direct de toutes les équipes'),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => context.go('/home/results'),
+        ),
+      ),
       ..._nextMatch(context, ref, teamId),
       ..._squadAndLoad(context, ref, teamId),
       const SizedBox(height: 16),

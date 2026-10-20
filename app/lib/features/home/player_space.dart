@@ -119,6 +119,15 @@ class PlayerSpace extends ConsumerWidget {
       const SizedBox(height: 16),
       Card(
         child: ListTile(
+          leading: const Icon(Icons.emoji_events_outlined),
+          title: const Text('Résultats du club'),
+          subtitle: const Text('Scores et matchs en direct de toutes les équipes'),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => context.go('/home/results'),
+        ),
+      ),
+      Card(
+        child: ListTile(
           leading: const Icon(Icons.badge_outlined),
           title: const Text('Mon dossier'),
           subtitle: const Text('Coordonnées, école, parents, club précédent'),

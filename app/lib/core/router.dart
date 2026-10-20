@@ -11,6 +11,7 @@ import '../features/home/home_screen.dart';
 import '../features/profile/profile_screens.dart';
 import '../features/injuries/injuries_screen.dart';
 import '../features/matches/end_match_screen.dart';
+import '../features/matches/club_results_screen.dart';
 import '../features/matches/lineup_screen.dart';
 import '../features/matches/match_form_screen.dart';
 import '../features/matches/match_screen.dart';
@@ -70,6 +71,8 @@ final routerProvider = Provider<GoRouter>((ref) {
               path: '/home',
               builder: (_, _) => const HomeScreen(),
               routes: [
+                // Résultats de toutes les équipes du club, en lecture seule (staff et joueurs).
+                GoRoute(path: 'results', builder: (_, _) => const ClubResultsScreen()),
                 // Espace joueur : son dossier et ses questionnaires de bien-être.
                 GoRoute(path: 'dossier/:playerId', builder: (_, s) => PlayerProfileFormScreen(playerId: s.pathParameters['playerId']!)),
                 GoRoute(
@@ -247,7 +250,7 @@ final routerProvider = Provider<GoRouter>((ref) {
 
 /// Écrans ouverts à un compte joueur : son espace (accueil), son profil, la synchronisation.
 final _playerRoutes =
-    RegExp(r'^/(home(/dossier/[^/]+|/(wellness|survey)/[^/]+/[^/]+)?|profile(/edit|/password)?|sync)$');
+    RegExp(r'^/(home(/results|/dossier/[^/]+|/(wellness|survey)/[^/]+/[^/]+)?|profile(/edit|/password)?|sync)$');
 
 /// Permission nécessaire pour ouvrir un écran (null : écran ouvert à tout le staff).
 String? requiredPermission(String location) {
