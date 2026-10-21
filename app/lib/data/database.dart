@@ -117,6 +117,14 @@ class Matches extends Table with SyncColumns {
   TextColumn get formation => text().nullable()();
   /// Match envoyé aux joueurs : chacun donne son RPE depuis son compte.
   BoolColumn get rpeRequested => boolean().withDefault(const Constant(false))();
+  /// Chronomètre : période (first_half, half_time, second_half, finished), coup d'envoi de chaque
+  /// mi-temps (horodatage ISO) et temps additionnel de chaque mi-temps.
+  TextColumn get period => text().nullable()();
+  TextColumn get firstHalfStartedAt => text().nullable()();
+  TextColumn get secondHalfStartedAt => text().nullable()();
+  // Noms imposés : le nom déduit serait added_time1, différent de la colonne du serveur (added_time_1).
+  IntColumn get addedTime1 => integer().named('added_time_1').nullable()();
+  IntColumn get addedTime2 => integer().named('added_time_2').nullable()();
 }
 
 /// Feuille de match d'un joueur (id déterministe : match + joueur).
@@ -314,7 +322,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? openConnection());
 
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 10;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -388,6 +396,25 @@ class AppDatabase extends _$AppDatabase {
             final cols = await customSelect('PRAGMA table_info(matches)').get();
             if (!cols.any((c) => c.read<String>('name') == 'rpe_requested')) {
               await m.addColumn(matches, matches.rpeRequested);
+            }
+          }
+          if (from < 9) {
+            // v9 : chronomètre du match.
+            final names = {for (final c in await customSelect('PRAGMA table_info(matches)').get()) c.read<String>('name')};
+            for (final c in [matches.period, matches.firstHalfStartedAt, matches.secondHalfStartedAt, matches.addedTime1,
+              matches.addedTime2]) {
+              if (!names.contains(c.name)) await m.addColumn(matches, c);
+            }
+          }
+          if (from < 10) {
+            // v10 : une base de test passée en v9 a reçu added_time1 / added_time2 ; noms du serveur.
+            final names = {for (final c in await customSelect('PRAGMA table_info(matches)').get()) c.read<String>('name')};
+            for (final (old, col) in [('added_time1', matches.addedTime1), ('added_time2', matches.addedTime2)]) {
+              if (names.contains(old) && !names.contains(col.name)) {
+                await customStatement('ALTER TABLE matches RENAME COLUMN $old TO ${col.name}');
+              } else if (!names.contains(col.name)) {
+                await m.addColumn(matches, col);
+              }
             }
           }
         },

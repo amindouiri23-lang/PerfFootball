@@ -20,6 +20,7 @@ import '../features/matches/squad_screen.dart';
 import '../features/sessions/attendance_screen.dart';
 import '../features/sessions/closing_screen.dart';
 import '../features/sessions/injury_form_screen.dart';
+import '../features/sessions/player_load_screen.dart';
 import '../features/sessions/session_form_screen.dart';
 import '../features/sessions/session_screen.dart';
 import '../features/sessions/sessions_list_screen.dart';
@@ -73,6 +74,8 @@ final routerProvider = Provider<GoRouter>((ref) {
               routes: [
                 // Résultats de toutes les équipes du club, en lecture seule (staff et joueurs).
                 GoRoute(path: 'results', builder: (_, _) => const ClubResultsScreen()),
+                // Charge de la semaine par joueur (RPE × durée).
+                GoRoute(path: 'load', builder: (_, _) => const PlayerLoadScreen()),
                 // Espace joueur : son dossier et ses questionnaires de bien-être.
                 GoRoute(path: 'dossier/:playerId', builder: (_, s) => PlayerProfileFormScreen(playerId: s.pathParameters['playerId']!)),
                 GoRoute(
@@ -255,6 +258,7 @@ final _playerRoutes =
 /// Permission nécessaire pour ouvrir un écran (null : écran ouvert à tout le staff).
 String? requiredPermission(String location) {
   final rules = <(RegExp, String)>[
+    (RegExp(r'^/home/load$'), 'seances.view'),
     (RegExp(r'^/sessions/wellness/new$'), 'bienetre.edit'),
     (RegExp(r'^/sessions/wellness/[^/]+/[^/]+$'), 'bienetre.edit'),
     (RegExp(r'^/sessions/wellness'), 'bienetre.view'),

@@ -118,4 +118,26 @@ void main() {
     expect(await db.select(db.sessionExercises).get(), isEmpty);
     await db.close();
   });
+
+  test('migration v9 → v10 (temps additionnel : noms de colonnes du serveur)', () async {
+    final file = File('${Directory.systemTemp.createTempSync('perffoot').path}/v9.sqlite');
+    final v10 = AppDatabase(NativeDatabase(file));
+    await v10.customSelect('SELECT 1').get();
+    await v10.close();
+    final raw = sqlite3.open(file.path);
+    raw.execute('ALTER TABLE matches RENAME COLUMN added_time_1 TO added_time1');
+    raw.execute('ALTER TABLE matches RENAME COLUMN added_time_2 TO added_time2');
+    raw.execute("INSERT INTO matches (id, team_id, date, kick_off_time, opponent, home_away, competition, created_at, updated_at, "
+        "added_time1) VALUES ('m1', 't1', '2026-10-21', '15:00:00', 'EST', 'H', 'league', 'x', 'x', 3)");
+    raw.execute('PRAGMA user_version = 9');
+    raw.close();
+
+    final db = AppDatabase(NativeDatabase(file));
+    final m = await db.select(db.matches).getSingle();
+    expect(m.addedTime1, 3);
+    final names = {for (final c in await db.customSelect('PRAGMA table_info(matches)').get()) c.read<String>('name')};
+    expect(names, containsAll(['added_time_1', 'added_time_2']));
+    expect(names, isNot(contains('added_time1')));
+    await db.close();
+  });
 }

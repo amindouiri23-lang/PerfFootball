@@ -209,7 +209,7 @@ class HomeScreen extends ConsumerWidget {
           ),
         ),
       ),
-      if (planned > 0 || done > 0) ...[
+      ...[
         const SizedBox(height: 16),
         Text('CHARGE DE LA SEMAINE', style: sectionLabel(context)),
         const SizedBox(height: 8),
@@ -234,6 +234,14 @@ class HomeScreen extends ConsumerWidget {
                   ),
                 ),
               ],
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton.icon(
+                  onPressed: () => context.go('/home/load'),
+                  icon: const Icon(Icons.bar_chart, size: 18),
+                  label: const Text('Voir par joueur'),
+                ),
+              ),
             ]),
           ),
         ),
