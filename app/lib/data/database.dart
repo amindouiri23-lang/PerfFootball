@@ -193,6 +193,8 @@ class TestResults extends Table with SyncColumns {
   IntColumn get attempt => integer().withDefault(const Constant(1))();
   RealColumn get value => real()();
   TextColumn get remark => text().nullable()();
+  /// Batterie de la saison : start (début), mid (mi-saison), end (fin) ; null = test hors batterie.
+  TextColumn get campaign => text().nullable()();
 }
 
 /// Dossier administratif du joueur (id = player_id).
@@ -322,7 +324,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? openConnection());
 
   @override
-  int get schemaVersion => 10;
+  int get schemaVersion => 11;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -416,6 +418,11 @@ class AppDatabase extends _$AppDatabase {
                 await m.addColumn(matches, col);
               }
             }
+          }
+          if (from < 11) {
+            // v11 : période de la saison des tests physiques.
+            final names = {for (final c in await customSelect('PRAGMA table_info(test_results)').get()) c.read<String>('name')};
+            if (!names.contains('campaign')) await m.addColumn(testResults, testResults.campaign);
           }
         },
       );

@@ -191,10 +191,18 @@ class SyncEngine {
     return row;
   }
 
+  /// Colonnes de chaque table locale : une colonne ajoutée sur le serveur avant la mise à jour de l'appli est
+  /// ignorée au lieu de faire échouer la synchronisation.
+  final _localColumns = <String, Set<String>>{};
+
   /// Écrit une ligne reçue, sauf si une modification locale non envoyée existe (elle partira au prochain envoi).
   Future<void> _upsertLocal(_SyncTable t, Map<String, dynamic> remote) async {
+    final known = _localColumns[t.name] ??= {
+      for (final c in await _db.customSelect('PRAGMA table_info(${t.name})').get()) c.read<String>('name'),
+    };
     final row = <String, Object?>{
-      for (final e in remote.entries) e.key: e.value is bool ? ((e.value as bool) ? 1 : 0) : e.value,
+      for (final e in remote.entries)
+        if (known.contains(e.key)) e.key: e.value is bool ? ((e.value as bool) ? 1 : 0) : e.value,
       'is_dirty': 0,
     };
     final cols = row.keys.toList();

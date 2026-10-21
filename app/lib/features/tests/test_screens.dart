@@ -40,14 +40,10 @@ class TestDaysScreen extends ConsumerWidget {
         icon: const Icon(Icons.add),
         label: const Text('Nouvelle journée de tests'),
         onPressed: () async {
-          final d = await showDatePicker(
-            context: context,
-            initialDate: DateTime.now(),
-            firstDate: DateTime(2020),
-            lastDate: DateTime.now().add(const Duration(days: 30)),
-            helpText: 'Date des tests',
-          );
-          if (d != null && context.mounted) context.go('/team/tests/${isoDate(d)}');
+          final pick = await showTestDayDialog(context);
+          if (pick != null && context.mounted) {
+            context.go('/team/tests/${pick.date}${pick.campaign == null ? '' : '?c=${pick.campaign}'}');
+          }
         },
       ),
       body: days.isEmpty
@@ -62,7 +58,10 @@ class TestDaysScreen extends ConsumerWidget {
               for (final d in days)
                 ListTile(
                   leading: const Icon(Icons.timer_outlined),
-                  title: Text(_dayLabel(d)),
+                  title: Text(() {
+                    final campaign = testCampaigns[byDay[d]!.map((r) => r.campaign).nonNulls.firstOrNull];
+                    return campaign == null ? _dayLabel(d) : '$campaign · ${_dayLabel(d)}';
+                  }()),
                   subtitle: Text(() {
                     final rows = byDay[d]!;
                     final players = rows.map((r) => r.playerId).toSet().length;
@@ -80,9 +79,11 @@ class TestDaysScreen extends ConsumerWidget {
 /// E33 — Journée de tests : un test à la fois, une ligne par joueur, un champ par essai. Le meilleur
 /// essai est calculé ; « Classement » trie les joueurs du meilleur au moins bon.
 class TestDayScreen extends ConsumerStatefulWidget {
-  const TestDayScreen({super.key, required this.date});
+  const TestDayScreen({super.key, required this.date, this.campaign});
 
   final String date;
+  /// Batterie choisie à la création ; sinon celle des résultats déjà saisis ce jour-là.
+  final String? campaign;
 
   @override
   ConsumerState<TestDayScreen> createState() => _TestDayScreenState();
@@ -126,10 +127,12 @@ class _TestDayScreenState extends ConsumerState<TestDayScreen> {
       });
     }
     final done = players.where((p) => bestOf(p.id) != null).length;
+    final campaign = widget.campaign ?? dayResults.map((r) => r.campaign).nonNulls.firstOrNull;
+    final dayTitle = DateFormat('d MMM y', 'fr_FR').format(DateTime.parse(widget.date));
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(DateFormat('d MMM y', 'fr_FR').format(DateTime.parse(widget.date))),
+        title: Text(campaign == null ? dayTitle : '${testCampaigns[campaign]} · $dayTitle'),
         actions: [
           const SyncIndicator(),
           IconButton(
@@ -192,7 +195,8 @@ class _TestDayScreenState extends ConsumerState<TestDayScreen> {
                 values: values[p.id] ?? const {},
                 best: best,
                 onChanged: (attempt, v) => ref.read(testRepositoryProvider).saveResult(
-                      teamId: team.id, playerId: p.id, testTypeId: type.id, date: widget.date, attempt: attempt, value: v),
+                      teamId: team.id, playerId: p.id, testTypeId: type.id, date: widget.date, attempt: attempt, value: v,
+                      campaign: campaign),
               );
             },
           ),
@@ -373,7 +377,65 @@ Future<String?> showAddTestTypeDialog(BuildContext context, WidgetRef ref, Strin
   );
 }
 
-/// Onglet « Tests » de la fiche joueur : dernier meilleur résultat par test et évolution.
+/// Choix d'une journée de tests : batterie de la saison (ou hors batterie) et date.
+Future<({String date, String? campaign})?> showTestDayDialog(BuildContext context) {
+  var picked = DateTime.now();
+  String? c = 'start';
+  return showDialog<({String date, String? campaign})>(
+    context: context,
+    builder: (context) => StatefulBuilder(
+      builder: (context, setState) => AlertDialog(
+        title: const Text('Journée de tests'),
+        content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+          _CampaignChips(value: c, onChanged: (v) => setState(() => c = v)),
+          const SizedBox(height: 12),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.event),
+            title: Text(_dayLabel(isoDate(picked))),
+            trailing: const Icon(Icons.edit_calendar),
+            onTap: () async {
+              final d = await _pickTestDate(context, picked);
+              if (d != null) setState(() => picked = d);
+            },
+          ),
+        ]),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Annuler')),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop((date: isoDate(picked), campaign: c)),
+            child: const Text('Continuer'),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+Future<DateTime?> _pickTestDate(BuildContext context, DateTime initial) => showDatePicker(
+      context: context,
+      initialDate: initial,
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now().add(const Duration(days: 30)),
+      helpText: 'Date des tests',
+    );
+
+/// Batterie de la saison : début, mi-saison, fin, ou hors batterie (null).
+class _CampaignChips extends StatelessWidget {
+  const _CampaignChips({required this.value, required this.onChanged});
+
+  final String? value;
+  final ValueChanged<String?> onChanged;
+
+  @override
+  Widget build(BuildContext context) => Wrap(spacing: 8, runSpacing: 8, children: [
+        for (final e in <String?, String>{...testCampaigns, null: 'Hors batterie'}.entries)
+          ChoiceChip(label: Text(e.value), selected: value == e.key, onSelected: (_) => onChanged(e.key)),
+      ]);
+}
+
+/// Onglet « Tests » de la fiche joueur : les trois batteries de la saison (début, mi-saison, fin) côte à côte,
+/// l'historique de chaque test, et la saisie d'un test pour ce joueur si le rôle le permet.
 class PlayerTestsTab extends ConsumerWidget {
   const PlayerTestsTab({super.key, required this.player});
 
@@ -383,40 +445,214 @@ class PlayerTestsTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final types = {for (final t in ref.watch(testTypesProvider(player.teamId)).value ?? const <TestType>[]) t.id: t};
     final results = ref.watch(playerTestResultsProvider(player.id)).value ?? const <TestResult>[];
+    final canAdd = ref.watch(permsProvider).can('tests.add');
+    final theme = Theme.of(context);
+    final season = seasonOf(DateTime.now());
+    final inSeason = results.where((r) => seasonOf(DateTime.parse(r.date)) == season).toList();
+
+    // Batterie → son jour (le plus récent s'il y en a plusieurs) et le meilleur résultat de chaque test ce jour-là.
+    final campaignDate = <String, String>{};
+    for (final r in inSeason) {
+      if (r.campaign != null && (campaignDate[r.campaign!] ?? '').compareTo(r.date) < 0) campaignDate[r.campaign!] = r.date;
+    }
+    final byCampaign = {
+      for (final c in campaignDate.keys)
+        c: bestByTest(inSeason.where((r) => r.campaign == c && r.date == campaignDate[c]).toList(), types),
+    };
     final best = bestByTest(results, types);
     final ordered = types.values.where((t) => best.containsKey(t.id)).toList();
-    if (ordered.isEmpty) {
-      return const Center(child: Padding(padding: EdgeInsets.all(24), child: Text('Aucun test.')));
+    final campaignOf = {for (final r in results) r.date: r.campaign};
+
+    void open({String? campaign, String? date}) => context.go(Uri(
+          path: '/team/players/${player.id}/tests',
+          queryParameters: {'c': ?campaign, 'd': ?date},
+        ).toString());
+
+    String cell(String campaign, TestType t) {
+      final h = byCampaign[campaign]?[t.id];
+      return h == null ? '—' : formatTestValue(h.first.value);
+    }
+
+    return ListView(padding: const EdgeInsets.only(bottom: 24), children: [
+      Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+        child: Text('Saison ${seasonLabel(season)}', style: theme.textTheme.titleSmall),
+      ),
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        child: Row(children: [
+          for (final e in testCampaigns.entries)
+            Expanded(
+              child: Card(
+                margin: const EdgeInsets.all(4),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(12),
+                  // Avec le droit d'ajouter : saisir ou compléter la batterie ; sinon consulter la journée faite.
+                  onTap: canAdd
+                      ? () => open(campaign: e.key, date: campaignDate[e.key])
+                      : campaignDate[e.key] == null
+                          ? null
+                          : () => context.go('/team/tests/${campaignDate[e.key]}'),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
+                    child: Column(children: [
+                      Icon(campaignDate[e.key] != null ? Icons.check_circle : Icons.radio_button_unchecked,
+                          color: campaignDate[e.key] != null ? const Color(0xFF2E7D32) : theme.colorScheme.outline),
+                      const SizedBox(height: 4),
+                      Text(e.value, textAlign: TextAlign.center, style: theme.textTheme.labelLarge),
+                      Text(
+                        campaignDate[e.key] != null
+                            ? DateFormat('d MMM y', 'fr_FR').format(DateTime.parse(campaignDate[e.key]!))
+                            : canAdd ? 'À saisir' : 'À venir',
+                        style: theme.textTheme.bodySmall,
+                      ),
+                    ]),
+                  ),
+                ),
+              ),
+            ),
+        ]),
+      ),
+      if (canAdd)
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          child: OutlinedButton.icon(
+            icon: const Icon(Icons.add),
+            label: const Text('Saisir un test'),
+            // Prochaine batterie à faire cette saison, sinon hors batterie.
+            onPressed: () => open(campaign: testCampaigns.keys.where((c) => campaignDate[c] == null).firstOrNull),
+          ),
+        ),
+      if (ordered.isEmpty)
+        const Padding(padding: EdgeInsets.all(24), child: Center(child: Text('Aucun test.')))
+      else ...[
+        if (byCampaign.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+            child: Row(children: [
+              const Spacer(),
+              for (final l in ['Début', 'Mi', 'Fin'])
+                SizedBox(width: 52, child: Text(l, textAlign: TextAlign.end, style: theme.textTheme.labelSmall)),
+              const SizedBox(width: 28),
+            ]),
+          ),
+        for (final t in ordered)
+          Builder(builder: (context) {
+            final h = best[t.id]!;
+            final last = h.first;
+            final prev = h.length > 1 ? h[1] : null;
+            final up = prev == null ? null : t.isBetter(last.value, prev.value);
+            final same = prev != null && prev.value == last.value;
+            return ExpansionTile(
+              title: Text('${t.name}${t.unit == null || t.unit!.isEmpty ? '' : ' (${t.unit})'}'),
+              subtitle: byCampaign.isNotEmpty ? null : Text(DateFormat('d MMM y', 'fr_FR').format(DateTime.parse(last.date))),
+              trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+                if (byCampaign.isNotEmpty)
+                  for (final c in testCampaigns.keys)
+                    SizedBox(width: 52, child: Text(cell(c, t), textAlign: TextAlign.end, style: theme.textTheme.titleSmall))
+                else
+                  Text('${formatTestValue(last.value)}${t.unitLabel}', style: theme.textTheme.titleMedium),
+                SizedBox(
+                  width: 28,
+                  child: prev != null && !same && up != null
+                      ? Icon(up ? Icons.trending_up : Icons.trending_down,
+                          color: up ? const Color(0xFF2E7D32) : theme.colorScheme.error)
+                      : null,
+                ),
+              ]),
+              children: [
+                for (final b in h)
+                  ListTile(
+                    dense: true,
+                    title: Text(DateFormat('d MMMM y', 'fr_FR').format(DateTime.parse(b.date))),
+                    subtitle: campaignOf[b.date] == null ? null : Text(testCampaigns[campaignOf[b.date]]!),
+                    trailing: Text('${formatTestValue(b.value)}${t.unitLabel}'),
+                    onTap: () => context.go('/team/tests/${b.date}'),
+                  ),
+              ],
+            );
+          }),
+      ],
+    ]);
+  }
+}
+
+/// Saisie des tests d'un joueur depuis sa fiche : la batterie et la date, puis tous les tests du catalogue,
+/// un champ par essai. Chaque valeur est enregistrée à la frappe, comme sur la journée de tests de l'équipe.
+class PlayerTestEntryScreen extends ConsumerStatefulWidget {
+  const PlayerTestEntryScreen({super.key, required this.playerId, this.campaign, this.date});
+
+  final String playerId;
+  final String? campaign;
+  final String? date;
+
+  @override
+  ConsumerState<PlayerTestEntryScreen> createState() => _PlayerTestEntryScreenState();
+}
+
+class _PlayerTestEntryScreenState extends ConsumerState<PlayerTestEntryScreen> {
+  late String? _campaign = widget.campaign;
+  late String _date = widget.date ?? isoDate(DateTime.now());
+
+  @override
+  Widget build(BuildContext context) {
+    final player = ref.watch(playerProvider(widget.playerId)).value;
+    if (player == null) return Scaffold(appBar: AppBar(), body: const Center(child: CircularProgressIndicator()));
+    final types = ref.watch(testTypesProvider(player.teamId)).value ?? const <TestType>[];
+    final values = <String, Map<int, double>>{};
+    for (final r in ref.watch(playerTestResultsProvider(player.id)).value ?? const <TestResult>[]) {
+      if (r.date == _date) values.putIfAbsent(r.testTypeId, () => {})[r.attempt] = r.value;
     }
     final theme = Theme.of(context);
-    return ListView(padding: EdgeInsets.zero, children: [
-      for (final t in ordered)
-        Builder(builder: (context) {
-          final h = best[t.id]!;
-          final last = h.first;
-          final prev = h.length > 1 ? h[1] : null;
-          final up = prev == null ? null : t.isBetter(last.value, prev.value);
-          final same = prev != null && prev.value == last.value;
-          return ExpansionTile(
-            title: Text(t.name),
-            subtitle: Text(DateFormat('d MMM y', 'fr_FR').format(DateTime.parse(last.date))),
-            trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-              Text('${formatTestValue(last.value)}${t.unitLabel}', style: theme.textTheme.titleMedium),
-              if (prev != null && !same && up != null)
-                Icon(up ? Icons.trending_up : Icons.trending_down,
-                    color: up ? const Color(0xFF2E7D32) : theme.colorScheme.error),
-            ]),
-            children: [
-              for (final b in h)
-                ListTile(
-                  dense: true,
-                  title: Text(DateFormat('d MMMM y', 'fr_FR').format(DateTime.parse(b.date))),
-                  trailing: Text('${formatTestValue(b.value)}${t.unitLabel}'),
-                  onTap: () => context.go('/team/tests/${b.date}'),
+
+    return Scaffold(
+      appBar: AppBar(title: Text('Tests · ${player.fullName}'), actions: const [SyncIndicator()]),
+      body: ListView(padding: const EdgeInsets.only(bottom: 32), children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+          child: _CampaignChips(value: _campaign, onChanged: (v) => setState(() => _campaign = v)),
+        ),
+        ListTile(
+          leading: const Icon(Icons.event),
+          title: Text(_dayLabel(_date)),
+          subtitle: const Text('Date des tests'),
+          trailing: const Icon(Icons.edit_calendar),
+          onTap: () async {
+            final d = await _pickTestDate(context, DateTime.parse(_date));
+            if (d != null) setState(() => _date = isoDate(d));
+          },
+        ),
+        const Divider(height: 1),
+        for (final t in types)
+          Padding(
+            // Clé par test et par date : changer de date repart de champs à jour.
+            key: ValueKey('${t.id}:$_date'),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            child: Row(children: [
+              Expanded(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text(t.name),
+                  Text([if (t.unit != null && t.unit!.isNotEmpty) t.unit!, testCategories[t.category]!].join(' · '),
+                      style: theme.textTheme.bodySmall),
+                ]),
+              ),
+              for (var a = 1; a <= t.attempts; a++)
+                Padding(
+                  padding: const EdgeInsets.only(left: 6),
+                  child: SizedBox(
+                    width: 64,
+                    child: _ValueField(
+                      label: t.attempts > 1 ? 'E$a' : (t.unit ?? 'Valeur'),
+                      value: values[t.id]?[a],
+                      onChanged: (v) => ref.read(testRepositoryProvider).saveResult(
+                            teamId: player.teamId, playerId: player.id, testTypeId: t.id, date: _date, attempt: a,
+                            value: v, campaign: _campaign),
+                    ),
+                  ),
                 ),
-            ],
-          );
-        }),
-    ]);
+            ]),
+          ),
+      ]),
+    );
   }
 }

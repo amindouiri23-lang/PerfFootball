@@ -10151,6 +10151,17 @@ class $TestResultsTable extends TestResults
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _campaignMeta = const VerificationMeta(
+    'campaign',
+  );
+  @override
+  late final GeneratedColumn<String> campaign = GeneratedColumn<String>(
+    'campaign',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -10166,6 +10177,7 @@ class $TestResultsTable extends TestResults
     attempt,
     value,
     remark,
+    campaign,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -10276,6 +10288,12 @@ class $TestResultsTable extends TestResults
         remark.isAcceptableOrUnknown(data['remark']!, _remarkMeta),
       );
     }
+    if (data.containsKey('campaign')) {
+      context.handle(
+        _campaignMeta,
+        campaign.isAcceptableOrUnknown(data['campaign']!, _campaignMeta),
+      );
+    }
     return context;
   }
 
@@ -10337,6 +10355,10 @@ class $TestResultsTable extends TestResults
         DriftSqlType.string,
         data['${effectivePrefix}remark'],
       ),
+      campaign: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}campaign'],
+      ),
     );
   }
 
@@ -10362,6 +10384,9 @@ class TestResult extends DataClass implements Insertable<TestResult> {
   final int attempt;
   final double value;
   final String? remark;
+
+  /// Batterie de la saison : start (début), mid (mi-saison), end (fin) ; null = test hors batterie.
+  final String? campaign;
   const TestResult({
     required this.id,
     required this.createdAt,
@@ -10376,6 +10401,7 @@ class TestResult extends DataClass implements Insertable<TestResult> {
     required this.attempt,
     required this.value,
     this.remark,
+    this.campaign,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -10396,6 +10422,9 @@ class TestResult extends DataClass implements Insertable<TestResult> {
     map['value'] = Variable<double>(value);
     if (!nullToAbsent || remark != null) {
       map['remark'] = Variable<String>(remark);
+    }
+    if (!nullToAbsent || campaign != null) {
+      map['campaign'] = Variable<String>(campaign);
     }
     return map;
   }
@@ -10419,6 +10448,9 @@ class TestResult extends DataClass implements Insertable<TestResult> {
       remark: remark == null && nullToAbsent
           ? const Value.absent()
           : Value(remark),
+      campaign: campaign == null && nullToAbsent
+          ? const Value.absent()
+          : Value(campaign),
     );
   }
 
@@ -10441,6 +10473,7 @@ class TestResult extends DataClass implements Insertable<TestResult> {
       attempt: serializer.fromJson<int>(json['attempt']),
       value: serializer.fromJson<double>(json['value']),
       remark: serializer.fromJson<String?>(json['remark']),
+      campaign: serializer.fromJson<String?>(json['campaign']),
     );
   }
   @override
@@ -10460,6 +10493,7 @@ class TestResult extends DataClass implements Insertable<TestResult> {
       'attempt': serializer.toJson<int>(attempt),
       'value': serializer.toJson<double>(value),
       'remark': serializer.toJson<String?>(remark),
+      'campaign': serializer.toJson<String?>(campaign),
     };
   }
 
@@ -10477,6 +10511,7 @@ class TestResult extends DataClass implements Insertable<TestResult> {
     int? attempt,
     double? value,
     Value<String?> remark = const Value.absent(),
+    Value<String?> campaign = const Value.absent(),
   }) => TestResult(
     id: id ?? this.id,
     createdAt: createdAt ?? this.createdAt,
@@ -10493,6 +10528,7 @@ class TestResult extends DataClass implements Insertable<TestResult> {
     attempt: attempt ?? this.attempt,
     value: value ?? this.value,
     remark: remark.present ? remark.value : this.remark,
+    campaign: campaign.present ? campaign.value : this.campaign,
   );
   TestResult copyWithCompanion(TestResultsCompanion data) {
     return TestResult(
@@ -10513,6 +10549,7 @@ class TestResult extends DataClass implements Insertable<TestResult> {
       attempt: data.attempt.present ? data.attempt.value : this.attempt,
       value: data.value.present ? data.value.value : this.value,
       remark: data.remark.present ? data.remark.value : this.remark,
+      campaign: data.campaign.present ? data.campaign.value : this.campaign,
     );
   }
 
@@ -10531,7 +10568,8 @@ class TestResult extends DataClass implements Insertable<TestResult> {
           ..write('date: $date, ')
           ..write('attempt: $attempt, ')
           ..write('value: $value, ')
-          ..write('remark: $remark')
+          ..write('remark: $remark, ')
+          ..write('campaign: $campaign')
           ..write(')'))
         .toString();
   }
@@ -10551,6 +10589,7 @@ class TestResult extends DataClass implements Insertable<TestResult> {
     attempt,
     value,
     remark,
+    campaign,
   );
   @override
   bool operator ==(Object other) =>
@@ -10568,7 +10607,8 @@ class TestResult extends DataClass implements Insertable<TestResult> {
           other.date == this.date &&
           other.attempt == this.attempt &&
           other.value == this.value &&
-          other.remark == this.remark);
+          other.remark == this.remark &&
+          other.campaign == this.campaign);
 }
 
 class TestResultsCompanion extends UpdateCompanion<TestResult> {
@@ -10585,6 +10625,7 @@ class TestResultsCompanion extends UpdateCompanion<TestResult> {
   final Value<int> attempt;
   final Value<double> value;
   final Value<String?> remark;
+  final Value<String?> campaign;
   final Value<int> rowid;
   const TestResultsCompanion({
     this.id = const Value.absent(),
@@ -10600,6 +10641,7 @@ class TestResultsCompanion extends UpdateCompanion<TestResult> {
     this.attempt = const Value.absent(),
     this.value = const Value.absent(),
     this.remark = const Value.absent(),
+    this.campaign = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   TestResultsCompanion.insert({
@@ -10616,6 +10658,7 @@ class TestResultsCompanion extends UpdateCompanion<TestResult> {
     this.attempt = const Value.absent(),
     required double value,
     this.remark = const Value.absent(),
+    this.campaign = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        createdAt = Value(createdAt),
@@ -10639,6 +10682,7 @@ class TestResultsCompanion extends UpdateCompanion<TestResult> {
     Expression<int>? attempt,
     Expression<double>? value,
     Expression<String>? remark,
+    Expression<String>? campaign,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -10655,6 +10699,7 @@ class TestResultsCompanion extends UpdateCompanion<TestResult> {
       if (attempt != null) 'attempt': attempt,
       if (value != null) 'value': value,
       if (remark != null) 'remark': remark,
+      if (campaign != null) 'campaign': campaign,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -10673,6 +10718,7 @@ class TestResultsCompanion extends UpdateCompanion<TestResult> {
     Value<int>? attempt,
     Value<double>? value,
     Value<String?>? remark,
+    Value<String?>? campaign,
     Value<int>? rowid,
   }) {
     return TestResultsCompanion(
@@ -10689,6 +10735,7 @@ class TestResultsCompanion extends UpdateCompanion<TestResult> {
       attempt: attempt ?? this.attempt,
       value: value ?? this.value,
       remark: remark ?? this.remark,
+      campaign: campaign ?? this.campaign,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -10735,6 +10782,9 @@ class TestResultsCompanion extends UpdateCompanion<TestResult> {
     if (remark.present) {
       map['remark'] = Variable<String>(remark.value);
     }
+    if (campaign.present) {
+      map['campaign'] = Variable<String>(campaign.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -10757,6 +10807,7 @@ class TestResultsCompanion extends UpdateCompanion<TestResult> {
           ..write('attempt: $attempt, ')
           ..write('value: $value, ')
           ..write('remark: $remark, ')
+          ..write('campaign: $campaign, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -22536,6 +22587,7 @@ typedef $$TestResultsTableCreateCompanionBuilder =
       Value<int> attempt,
       required double value,
       Value<String?> remark,
+      Value<String?> campaign,
       Value<int> rowid,
     });
 typedef $$TestResultsTableUpdateCompanionBuilder =
@@ -22553,6 +22605,7 @@ typedef $$TestResultsTableUpdateCompanionBuilder =
       Value<int> attempt,
       Value<double> value,
       Value<String?> remark,
+      Value<String?> campaign,
       Value<int> rowid,
     });
 
@@ -22627,6 +22680,11 @@ class $$TestResultsTableFilterComposer
 
   ColumnFilters<String> get remark => $composableBuilder(
     column: $table.remark,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get campaign => $composableBuilder(
+    column: $table.campaign,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -22704,6 +22762,11 @@ class $$TestResultsTableOrderingComposer
     column: $table.remark,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get campaign => $composableBuilder(
+    column: $table.campaign,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$TestResultsTableAnnotationComposer
@@ -22757,6 +22820,9 @@ class $$TestResultsTableAnnotationComposer
 
   GeneratedColumn<String> get remark =>
       $composableBuilder(column: $table.remark, builder: (column) => column);
+
+  GeneratedColumn<String> get campaign =>
+      $composableBuilder(column: $table.campaign, builder: (column) => column);
 }
 
 class $$TestResultsTableTableManager
@@ -22803,6 +22869,7 @@ class $$TestResultsTableTableManager
                 Value<int> attempt = const Value.absent(),
                 Value<double> value = const Value.absent(),
                 Value<String?> remark = const Value.absent(),
+                Value<String?> campaign = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => TestResultsCompanion(
                 id: id,
@@ -22818,6 +22885,7 @@ class $$TestResultsTableTableManager
                 attempt: attempt,
                 value: value,
                 remark: remark,
+                campaign: campaign,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -22835,6 +22903,7 @@ class $$TestResultsTableTableManager
                 Value<int> attempt = const Value.absent(),
                 required double value,
                 Value<String?> remark = const Value.absent(),
+                Value<String?> campaign = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => TestResultsCompanion.insert(
                 id: id,
@@ -22850,6 +22919,7 @@ class $$TestResultsTableTableManager
                 attempt: attempt,
                 value: value,
                 remark: remark,
+                campaign: campaign,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

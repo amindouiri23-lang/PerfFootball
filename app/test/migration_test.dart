@@ -140,4 +140,23 @@ void main() {
     expect(names, isNot(contains('added_time1')));
     await db.close();
   });
+
+  test('migration v10 → v11 (batterie de tests de la saison)', () async {
+    final file = File('${Directory.systemTemp.createTempSync('perffoot').path}/v10.sqlite');
+    final v11 = AppDatabase(NativeDatabase(file));
+    await v11.customSelect('SELECT 1').get();
+    await v11.close();
+    final raw = sqlite3.open(file.path);
+    raw.execute('ALTER TABLE test_results DROP COLUMN campaign');
+    raw.execute("INSERT INTO test_results (id, team_id, player_id, test_type_id, date, attempt, value, created_at, updated_at) "
+        "VALUES ('r1', 't1', 'p1', 'tt1', '2026-09-01', 1, 3.4, 'x', 'x')");
+    raw.execute('PRAGMA user_version = 10');
+    raw.close();
+
+    final db = AppDatabase(NativeDatabase(file));
+    final r = await db.select(db.testResults).getSingle();
+    expect(r.value, 3.4);
+    expect(r.campaign, isNull);
+    await db.close();
+  });
 }
