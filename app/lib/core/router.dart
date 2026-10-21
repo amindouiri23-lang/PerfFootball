@@ -206,7 +206,12 @@ final routerProvider = Provider<GoRouter>((ref) {
                 GoRoute(
                   path: 'tests',
                   builder: (_, _) => const TestDaysScreen(),
-                  routes: [GoRoute(path: ':date', builder: (_, s) => TestDayScreen(date: s.pathParameters['date']!))],
+                  routes: [
+                    GoRoute(
+                      path: ':date',
+                      builder: (_, s) => TestDayScreen(date: s.pathParameters['date']!, campaign: s.uri.queryParameters['c']),
+                    ),
+                  ],
                 ),
                 GoRoute(
                   path: 'injuries',
@@ -220,6 +225,14 @@ final routerProvider = Provider<GoRouter>((ref) {
                     GoRoute(path: 'edit', builder: (_, s) => PlayerFormScreen(id: s.pathParameters['id'])),
                     GoRoute(path: 'profile', builder: (_, s) => PlayerProfileFormScreen(playerId: s.pathParameters['id']!)),
                     GoRoute(path: 'medical', builder: (_, s) => PlayerMedicalFormScreen(playerId: s.pathParameters['id']!)),
+                    GoRoute(
+                      path: 'tests',
+                      builder: (_, s) => PlayerTestEntryScreen(
+                        playerId: s.pathParameters['id']!,
+                        campaign: s.uri.queryParameters['c'],
+                        date: s.uri.queryParameters['d'],
+                      ),
+                    ),
                   ],
                 ),
               ],
@@ -284,6 +297,7 @@ String? requiredPermission(String location) {
     (RegExp(r'^/team/players/[^/]+/edit$'), 'effectif.edit'),
     (RegExp(r'^/team/players/[^/]+/profile$'), 'dossier.edit'),
     (RegExp(r'^/team/players/[^/]+/medical$'), 'medical.edit'),
+    (RegExp(r'^/team/players/[^/]+/tests$'), 'tests.add'),
     (RegExp(r'^/team'), 'effectif.view'),
   ];
   return rules.where((r) => r.$1.hasMatch(location)).firstOrNull?.$2;

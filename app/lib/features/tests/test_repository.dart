@@ -16,6 +16,14 @@ const testCategories = {
 };
 const testBetter = {'higher': 'Plus haut = mieux', 'lower': 'Plus bas = mieux', 'none': 'Sans classement'};
 
+/// Les trois batteries de tests d'une saison.
+const testCampaigns = {'start': 'Début de saison', 'mid': 'Mi-saison', 'end': 'Fin de saison'};
+
+/// Saison sportive d'une date : elle commence le 1er juillet (« 2026-2027 » → 2026).
+int seasonOf(DateTime d) => d.month >= 7 ? d.year : d.year - 1;
+
+String seasonLabel(int season) => '$season-${season + 1}';
+
 /// « 3,29 » : virgule française, zéros inutiles retirés.
 String formatTestValue(double v) =>
     NumberFormat('0.##', 'fr_FR').format(v);
@@ -110,6 +118,7 @@ class TestRepository {
     required String date,
     required int attempt,
     required double? value,
+    String? campaign,
   }) async {
     final id = naturalId([playerId, testTypeId, date, '$attempt']);
     final now = nowIso();
@@ -124,7 +133,7 @@ class TestRepository {
     }
     await _db.into(_db.testResults).insertOnConflictUpdate(TestResultsCompanion.insert(
           id: id, teamId: teamId, playerId: playerId, testTypeId: testTypeId, date: date,
-          attempt: Value(attempt), value: value, deleted: const Value(false),
+          attempt: Value(attempt), value: value, campaign: Value(campaign), deleted: const Value(false),
           createdAt: existing?.createdAt ?? now, updatedAt: now, isDirty: const Value(true),
         ));
     _sync();
