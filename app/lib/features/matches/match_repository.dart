@@ -54,8 +54,48 @@ extension FootballMatchLabels on FootballMatch {
       ? null
       : goalsFor! > goalsAgainst! ? 'W' : goalsFor! < goalsAgainst! ? 'L' : 'D';
 
+  /// Minute affichée par le chronomètre (« 23' », « 45+2' », « MT », « 67' », « 90+3' », « Fin »).
+  String get clockLabel => matchClockLabel(period, firstHalfStartedAt, secondHalfStartedAt, durationMin);
+
+  /// Minute en cours pour pré-remplir un but, un carton ou un changement (null si le chrono ne tourne pas).
+  int? get liveMinute => matchLiveMinute(period, firstHalfStartedAt, secondHalfStartedAt, durationMin);
+
   /// Match qui ne se jouera pas ou plus : forfait, reporté, annulé.
   bool get notPlayed => {'forfeit', 'postponed', 'cancelled'}.contains(status);
+}
+
+/// Minutes écoulées (commencées) depuis [iso] : 1 dès le coup d'envoi.
+int _minutesSince(String iso, DateTime now) => now.difference(DateTime.parse(iso)).inSeconds ~/ 60 + 1;
+
+/// Minute affichée par le chronomètre : temps additionnel noté « 45+2' » au-delà de la mi-temps.
+String matchClockLabel(String? period, String? firstStart, String? secondStart, int durationMin, {DateTime? now}) {
+  final half = durationMin ~/ 2;
+  now ??= DateTime.now();
+  switch (period) {
+    case 'first_half' when firstStart != null:
+      final e = _minutesSince(firstStart, now);
+      return e <= half ? "$e'" : "$half+${e - half}'";
+    case 'half_time':
+      return 'MT';
+    case 'second_half' when secondStart != null:
+      final e = _minutesSince(secondStart, now);
+      return e <= half ? "${half + e}'" : "$durationMin+${e - half}'";
+    case 'finished':
+      return 'Fin';
+  }
+  return '';
+}
+
+/// Minute du match pour un événement (temps additionnel compris, plafonnée à 130).
+int? matchLiveMinute(String? period, String? firstStart, String? secondStart, int durationMin, {DateTime? now}) {
+  final half = durationMin ~/ 2;
+  now ??= DateTime.now();
+  return switch (period) {
+    'first_half' when firstStart != null => _minutesSince(firstStart, now).clamp(1, 130),
+    'half_time' => half,
+    'second_half' when secondStart != null => (half + _minutesSince(secondStart, now)).clamp(1, 130),
+    _ => null,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -268,6 +308,22 @@ class MatchRepository {
     }
     _sync();
   }
+
+  /// Chronomètre : coup d'envoi de la 1re mi-temps.
+  Future<void> kickOff(FootballMatch m) => _updateMatch(m.id,
+      MatchesCompanion(period: const Value('first_half'), firstHalfStartedAt: Value(nowIso())));
+
+  /// Mi-temps, avec le temps additionnel joué en 1re mi-temps.
+  Future<void> halfTime(FootballMatch m, int addedTime) => _updateMatch(m.id,
+      MatchesCompanion(period: const Value('half_time'), addedTime1: Value(addedTime)));
+
+  /// Reprise : coup d'envoi de la 2e mi-temps.
+  Future<void> secondHalf(FootballMatch m) => _updateMatch(m.id,
+      MatchesCompanion(period: const Value('second_half'), secondHalfStartedAt: Value(nowIso())));
+
+  /// Fin du temps de jeu, avec le temps additionnel de la 2e mi-temps.
+  Future<void> fullTime(FootballMatch m, int addedTime) => _updateMatch(m.id,
+      MatchesCompanion(period: const Value('finished'), addedTime2: Value(addedTime)));
 
   /// Envoie le match aux joueurs : chacun donne son RPE depuis son compte (le staff peut aussi le saisir).
   Future<void> requestRpe(FootballMatch m) => _updateMatch(m.id, const MatchesCompanion(rpeRequested: Value(true)));

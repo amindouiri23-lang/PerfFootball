@@ -14,6 +14,7 @@ import '../sessions/sessions_list_screen.dart' show StatusChip;
 import '../tactics/tactic_screens.dart' show LinkedTactics;
 import '../team/team_repository.dart';
 import 'lineup_screen.dart';
+import 'match_clock.dart';
 import 'match_repository.dart';
 import 'matches_list_screen.dart';
 
@@ -198,6 +199,7 @@ class MatchScreen extends ConsumerWidget {
           LineupPreview(match: m),
         ]
         else ...[
+          if (m.status == 'in_progress') MatchClock(match: m, canControl: play),
           if (m.status == 'in_progress' && play) _lineupButton(context, m),
           if (m.status == 'in_progress') LineupPreview(match: m),
           if (m.status == 'abandoned')
@@ -499,7 +501,7 @@ Future<void> showSubstitutionSheet(BuildContext context, WidgetRef ref, Football
   }
   onField.removeAll(events.where((e) => e.type == 'red_card').map((e) => e.playerId));
   final bench = [for (final r in present) if (!onField.contains(r.playerId) && !used.contains(r.playerId)) r.playerId];
-  final minute = TextEditingController(text: event?.minute.toString() ?? '');
+  final minute = TextEditingController(text: (event?.minute ?? m.liveMinute)?.toString() ?? '');
   String? out = event?.assistPlayerId;
   String? inn = event?.playerId;
   var submitted = false;
@@ -583,7 +585,7 @@ Future<void> showEventSheet(BuildContext context, WidgetRef ref, FootballMatch m
     Map<String, Player> players, {String? type, MatchEvent? event}) async {
   final repo = ref.read(matchRepositoryProvider);
   var kind = event?.type ?? type ?? 'goal';
-  final minute = TextEditingController(text: event?.minute.toString() ?? '');
+  final minute = TextEditingController(text: (event?.minute ?? m.liveMinute)?.toString() ?? '');
   final remark = TextEditingController(text: event?.remark ?? '');
   String? scorer = event?.playerId;
   String? assist = event?.assistPlayerId;

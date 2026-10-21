@@ -5,7 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../auth/auth_repository.dart';
-import 'match_repository.dart' show competitions, eventColors, eventIcons, forfeitGoals, homeAwayLabels, matchStatuses;
+import 'match_repository.dart'
+    show competitions, eventColors, eventIcons, forfeitGoals, homeAwayLabels, matchClockLabel, matchStatuses;
 
 /// Match d'une équipe du club, vu en lecture seule (fonction serveur club_results).
 class ClubMatch {
@@ -22,7 +23,13 @@ class ClubMatch {
         goalsFor = j['goals_for'] as int?,
         goalsAgainst = j['goals_against'] as int?,
         forfeitBy = j['forfeit_by'] as String?,
-        events = [for (final e in (j['events'] as List<dynamic>? ?? const [])) e as Map<String, dynamic>];
+        events = [for (final e in (j['events'] as List<dynamic>? ?? const [])) e as Map<String, dynamic>],
+        durationMin = j['duration_min'] as int? ?? 90,
+        period = j['period'] as String?,
+        firstHalfStartedAt = j['first_half_started_at'] as String?,
+        secondHalfStartedAt = j['second_half_started_at'] as String?,
+        addedTime1 = j['added_time_1'] as int?,
+        addedTime2 = j['added_time_2'] as int?;
 
   final String id;
   final String team;
@@ -37,6 +44,21 @@ class ClubMatch {
   final int? goalsAgainst;
   final String? forfeitBy;
   final List<Map<String, dynamic>> events;
+  final int durationMin;
+  final String? period;
+  final String? firstHalfStartedAt;
+  final String? secondHalfStartedAt;
+  final int? addedTime1;
+  final int? addedTime2;
+
+  /// Minute du match en cours (« 23' », « 45+2' », « MT »), ou null si le chrono n'a pas été lancé.
+  String? get clock {
+    final c = matchClockLabel(period, firstHalfStartedAt, secondHalfStartedAt, durationMin);
+    return c.isEmpty ? null : c;
+  }
+
+  /// Temps additionnel joué : « +2 / +4 ».
+  String? get addedTime => addedTime1 == null && addedTime2 == null ? null : '+${addedTime1 ?? 0} / +${addedTime2 ?? 0}';
 
   bool get live => status == 'in_progress';
   bool get played => {'completed', 'forfeit', 'abandoned'}.contains(status);
@@ -56,7 +78,7 @@ final clubResultsProvider = FutureProvider<List<ClubMatch>>((ref) async {
 });
 
 /// Résultats du club : matchs en direct, résultats et matchs à venir de toutes les équipes du club,
-/// pour tout le monde (même sans être affecté à l'équipe). Lecture seule, mis à jour toutes les 30 s.
+/// pour tout le monde (même sans être affecté à l'équipe). Lecture seule, mis à jour toutes les 20 s.
 class ClubResultsScreen extends ConsumerStatefulWidget {
   const ClubResultsScreen({super.key});
 
@@ -71,7 +93,7 @@ class _ClubResultsScreenState extends ConsumerState<ClubResultsScreen> {
   @override
   void initState() {
     super.initState();
-    _timer = Timer.periodic(const Duration(seconds: 30), (_) => ref.invalidate(clubResultsProvider));
+    _timer = Timer.periodic(const Duration(seconds: 20), (_) => ref.invalidate(clubResultsProvider));
   }
 
   @override
@@ -177,7 +199,7 @@ class _MatchCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
             decoration: BoxDecoration(color: m.live ? Colors.green.shade600 : bg, borderRadius: BorderRadius.circular(12)),
-            child: Text(m.upcoming ? m.time : m.score,
+            child: Text(m.upcoming ? m.time : m.live && m.clock != null ? '${m.score} · ${m.clock}' : m.score,
                 style: TextStyle(color: m.live ? Colors.white : fg, fontWeight: FontWeight.bold)),
           ),
         ]),
@@ -185,7 +207,8 @@ class _MatchCard extends StatelessWidget {
           '${day[0].toUpperCase()}${day.substring(1)} · ${m.time}',
           homeAwayLabels[m.homeAway] ?? m.homeAway,
           [competitions[m.competition] ?? m.competition, if (m.matchday != null) 'J${m.matchday}'].join(' '),
-          if (m.live) 'en cours',
+          if (m.live) m.clock == null ? 'en cours' : 'en cours · ${m.clock}',
+          if (!m.live && m.addedTime != null) 'temps additionnel ${m.addedTime}',
           if (m.status == 'forfeit')
             m.forfeitBy == 'opponent' ? 'victoire $forfeitGoals-0 par forfait' : 'défaite 0-$forfeitGoals par forfait',
           if ({'abandoned', 'postponed', 'cancelled'}.contains(m.status)) (matchStatuses[m.status] ?? m.status).toLowerCase(),

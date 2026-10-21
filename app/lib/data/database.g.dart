@@ -5162,6 +5162,59 @@ class $MatchesTable extends Matches
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _periodMeta = const VerificationMeta('period');
+  @override
+  late final GeneratedColumn<String> period = GeneratedColumn<String>(
+    'period',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _firstHalfStartedAtMeta =
+      const VerificationMeta('firstHalfStartedAt');
+  @override
+  late final GeneratedColumn<String> firstHalfStartedAt =
+      GeneratedColumn<String>(
+        'first_half_started_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _secondHalfStartedAtMeta =
+      const VerificationMeta('secondHalfStartedAt');
+  @override
+  late final GeneratedColumn<String> secondHalfStartedAt =
+      GeneratedColumn<String>(
+        'second_half_started_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _addedTime1Meta = const VerificationMeta(
+    'addedTime1',
+  );
+  @override
+  late final GeneratedColumn<int> addedTime1 = GeneratedColumn<int>(
+    'added_time_1',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _addedTime2Meta = const VerificationMeta(
+    'addedTime2',
+  );
+  @override
+  late final GeneratedColumn<int> addedTime2 = GeneratedColumn<int>(
+    'added_time_2',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -5186,6 +5239,11 @@ class $MatchesTable extends Matches
     forfeitBy,
     formation,
     rpeRequested,
+    period,
+    firstHalfStartedAt,
+    secondHalfStartedAt,
+    addedTime1,
+    addedTime2,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -5364,6 +5422,48 @@ class $MatchesTable extends Matches
         ),
       );
     }
+    if (data.containsKey('period')) {
+      context.handle(
+        _periodMeta,
+        period.isAcceptableOrUnknown(data['period']!, _periodMeta),
+      );
+    }
+    if (data.containsKey('first_half_started_at')) {
+      context.handle(
+        _firstHalfStartedAtMeta,
+        firstHalfStartedAt.isAcceptableOrUnknown(
+          data['first_half_started_at']!,
+          _firstHalfStartedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('second_half_started_at')) {
+      context.handle(
+        _secondHalfStartedAtMeta,
+        secondHalfStartedAt.isAcceptableOrUnknown(
+          data['second_half_started_at']!,
+          _secondHalfStartedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('added_time_1')) {
+      context.handle(
+        _addedTime1Meta,
+        addedTime1.isAcceptableOrUnknown(
+          data['added_time_1']!,
+          _addedTime1Meta,
+        ),
+      );
+    }
+    if (data.containsKey('added_time_2')) {
+      context.handle(
+        _addedTime2Meta,
+        addedTime2.isAcceptableOrUnknown(
+          data['added_time_2']!,
+          _addedTime2Meta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -5461,6 +5561,26 @@ class $MatchesTable extends Matches
         DriftSqlType.bool,
         data['${effectivePrefix}rpe_requested'],
       )!,
+      period: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}period'],
+      ),
+      firstHalfStartedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}first_half_started_at'],
+      ),
+      secondHalfStartedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}second_half_started_at'],
+      ),
+      addedTime1: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}added_time_1'],
+      ),
+      addedTime2: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}added_time_2'],
+      ),
     );
   }
 
@@ -5503,6 +5623,14 @@ class FootballMatch extends DataClass implements Insertable<FootballMatch> {
 
   /// Match envoyé aux joueurs : chacun donne son RPE depuis son compte.
   final bool rpeRequested;
+
+  /// Chronomètre : période (first_half, half_time, second_half, finished), coup d'envoi de chaque
+  /// mi-temps (horodatage ISO) et temps additionnel de chaque mi-temps.
+  final String? period;
+  final String? firstHalfStartedAt;
+  final String? secondHalfStartedAt;
+  final int? addedTime1;
+  final int? addedTime2;
   const FootballMatch({
     required this.id,
     required this.createdAt,
@@ -5526,6 +5654,11 @@ class FootballMatch extends DataClass implements Insertable<FootballMatch> {
     this.forfeitBy,
     this.formation,
     required this.rpeRequested,
+    this.period,
+    this.firstHalfStartedAt,
+    this.secondHalfStartedAt,
+    this.addedTime1,
+    this.addedTime2,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -5568,6 +5701,21 @@ class FootballMatch extends DataClass implements Insertable<FootballMatch> {
       map['formation'] = Variable<String>(formation);
     }
     map['rpe_requested'] = Variable<bool>(rpeRequested);
+    if (!nullToAbsent || period != null) {
+      map['period'] = Variable<String>(period);
+    }
+    if (!nullToAbsent || firstHalfStartedAt != null) {
+      map['first_half_started_at'] = Variable<String>(firstHalfStartedAt);
+    }
+    if (!nullToAbsent || secondHalfStartedAt != null) {
+      map['second_half_started_at'] = Variable<String>(secondHalfStartedAt);
+    }
+    if (!nullToAbsent || addedTime1 != null) {
+      map['added_time_1'] = Variable<int>(addedTime1);
+    }
+    if (!nullToAbsent || addedTime2 != null) {
+      map['added_time_2'] = Variable<int>(addedTime2);
+    }
     return map;
   }
 
@@ -5611,6 +5759,21 @@ class FootballMatch extends DataClass implements Insertable<FootballMatch> {
           ? const Value.absent()
           : Value(formation),
       rpeRequested: Value(rpeRequested),
+      period: period == null && nullToAbsent
+          ? const Value.absent()
+          : Value(period),
+      firstHalfStartedAt: firstHalfStartedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(firstHalfStartedAt),
+      secondHalfStartedAt: secondHalfStartedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(secondHalfStartedAt),
+      addedTime1: addedTime1 == null && nullToAbsent
+          ? const Value.absent()
+          : Value(addedTime1),
+      addedTime2: addedTime2 == null && nullToAbsent
+          ? const Value.absent()
+          : Value(addedTime2),
     );
   }
 
@@ -5642,6 +5805,15 @@ class FootballMatch extends DataClass implements Insertable<FootballMatch> {
       forfeitBy: serializer.fromJson<String?>(json['forfeitBy']),
       formation: serializer.fromJson<String?>(json['formation']),
       rpeRequested: serializer.fromJson<bool>(json['rpeRequested']),
+      period: serializer.fromJson<String?>(json['period']),
+      firstHalfStartedAt: serializer.fromJson<String?>(
+        json['firstHalfStartedAt'],
+      ),
+      secondHalfStartedAt: serializer.fromJson<String?>(
+        json['secondHalfStartedAt'],
+      ),
+      addedTime1: serializer.fromJson<int?>(json['addedTime1']),
+      addedTime2: serializer.fromJson<int?>(json['addedTime2']),
     );
   }
   @override
@@ -5670,6 +5842,11 @@ class FootballMatch extends DataClass implements Insertable<FootballMatch> {
       'forfeitBy': serializer.toJson<String?>(forfeitBy),
       'formation': serializer.toJson<String?>(formation),
       'rpeRequested': serializer.toJson<bool>(rpeRequested),
+      'period': serializer.toJson<String?>(period),
+      'firstHalfStartedAt': serializer.toJson<String?>(firstHalfStartedAt),
+      'secondHalfStartedAt': serializer.toJson<String?>(secondHalfStartedAt),
+      'addedTime1': serializer.toJson<int?>(addedTime1),
+      'addedTime2': serializer.toJson<int?>(addedTime2),
     };
   }
 
@@ -5696,6 +5873,11 @@ class FootballMatch extends DataClass implements Insertable<FootballMatch> {
     Value<String?> forfeitBy = const Value.absent(),
     Value<String?> formation = const Value.absent(),
     bool? rpeRequested,
+    Value<String?> period = const Value.absent(),
+    Value<String?> firstHalfStartedAt = const Value.absent(),
+    Value<String?> secondHalfStartedAt = const Value.absent(),
+    Value<int?> addedTime1 = const Value.absent(),
+    Value<int?> addedTime2 = const Value.absent(),
   }) => FootballMatch(
     id: id ?? this.id,
     createdAt: createdAt ?? this.createdAt,
@@ -5721,6 +5903,15 @@ class FootballMatch extends DataClass implements Insertable<FootballMatch> {
     forfeitBy: forfeitBy.present ? forfeitBy.value : this.forfeitBy,
     formation: formation.present ? formation.value : this.formation,
     rpeRequested: rpeRequested ?? this.rpeRequested,
+    period: period.present ? period.value : this.period,
+    firstHalfStartedAt: firstHalfStartedAt.present
+        ? firstHalfStartedAt.value
+        : this.firstHalfStartedAt,
+    secondHalfStartedAt: secondHalfStartedAt.present
+        ? secondHalfStartedAt.value
+        : this.secondHalfStartedAt,
+    addedTime1: addedTime1.present ? addedTime1.value : this.addedTime1,
+    addedTime2: addedTime2.present ? addedTime2.value : this.addedTime2,
   );
   FootballMatch copyWithCompanion(MatchesCompanion data) {
     return FootballMatch(
@@ -5758,6 +5949,19 @@ class FootballMatch extends DataClass implements Insertable<FootballMatch> {
       rpeRequested: data.rpeRequested.present
           ? data.rpeRequested.value
           : this.rpeRequested,
+      period: data.period.present ? data.period.value : this.period,
+      firstHalfStartedAt: data.firstHalfStartedAt.present
+          ? data.firstHalfStartedAt.value
+          : this.firstHalfStartedAt,
+      secondHalfStartedAt: data.secondHalfStartedAt.present
+          ? data.secondHalfStartedAt.value
+          : this.secondHalfStartedAt,
+      addedTime1: data.addedTime1.present
+          ? data.addedTime1.value
+          : this.addedTime1,
+      addedTime2: data.addedTime2.present
+          ? data.addedTime2.value
+          : this.addedTime2,
     );
   }
 
@@ -5785,7 +5989,12 @@ class FootballMatch extends DataClass implements Insertable<FootballMatch> {
           ..write('matchday: $matchday, ')
           ..write('forfeitBy: $forfeitBy, ')
           ..write('formation: $formation, ')
-          ..write('rpeRequested: $rpeRequested')
+          ..write('rpeRequested: $rpeRequested, ')
+          ..write('period: $period, ')
+          ..write('firstHalfStartedAt: $firstHalfStartedAt, ')
+          ..write('secondHalfStartedAt: $secondHalfStartedAt, ')
+          ..write('addedTime1: $addedTime1, ')
+          ..write('addedTime2: $addedTime2')
           ..write(')'))
         .toString();
   }
@@ -5814,6 +6023,11 @@ class FootballMatch extends DataClass implements Insertable<FootballMatch> {
     forfeitBy,
     formation,
     rpeRequested,
+    period,
+    firstHalfStartedAt,
+    secondHalfStartedAt,
+    addedTime1,
+    addedTime2,
   ]);
   @override
   bool operator ==(Object other) =>
@@ -5840,7 +6054,12 @@ class FootballMatch extends DataClass implements Insertable<FootballMatch> {
           other.matchday == this.matchday &&
           other.forfeitBy == this.forfeitBy &&
           other.formation == this.formation &&
-          other.rpeRequested == this.rpeRequested);
+          other.rpeRequested == this.rpeRequested &&
+          other.period == this.period &&
+          other.firstHalfStartedAt == this.firstHalfStartedAt &&
+          other.secondHalfStartedAt == this.secondHalfStartedAt &&
+          other.addedTime1 == this.addedTime1 &&
+          other.addedTime2 == this.addedTime2);
 }
 
 class MatchesCompanion extends UpdateCompanion<FootballMatch> {
@@ -5866,6 +6085,11 @@ class MatchesCompanion extends UpdateCompanion<FootballMatch> {
   final Value<String?> forfeitBy;
   final Value<String?> formation;
   final Value<bool> rpeRequested;
+  final Value<String?> period;
+  final Value<String?> firstHalfStartedAt;
+  final Value<String?> secondHalfStartedAt;
+  final Value<int?> addedTime1;
+  final Value<int?> addedTime2;
   final Value<int> rowid;
   const MatchesCompanion({
     this.id = const Value.absent(),
@@ -5890,6 +6114,11 @@ class MatchesCompanion extends UpdateCompanion<FootballMatch> {
     this.forfeitBy = const Value.absent(),
     this.formation = const Value.absent(),
     this.rpeRequested = const Value.absent(),
+    this.period = const Value.absent(),
+    this.firstHalfStartedAt = const Value.absent(),
+    this.secondHalfStartedAt = const Value.absent(),
+    this.addedTime1 = const Value.absent(),
+    this.addedTime2 = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   MatchesCompanion.insert({
@@ -5915,6 +6144,11 @@ class MatchesCompanion extends UpdateCompanion<FootballMatch> {
     this.forfeitBy = const Value.absent(),
     this.formation = const Value.absent(),
     this.rpeRequested = const Value.absent(),
+    this.period = const Value.absent(),
+    this.firstHalfStartedAt = const Value.absent(),
+    this.secondHalfStartedAt = const Value.absent(),
+    this.addedTime1 = const Value.absent(),
+    this.addedTime2 = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        createdAt = Value(createdAt),
@@ -5948,6 +6182,11 @@ class MatchesCompanion extends UpdateCompanion<FootballMatch> {
     Expression<String>? forfeitBy,
     Expression<String>? formation,
     Expression<bool>? rpeRequested,
+    Expression<String>? period,
+    Expression<String>? firstHalfStartedAt,
+    Expression<String>? secondHalfStartedAt,
+    Expression<int>? addedTime1,
+    Expression<int>? addedTime2,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -5973,6 +6212,13 @@ class MatchesCompanion extends UpdateCompanion<FootballMatch> {
       if (forfeitBy != null) 'forfeit_by': forfeitBy,
       if (formation != null) 'formation': formation,
       if (rpeRequested != null) 'rpe_requested': rpeRequested,
+      if (period != null) 'period': period,
+      if (firstHalfStartedAt != null)
+        'first_half_started_at': firstHalfStartedAt,
+      if (secondHalfStartedAt != null)
+        'second_half_started_at': secondHalfStartedAt,
+      if (addedTime1 != null) 'added_time_1': addedTime1,
+      if (addedTime2 != null) 'added_time_2': addedTime2,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -6000,6 +6246,11 @@ class MatchesCompanion extends UpdateCompanion<FootballMatch> {
     Value<String?>? forfeitBy,
     Value<String?>? formation,
     Value<bool>? rpeRequested,
+    Value<String?>? period,
+    Value<String?>? firstHalfStartedAt,
+    Value<String?>? secondHalfStartedAt,
+    Value<int?>? addedTime1,
+    Value<int?>? addedTime2,
     Value<int>? rowid,
   }) {
     return MatchesCompanion(
@@ -6025,6 +6276,11 @@ class MatchesCompanion extends UpdateCompanion<FootballMatch> {
       forfeitBy: forfeitBy ?? this.forfeitBy,
       formation: formation ?? this.formation,
       rpeRequested: rpeRequested ?? this.rpeRequested,
+      period: period ?? this.period,
+      firstHalfStartedAt: firstHalfStartedAt ?? this.firstHalfStartedAt,
+      secondHalfStartedAt: secondHalfStartedAt ?? this.secondHalfStartedAt,
+      addedTime1: addedTime1 ?? this.addedTime1,
+      addedTime2: addedTime2 ?? this.addedTime2,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -6098,6 +6354,23 @@ class MatchesCompanion extends UpdateCompanion<FootballMatch> {
     if (rpeRequested.present) {
       map['rpe_requested'] = Variable<bool>(rpeRequested.value);
     }
+    if (period.present) {
+      map['period'] = Variable<String>(period.value);
+    }
+    if (firstHalfStartedAt.present) {
+      map['first_half_started_at'] = Variable<String>(firstHalfStartedAt.value);
+    }
+    if (secondHalfStartedAt.present) {
+      map['second_half_started_at'] = Variable<String>(
+        secondHalfStartedAt.value,
+      );
+    }
+    if (addedTime1.present) {
+      map['added_time_1'] = Variable<int>(addedTime1.value);
+    }
+    if (addedTime2.present) {
+      map['added_time_2'] = Variable<int>(addedTime2.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -6129,6 +6402,11 @@ class MatchesCompanion extends UpdateCompanion<FootballMatch> {
           ..write('forfeitBy: $forfeitBy, ')
           ..write('formation: $formation, ')
           ..write('rpeRequested: $rpeRequested, ')
+          ..write('period: $period, ')
+          ..write('firstHalfStartedAt: $firstHalfStartedAt, ')
+          ..write('secondHalfStartedAt: $secondHalfStartedAt, ')
+          ..write('addedTime1: $addedTime1, ')
+          ..write('addedTime2: $addedTime2, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -19964,6 +20242,11 @@ typedef $$MatchesTableCreateCompanionBuilder = MatchesCompanion Function({
   Value<String?> forfeitBy,
   Value<String?> formation,
   Value<bool> rpeRequested,
+  Value<String?> period,
+  Value<String?> firstHalfStartedAt,
+  Value<String?> secondHalfStartedAt,
+  Value<int?> addedTime1,
+  Value<int?> addedTime2,
   Value<int> rowid,
 });
 typedef $$MatchesTableUpdateCompanionBuilder = MatchesCompanion Function({
@@ -19989,6 +20272,11 @@ typedef $$MatchesTableUpdateCompanionBuilder = MatchesCompanion Function({
   Value<String?> forfeitBy,
   Value<String?> formation,
   Value<bool> rpeRequested,
+  Value<String?> period,
+  Value<String?> firstHalfStartedAt,
+  Value<String?> secondHalfStartedAt,
+  Value<int?> addedTime1,
+  Value<int?> addedTime2,
   Value<int> rowid,
 });
 
@@ -20108,6 +20396,31 @@ class $$MatchesTableFilterComposer
 
   ColumnFilters<bool> get rpeRequested => $composableBuilder(
     column: $table.rpeRequested,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get period => $composableBuilder(
+    column: $table.period,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get firstHalfStartedAt => $composableBuilder(
+    column: $table.firstHalfStartedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get secondHalfStartedAt => $composableBuilder(
+    column: $table.secondHalfStartedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get addedTime1 => $composableBuilder(
+    column: $table.addedTime1,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get addedTime2 => $composableBuilder(
+    column: $table.addedTime2,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -20230,6 +20543,31 @@ class $$MatchesTableOrderingComposer
     column: $table.rpeRequested,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get period => $composableBuilder(
+    column: $table.period,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get firstHalfStartedAt => $composableBuilder(
+    column: $table.firstHalfStartedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get secondHalfStartedAt => $composableBuilder(
+    column: $table.secondHalfStartedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get addedTime1 => $composableBuilder(
+    column: $table.addedTime1,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get addedTime2 => $composableBuilder(
+    column: $table.addedTime2,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$MatchesTableAnnotationComposer
@@ -20318,6 +20656,29 @@ class $$MatchesTableAnnotationComposer
     column: $table.rpeRequested,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get period =>
+      $composableBuilder(column: $table.period, builder: (column) => column);
+
+  GeneratedColumn<String> get firstHalfStartedAt => $composableBuilder(
+    column: $table.firstHalfStartedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get secondHalfStartedAt => $composableBuilder(
+    column: $table.secondHalfStartedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get addedTime1 => $composableBuilder(
+    column: $table.addedTime1,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get addedTime2 => $composableBuilder(
+    column: $table.addedTime2,
+    builder: (column) => column,
+  );
 }
 
 class $$MatchesTableTableManager
@@ -20373,6 +20734,11 @@ class $$MatchesTableTableManager
                 Value<String?> forfeitBy = const Value.absent(),
                 Value<String?> formation = const Value.absent(),
                 Value<bool> rpeRequested = const Value.absent(),
+                Value<String?> period = const Value.absent(),
+                Value<String?> firstHalfStartedAt = const Value.absent(),
+                Value<String?> secondHalfStartedAt = const Value.absent(),
+                Value<int?> addedTime1 = const Value.absent(),
+                Value<int?> addedTime2 = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => MatchesCompanion(
                 id: id,
@@ -20397,6 +20763,11 @@ class $$MatchesTableTableManager
                 forfeitBy: forfeitBy,
                 formation: formation,
                 rpeRequested: rpeRequested,
+                period: period,
+                firstHalfStartedAt: firstHalfStartedAt,
+                secondHalfStartedAt: secondHalfStartedAt,
+                addedTime1: addedTime1,
+                addedTime2: addedTime2,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -20423,6 +20794,11 @@ class $$MatchesTableTableManager
                 Value<String?> forfeitBy = const Value.absent(),
                 Value<String?> formation = const Value.absent(),
                 Value<bool> rpeRequested = const Value.absent(),
+                Value<String?> period = const Value.absent(),
+                Value<String?> firstHalfStartedAt = const Value.absent(),
+                Value<String?> secondHalfStartedAt = const Value.absent(),
+                Value<int?> addedTime1 = const Value.absent(),
+                Value<int?> addedTime2 = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => MatchesCompanion.insert(
                 id: id,
@@ -20447,6 +20823,11 @@ class $$MatchesTableTableManager
                 forfeitBy: forfeitBy,
                 formation: formation,
                 rpeRequested: rpeRequested,
+                period: period,
+                firstHalfStartedAt: firstHalfStartedAt,
+                secondHalfStartedAt: secondHalfStartedAt,
+                addedTime1: addedTime1,
+                addedTime2: addedTime2,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
