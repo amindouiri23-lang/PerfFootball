@@ -133,10 +133,12 @@ class _MatchFormScreenState extends ConsumerState<MatchFormScreen> {
       _load(m.value);
     }
     final team = ref.watch(activeTeamProvider).value;
-    // Suggestions : adversaires déjà saisis.
-    final opponents = team == null
-        ? const <String>[]
-        : {for (final m in ref.watch(matchesProvider(team.id)).value ?? const <FootballMatch>[]) m.opponent}.toList();
+    // Suggestions : clubs de Ligue 1, puis adversaires déjà saisis (un nouveau nom reste possible).
+    final opponents = {
+      ...ligue1Clubs.keys,
+      if (team != null)
+        for (final m in ref.watch(matchesProvider(team.id)).value ?? const <FootballMatch>[]) m.opponent,
+    }.toList();
     final create = widget.id == null;
     if (_tactics == null && team != null) {
       if (create) {
@@ -179,9 +181,7 @@ class _MatchFormScreenState extends ConsumerState<MatchFormScreen> {
       const SizedBox(height: 16),
       Autocomplete<String>(
         initialValue: TextEditingValue(text: _opponent.text),
-        optionsBuilder: (v) => v.text.isEmpty
-            ? const Iterable<String>.empty()
-            : opponents.where((o) => o.toLowerCase().contains(v.text.toLowerCase())),
+        optionsBuilder: (v) => opponentOptions(v.text, opponents),
         onSelected: (v) => _opponent.text = v,
         fieldViewBuilder: (context, controller, focus, onSubmit) => TextField(
           controller: controller,
@@ -190,6 +190,8 @@ class _MatchFormScreenState extends ConsumerState<MatchFormScreen> {
           onChanged: (v) => _opponent.text = v,
           decoration: InputDecoration(
             labelText: 'Adversaire *',
+            helperText: 'Club de Ligue 1, ou tapez un autre nom',
+            suffixIcon: const Icon(Icons.arrow_drop_down),
             errorText: _submitted && _opponent.text.trim().isEmpty ? 'Obligatoire' : null,
           ),
         ),
@@ -250,4 +252,39 @@ class _MatchFormScreenState extends ConsumerState<MatchFormScreen> {
         FilledButton(onPressed: () => _save(next: null), child: const Text('Enregistrer')),
     ]);
   }
+}
+
+/// Clubs de la Ligue 1 tunisienne 2026-2027 (hors Club Africain) et leur sigle, cherchable dans le champ.
+const ligue1Clubs = {
+  'Espérance de Tunis': 'EST',
+  'Étoile du Sahel': 'ESS',
+  'CS Sfaxien': 'CSS',
+  'US Monastir': 'USM',
+  'Stade Tunisien': 'ST',
+  'CA Bizertin': 'CAB',
+  'US Ben Guerdane': 'USBG',
+  'ES Zarzis': 'ESZ',
+  'ES Métlaoui': 'ESM',
+  'Olympique de Béja': 'OB',
+  'AS Marsa': 'ASM',
+  'JS El Omrane': 'JSO',
+  'CS Hammam-Lif': 'CSHL',
+  'ES Hammam-Sousse': 'ESHS',
+  'Progrès Sakiet Eddaïer': 'PSE',
+};
+
+/// Suggestions de l'adversaire : par nom (sans accents) ou par sigle (« ess » → Étoile du Sahel) ; tout si vide.
+Iterable<String> opponentOptions(String text, Iterable<String> opponents) {
+  final q = _fold(text.trim());
+  return opponents.where((o) => _fold(o).contains(q) || _fold(ligue1Clubs[o] ?? '').startsWith(q));
+}
+
+/// Minuscules sans accents : « etoile » trouve « Étoile du Sahel ».
+String _fold(String s) {
+  const from = 'àâäéèêëîïôöùûüç', to = 'aaaeeeeiioouuuc';
+  final l = s.toLowerCase();
+  return String.fromCharCodes(l.runes.map((c) {
+    final i = from.indexOf(String.fromCharCode(c));
+    return i < 0 ? c : to.codeUnitAt(i);
+  }));
 }
