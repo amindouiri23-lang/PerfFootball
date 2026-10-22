@@ -80,6 +80,16 @@ class HomeScreen extends ConsumerWidget {
           onTap: () => context.go('/home/results'),
         ),
       ),
+      if (perms.can('analyse.view'))
+        Card(
+          child: ListTile(
+            leading: const Icon(Icons.insights_outlined),
+            title: const Text('Tableau de bord'),
+            subtitle: const Text('Charge, ACWR, bien-être, matchs, blessures · export PDF et Excel'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.go('/home/analytics'),
+          ),
+        ),
       ..._nextMatch(context, ref, teamId),
       ..._squadAndLoad(context, ref, teamId),
       const SizedBox(height: 16),

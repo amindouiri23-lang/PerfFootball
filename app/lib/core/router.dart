@@ -32,6 +32,7 @@ import '../features/team/team_staff_screen.dart';
 import '../features/team/player_screens.dart';
 import '../features/tactics/tactic_screens.dart';
 import '../features/tests/test_screens.dart';
+import '../features/analytics/analytics_screen.dart';
 import '../features/wellness/wellness_survey_screens.dart';
 import '../features/team/team_form_screen.dart';
 import '../features/team/team_screen.dart';
@@ -76,6 +77,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                 GoRoute(path: 'results', builder: (_, _) => const ClubResultsScreen()),
                 // Charge de la semaine par joueur (RPE × durée).
                 GoRoute(path: 'load', builder: (_, _) => const PlayerLoadScreen()),
+                GoRoute(path: 'analytics', builder: (_, _) => const AnalyticsScreen()),
                 // Espace joueur : son dossier et ses questionnaires de bien-être.
                 GoRoute(path: 'dossier/:playerId', builder: (_, s) => PlayerProfileFormScreen(playerId: s.pathParameters['playerId']!)),
                 GoRoute(
@@ -272,6 +274,7 @@ final _playerRoutes =
 String? requiredPermission(String location) {
   final rules = <(RegExp, String)>[
     (RegExp(r'^/home/load$'), 'seances.view'),
+    (RegExp(r'^/home/analytics$'), 'analyse.view'),
     (RegExp(r'^/sessions/wellness/new$'), 'bienetre.edit'),
     (RegExp(r'^/sessions/wellness/[^/]+/[^/]+$'), 'bienetre.edit'),
     (RegExp(r'^/sessions/wellness'), 'bienetre.view'),
