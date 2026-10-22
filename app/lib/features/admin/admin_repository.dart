@@ -194,6 +194,9 @@ class AdminRepository {
   Future<void> setDisabled(String userId, bool disabled) =>
       _call({'action': disabled ? 'disable' : 'enable', 'user_id': userId});
 
+  /// Suppression définitive : la connexion, le profil et les appartenances aux équipes ; les données saisies restent.
+  Future<void> deleteAccount(String userId) => _call({'action': 'delete', 'user_id': userId});
+
   Future<Object?> _call(Map<String, Object?> body) async {
     try {
       final r = await _client.functions.invoke('admin-users', body: body);
