@@ -12,6 +12,7 @@
 // POST { action: "set_teams", user_id, team_ids }                             -> équipes où il est « staff »
 // POST { action: "reset_password", user_id }                                  -> { temporary_password }
 // POST { action: "disable" | "enable", user_id }
+// POST { action: "delete", user_id }                                          -> suppression définitive du compte
 //
 // Seul un utilisateur dont app_metadata.role = "admin" peut l'appeler. La clé de service est fournie
 // par Supabase (SUPABASE_SERVICE_ROLE_KEY) et ne quitte jamais cette fonction.
@@ -306,6 +307,18 @@ async function setDisabled(userId: string, disabled: boolean) {
   return { ok: true };
 }
 
+// Suppression définitive : profil, appartenances et exceptions partent en cascade (migration 20261029000001) ;
+// les données saisies (séances, matchs, commentaires signés) restent. La photo de profil est retirée.
+async function deleteAccount(userId: string) {
+  const { error: gErr } = await admin.auth.admin.getUserById(userId);
+  if (gErr) throw new HttpError(404, "Compte introuvable.");
+  await revokeSessions(userId);
+  const { error } = await admin.auth.admin.deleteUser(userId);
+  if (error) throw error;
+  await admin.storage.from("photos").remove([`profiles/${userId}.jpg`]);
+  return { ok: true };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   try {
@@ -325,6 +338,7 @@ Deno.serve(async (req) => {
       case "reset_password": result = await resetPassword(targetId(body, me)); break;
       case "disable": result = await setDisabled(targetId(body, me), true); break;
       case "enable": result = await setDisabled(targetId(body, me), false); break;
+      case "delete": result = await deleteAccount(targetId(body, me)); break;
       default: throw new HttpError(400, "Action inconnue.");
     }
     return Response.json(result, { headers: CORS });

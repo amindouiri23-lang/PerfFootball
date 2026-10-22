@@ -52,6 +52,18 @@ class _StaffAccountsScreenState extends ConsumerState<StaffAccountsScreen> {
     }
   }
 
+  Future<void> _delete(StaffAccount a) async {
+    final ok = await _confirmDelete(context, a);
+    if (!ok || !mounted) return;
+    try {
+      await ref.read(adminRepositoryProvider).deleteAccount(a.id);
+      ref.invalidate(staffAccountsProvider);
+      if (mounted) showMessage(context, 'Compte de ${a.displayName} supprimé');
+    } on AppException catch (e) {
+      if (mounted) showMessage(context, e.message);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final accounts = ref.watch(staffAccountsProvider);
@@ -120,6 +132,7 @@ class _StaffAccountsScreenState extends ConsumerState<StaffAccountsScreen> {
                         onSelected: (v) => switch (v) {
                           'reset' => _reset(a),
                           'teams' => showAccountTeams(context, ref, a),
+                          'delete' => _delete(a),
                           _ => _toggle(a),
                         },
                         itemBuilder: (_) => [
@@ -127,6 +140,8 @@ class _StaffAccountsScreenState extends ConsumerState<StaffAccountsScreen> {
                           const PopupMenuItem(value: 'reset', child: Text('Réinitialiser le mot de passe')),
                           PopupMenuItem(value: 'toggle',
                               child: Text(a.isDisabled ? 'Réactiver le compte' : 'Désactiver le compte')),
+                          PopupMenuItem(value: 'delete',
+                              child: Text('Supprimer le compte', style: TextStyle(color: Theme.of(context).colorScheme.error))),
                         ],
                       )
                     else
@@ -329,6 +344,42 @@ Future<void> showTemporaryPassword(BuildContext context, String email, String na
       );
     },
   );
+}
+
+/// Suppression définitive : confirmée en tapant SUPPRIMER, la désactivation restant proposée comme alternative.
+Future<bool> _confirmDelete(BuildContext context, StaffAccount a) async {
+  final typed = TextEditingController();
+  final r = await showDialog<bool>(
+    context: context,
+    builder: (context) => StatefulBuilder(
+      builder: (context, setState) => AlertDialog(
+        title: const Text('Supprimer le compte ?'),
+        content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text('${a.displayName} (${a.email}) ne pourra plus se connecter, et le compte disparaîtra de la liste et '
+              'des équipes. Cette action est définitive.\n\n'
+              'Les séances, matchs et commentaires qu\'il a saisis sont conservés.\n\n'
+              'Pour une absence temporaire, préférez « Désactiver le compte ».'),
+          const SizedBox(height: 12),
+          TextField(
+            controller: typed,
+            autofocus: true,
+            decoration: const InputDecoration(labelText: 'Tapez SUPPRIMER pour confirmer'),
+            onChanged: (_) => setState(() {}),
+          ),
+        ]),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Annuler')),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
+            onPressed: typed.text.trim().toUpperCase() == 'SUPPRIMER' ? () => Navigator.of(context).pop(true) : null,
+            child: const Text('Supprimer'),
+          ),
+        ],
+      ),
+    ),
+  );
+  typed.dispose();
+  return r ?? false;
 }
 
 Future<bool> _confirm(BuildContext context, String title, String body, String action) async {
