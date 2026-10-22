@@ -62,6 +62,7 @@ const permissionCatalog = [
   PermissionFeature('tactiques', 'Tactiques', {'view': 'Voir', 'add': 'Ajouter', 'edit': 'Modifier', 'delete': 'Supprimer'}),
   PermissionFeature('import', 'Import Excel', {'use': 'Importer'}),
   PermissionFeature('equipes', 'Équipes', {'add': 'Créer', 'edit': 'Modifier'}),
+  PermissionFeature('analyse', 'Tableau de bord', {'view': 'Voir', 'export': 'Exporter (PDF, Excel)'}),
 ];
 
 /// Libellé d'une permission : « Matchs — Supprimer ».
