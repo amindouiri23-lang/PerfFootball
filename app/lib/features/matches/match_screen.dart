@@ -4,9 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/pdf_kit.dart';
+import '../../core/save_file.dart';
 import '../../core/permissions.dart';
 import '../../core/router.dart';
 import '../../core/widgets/sync_indicator.dart';
+import '../exports/document_exports.dart';
 import '../../data/database.dart';
 import '../sessions/session_repository.dart' show bodyAreas, injurySides;
 import '../sessions/session_screen.dart' show showRemarkSheet;
@@ -116,6 +119,13 @@ class MatchScreen extends ConsumerWidget {
               case 'restore':
                 await repo.restore(m);
                 if (context.mounted) showMessage(context, 'Match rétabli : de nouveau planifié');
+              case 'pdf':
+                try {
+                  await saveFile(await ref.read(documentExportsProvider).matchSheet(m),
+                      'Feuille_de_match_${m.date}_${fileSafe(m.opponent)}.pdf', 'application/pdf');
+                } catch (e) {
+                  if (context.mounted) showMessage(context, 'Export impossible : $e');
+                }
               case 'delete':
                 if (await confirmDeleteMatch(context, ref, m) && context.mounted) context.go('/matches');
             }
@@ -137,6 +147,7 @@ class MatchScreen extends ConsumerWidget {
             ],
             if (m.notPlayed && perms.can('matchs.issues'))
               const PopupMenuItem(value: 'restore', child: Text('Rétablir le match')),
+            const PopupMenuItem(value: 'pdf', child: Text('Exporter la feuille de match (PDF)')),
             if (perms.can('matchs.delete')) const PopupMenuItem(value: 'delete', child: Text('Supprimer le match')),
           ],
         ),

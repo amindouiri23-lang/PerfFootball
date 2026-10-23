@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/pdf_kit.dart';
+import '../../core/save_file.dart';
 import '../../core/permissions.dart';
+import '../../core/router.dart';
 import '../../core/widgets/sync_indicator.dart';
+import '../exports/document_exports.dart';
 import '../../data/database.dart';
 import '../tactics/tactic_screens.dart' show LinkedTactics;
 import '../team/team_repository.dart';
@@ -53,6 +57,13 @@ class SessionScreen extends ConsumerWidget {
                 context.go('/sessions/${s.id}/close');
               case 'wellness':
                 context.go('/sessions/${s.id}/wellness');
+              case 'pdf':
+                try {
+                  await saveFile(await ref.read(documentExportsProvider).sessionProgram(s),
+                      'Seance_${s.date}_${fileSafe(sessionTypes[s.type] ?? s.type)}.pdf', 'application/pdf');
+                } catch (e) {
+                  if (context.mounted) showMessage(context, 'Export impossible : $e');
+                }
               case 'delete':
                 if (await confirmDeleteSession(context, ref, s) && context.mounted) context.go('/sessions');
             }
@@ -65,6 +76,7 @@ class SessionScreen extends ConsumerWidget {
                 const PopupMenuItem(value: 'close', child: Text('Modifier les durées et RPE')),
               if (perms.can('bienetre.view')) const PopupMenuItem(value: 'wellness', child: Text('Bien-être')),
             ],
+            const PopupMenuItem(value: 'pdf', child: Text('Exporter le programme (PDF)')),
             if (perms.can('seances.delete')) const PopupMenuItem(value: 'delete', child: Text('Supprimer la séance')),
           ],
         ),

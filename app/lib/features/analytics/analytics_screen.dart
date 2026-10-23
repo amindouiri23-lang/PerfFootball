@@ -23,7 +23,7 @@ import '../wellness/wellness_repository.dart';
 import 'analytics_data.dart';
 import 'analytics_export.dart';
 import 'analytics_report.dart';
-import 'save_file.dart';
+import '../../core/save_file.dart';
 
 /// Réponses de bien-être d'une équipe (séances et questionnaires).
 final _teamWellnessProvider = StreamProvider.family<List<WellnessEntry>, String>((ref, teamId) {
