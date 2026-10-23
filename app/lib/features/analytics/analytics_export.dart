@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
+import '../../core/pdf_kit.dart';
 import 'analytics_report.dart';
 
 // Export du tableau de bord : PDF (une page par onglet, A4 paysage) et Excel (un onglet par page).
@@ -43,22 +44,9 @@ const _red = PdfColor.fromInt(0xFFC8102E);
 const _grey = PdfColor.fromInt(0xFF6B6B6B);
 const _seriesColors = [PdfColor.fromInt(0xFFC8102E), PdfColor.fromInt(0xFF1565C0), PdfColor.fromInt(0xFF2E7D32)];
 
-/// Polices standard du PDF : Latin-1 seulement ; les quelques signes hors Latin-1 sont remplacés.
-String _latin1(String s) => s
-    .replaceAll('—', '-')
-    .replaceAll('–', '-')
-    .replaceAll('’', "'")
-    .replaceAll('…', '...')
-    .replaceAll('≤', '<=')
-    .replaceAll('≥', '>=')
-    .replaceAll('œ', 'oe')
-    .replaceAll(' ', ' ')
-    .replaceAll(' ', ' ')
-    .replaceAll(RegExp(r'[^\x00-\xFF]'), '?');
-
 Future<Uint8List> buildPdf(ReportHeader header, List<ReportPage> pages) async {
   final doc = pw.Document(title: 'PerfFoot - Tableau de bord', author: 'PerfFoot');
-  pw.Widget text(String s, {double size = 9, bool bold = false, PdfColor? color}) => pw.Text(_latin1(s),
+  pw.Widget text(String s, {double size = 9, bool bold = false, PdfColor? color}) => pw.Text(pdfLatin1(s),
       style: pw.TextStyle(fontSize: size, fontWeight: bold ? pw.FontWeight.bold : null, color: color));
 
   for (final page in pages) {
@@ -122,8 +110,8 @@ pw.Widget _pdfTable(ReportTable t) {
   final cut = t.headers.length > maxCols ? t.headers.length - maxCols + 1 : 0;
   List<T> trim<T>(List<T> l) => cut == 0 ? l : [l.first, ...l.sublist(cut + 1)];
   return pw.TableHelper.fromTextArray(
-    headers: [for (final h in trim(t.headers)) _latin1(h)],
-    data: [for (final r in t.rows) [for (final c in trim(r)) _latin1(_cell(c))]],
+    headers: [for (final h in trim(t.headers)) pdfLatin1(h)],
+    data: [for (final r in t.rows) [for (final c in trim(r)) pdfLatin1(_cell(c))]],
     headerStyle: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold, color: PdfColors.white),
     headerDecoration: const pw.BoxDecoration(color: _red),
     cellStyle: const pw.TextStyle(fontSize: 8),
@@ -152,7 +140,7 @@ pw.Widget _pdfChart(ReportChart c) {
       child: pw.Chart(
         grid: pw.CartesianGrid(
           xAxis: pw.FixedAxis.fromStrings(
-            [for (var i = 0; i < labels.length; i++) i % every == 0 ? _latin1(labels[i]) : ''],
+            [for (var i = 0; i < labels.length; i++) i % every == 0 ? pdfLatin1(labels[i]) : ''],
             marginStart: 14, marginEnd: 14, ticks: true, textStyle: const pw.TextStyle(fontSize: 6)),
           yAxis: pw.FixedAxis([for (var i = 0; i <= 4; i++) top * i / 4],
               format: (v) => fmtNum(v), divisions: true, textStyle: const pw.TextStyle(fontSize: 7)),
@@ -160,7 +148,7 @@ pw.Widget _pdfChart(ReportChart c) {
         datasets: [
           for (var s = 0; s < series.length; s++)
             pw.BarDataSet(
-              legend: _latin1(series[s].key),
+              legend: pdfLatin1(series[s].key),
               color: _seriesColors[s % _seriesColors.length],
               width: barWidth,
               offset: series.length == 1 ? 0 : (s - (series.length - 1) / 2) * barWidth,
@@ -177,7 +165,7 @@ pw.Widget _pdfChart(ReportChart c) {
         for (var s = 0; s < series.length; s++) ...[
           pw.Container(width: 8, height: 8, color: _seriesColors[s % _seriesColors.length]),
           pw.SizedBox(width: 3),
-          pw.Text(_latin1(series[s].key), style: const pw.TextStyle(fontSize: 7)),
+          pw.Text(pdfLatin1(series[s].key), style: const pw.TextStyle(fontSize: 7)),
           pw.SizedBox(width: 12),
         ],
       ]),

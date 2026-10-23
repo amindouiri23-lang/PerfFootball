@@ -1,18 +1,18 @@
-import 'dart:ui' as ui;
-
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:share_plus/share_plus.dart';
 
 import '../../core/permissions.dart';
+import '../../core/pdf_kit.dart';
 import '../../core/router.dart';
+import '../../core/save_file.dart';
 import '../../core/widgets/sync_indicator.dart';
 import '../../data/database.dart';
 import '../team/team_repository.dart';
 import '../team/team_screen.dart' show NoTeamScreen;
 import 'tactic_board.dart';
+import 'tactic_export.dart';
+import 'tactic_render.dart';
 import 'tactic_repository.dart';
 import '../team/team_filter.dart';
 
@@ -138,18 +138,9 @@ class BoardView extends StatefulWidget {
 class _BoardViewState extends State<BoardView> {
   BoardArrow? _preview;
 
-  String _text(BoardToken t) {
-    final p = widget.players[t.playerId];
-    if (p != null) return p.shirtNumber?.toString() ?? p.initials;
-    return t.label ?? '';
-  }
+  String _text(BoardToken t) => tokenText(t, widget.players);
 
-  /// Sous le pion : le nom du joueur (suivi de son rôle s'il en a un), sinon le rôle seul.
-  String? _caption(BoardToken t) {
-    final name = widget.players[t.playerId]?.lastName;
-    if (name == null) return t.role;
-    return t.role == null ? name : '$name · ${t.role}';
-  }
+  String? _caption(BoardToken t) => tokenCaption(t, widget.players);
 
   @override
   Widget build(BuildContext context) {
@@ -237,7 +228,6 @@ class _TacticEditorScreenState extends ConsumerState<TacticEditorScreen> {
   TacticBoard? _board;
   final List<String> _undo = [];
   String? _arrowMode;
-  final _capture = GlobalKey();
 
   TacticRepository get _repo => ref.read(tacticRepositoryProvider);
 
@@ -293,8 +283,10 @@ class _TacticEditorScreenState extends ConsumerState<TacticEditorScreen> {
               switch (v) {
                 case 'info':
                   await showTacticInfoSheet(context, ref, teamId: t.teamId, tactic: t);
-                case 'share':
-                  await _share(t);
+                case 'png':
+                  await _export(t, board, players, pdf: false);
+                case 'pdf':
+                  await _export(t, board, players, pdf: true);
                 case 'duplicate':
                   final id = await _repo.duplicate(t.copyWith(board: board.encode()));
                   if (context.mounted) {
@@ -315,7 +307,8 @@ class _TacticEditorScreenState extends ConsumerState<TacticEditorScreen> {
             },
             itemBuilder: (_) => [
               if (editable) const PopupMenuItem(value: 'info', child: Text('Modifier les informations')),
-              const PopupMenuItem(value: 'share', child: Text('Partager en image')),
+              const PopupMenuItem(value: 'png', child: Text('Exporter en image (PNG)')),
+              const PopupMenuItem(value: 'pdf', child: Text('Exporter en PDF')),
               if (perms.can('tactiques.add')) const PopupMenuItem(value: 'duplicate', child: Text('Dupliquer')),
               if (editable) const PopupMenuItem(value: 'clear', child: Text('Effacer toutes les flèches')),
               if (perms.can('tactiques.delete')) const PopupMenuItem(value: 'delete', child: Text('Supprimer la tactique')),
@@ -345,7 +338,6 @@ class _TacticEditorScreenState extends ConsumerState<TacticEditorScreen> {
               child: Align(
                 alignment: Alignment.topCenter,
                 child: RepaintBoundary(
-                  key: _capture,
                   child: IgnorePointer(
                     ignoring: !editable,
                     child: BoardView(
@@ -526,17 +518,21 @@ class _TacticEditorScreenState extends ConsumerState<TacticEditorScreen> {
     }
   }
 
-  Future<void> _share(Tactic t) async {
-    final boundary = _capture.currentContext?.findRenderObject() as RenderRepaintBoundary?;
-    if (boundary == null) return;
-    final image = await boundary.toImage(pixelRatio: 3);
-    final bytes = (await image.toByteData(format: ui.ImageByteFormat.png))!.buffer.asUint8List();
-    final file = '${t.name.replaceAll(RegExp(r'[^\w\- ]'), '').trim().replaceAll(' ', '_')}.png';
-    await SharePlus.instance.share(ShareParams(
-      title: t.name,
-      files: [XFile.fromData(bytes, mimeType: 'image/png', name: file)],
-      fileNameOverrides: [file],
-    ));
+  /// Exporte la tactique telle qu'affichée (modifications en cours comprises), en image ou en PDF.
+  Future<void> _export(Tactic t, TacticBoard board, Map<String, Player> players, {required bool pdf}) async {
+    try {
+      final current = t.copyWith(board: board.encode());
+      final png = await renderTacticPng(current, players, width: 1200);
+      final name = fileSafe(t.name);
+      if (pdf) {
+        final team = ref.read(activeTeamProvider).value?.name ?? '';
+        await saveFile(await buildTacticPdf(tactic: current, png: png, players: players, team: team), '$name.pdf', 'application/pdf');
+      } else {
+        await saveFile(png, '$name.png', 'image/png');
+      }
+    } catch (e) {
+      if (mounted) showMessage(context, 'Export impossible : $e');
+    }
   }
 }
 
