@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
@@ -46,7 +47,12 @@ Future<Uint8List> renderBoardPng({
   for (final t in board.tokens) {
     final c = boardToScreen(board.positionAt(t, step), size, horizontal);
     if (!isPlayerToken(t.kind)) {
-      paintEquipment(canvas, c, t.kind, ts);
+      canvas
+        ..save()
+        ..translate(c.dx, c.dy)
+        ..rotate(t.angle * math.pi / 180);
+      paintEquipment(canvas, Offset.zero, t.kind, ts);
+      canvas.restore();
       continue;
     }
     final r = ts / 2;

@@ -12,7 +12,8 @@ import 'tactic_equipment.dart';
 
 /// Pion : us = notre joueur, them = adversaire, ball = ballon. x, y : position à l'étape 1.
 class BoardToken {
-  BoardToken({required this.id, required this.kind, required this.x, required this.y, this.label, this.role, this.playerId});
+  BoardToken({required this.id, required this.kind, required this.x, required this.y, this.label, this.role, this.playerId,
+      this.angle = 0});
 
   final String id;
   final String kind;
@@ -23,19 +24,27 @@ class BoardToken {
   /// Rôle affiché sous le pion : « Tireur », « 1er poteau »…
   String? role;
   String? playerId;
+  /// Orientation du matériel à l'écran, en degrés (0 à 359, sens des aiguilles d'une montre).
+  double angle;
 
   factory BoardToken.fromJson(Map<String, dynamic> j) => BoardToken(
         id: j['id'] as String, kind: j['kind'] as String,
         x: (j['x'] as num).toDouble(), y: (j['y'] as num).toDouble(),
         label: j['label'] as String?, role: j['role'] as String?, playerId: j['playerId'] as String?,
+        angle: (j['a'] as num?)?.toDouble() ?? 0,
       );
 
   Map<String, dynamic> toJson() => {
         'id': id, 'kind': kind, 'x': _round(x), 'y': _round(y),
         if (label != null) 'label': label, if (role != null) 'role': role, if (playerId != null) 'playerId': playerId,
+        if (angle != 0) 'a': angle.round(),
       };
 
-  BoardToken copyAt(Offset p) => BoardToken(id: id, kind: kind, x: p.dx, y: p.dy, label: label, role: role, playerId: playerId);
+  BoardToken copyAt(Offset p) =>
+      BoardToken(id: id, kind: kind, x: p.dx, y: p.dy, label: label, role: role, playerId: playerId, angle: angle);
+
+  /// Tourne de [degrees] (négatif : sens inverse), ramené entre 0 et 359.
+  void rotate(double degrees) => angle = (angle + degrees) % 360;
 }
 
 /// Flèche : run = course d'un joueur, ball = trajectoire du ballon. (cx, cy) : point de contrôle d'une
@@ -262,6 +271,8 @@ class TacticBoard {
 
     for (final t in tokens) {
       t.x = 1 - t.x;
+      // Le terrain est retourné haut / bas à l'écran (vue horizontale) : l'orientation aussi.
+      t.angle = (360 - t.angle) % 360;
     }
     arrows.forEach(flip);
     for (final s in steps) {
@@ -433,17 +444,22 @@ double distanceToArrow(Offset p, BoardArrow a, Size size, {bool horizontal = fal
 
 /// Pion dessiné : rond coloré, texte au centre, rôle en dessous.
 class TokenView extends StatelessWidget {
-  const TokenView({super.key, required this.kind, required this.text, this.caption, this.size = 30, this.selected = false});
+  const TokenView({super.key, required this.kind, required this.text, this.caption, this.size = 30, this.selected = false,
+      this.angle = 0});
 
   final String kind;
   final String text;
   final String? caption;
   final double size;
   final bool selected;
+  /// Orientation du matériel, en degrés.
+  final double angle;
 
   @override
   Widget build(BuildContext context) {
-    if (!isPlayerToken(kind)) return EquipmentView(kind: kind, size: size);
+    if (!isPlayerToken(kind)) {
+      return Transform.rotate(angle: angle * math.pi / 180, child: EquipmentView(kind: kind, size: size));
+    }
     return Column(mainAxisSize: MainAxisSize.min, children: [
       Container(
         width: size,

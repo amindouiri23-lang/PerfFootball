@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:perffoot/features/tactics/tactic_board.dart';
 import 'package:perffoot/features/tactics/tactic_layouts.dart';
@@ -25,6 +23,17 @@ void main() {
     final them = layoutTokens(tacticLayouts.firstWhere((l) => l.name == '4-4-2' && l.category == layoutCategories[1]), 'full');
     final keeper = them.firstWhere((t) => t.role == 'GB');
     expect(keeper.y, lessThan(0.15));
+  });
+
+  test('orientation du matériel : tourne, se relit, se retourne avec la symétrie', () {
+    final goal = BoardToken(id: 'g', kind: 'minigoal', x: 0.5, y: 0.5)..rotate(-45);
+    expect(goal.angle, 315);
+    final back = TacticBoard.decode(TacticBoard(tokens: [goal]).encode()).tokens.single;
+    expect(back.angle, 315);
+    TacticBoard(tokens: [back]).mirror();
+    expect(back.angle, 45);
+    final mini = layoutTokens(tacticLayouts.firstWhere((l) => l.name.startsWith('Jeu réduit')), 'half').where((t) => t.kind == 'minigoal');
+    expect(mini.map((t) => t.angle), [90, 270]);
   });
 
   test('le matériel glisse en ligne droite et ne s\'accroche pas à une course', () {
