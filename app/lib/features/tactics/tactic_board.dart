@@ -160,8 +160,48 @@ class TacticBoard {
   List<BoardArrow> arrowsAt(int step) => step == 0 ? arrows : steps[step - 1].arrows;
 
   /// Ajoute une étape juste après l'étape [after] (0 = étape 1) : les pions partent de ses positions, sans flèche.
+  /// Les pions qui ont une flèche (course pour un joueur, trajectoire pour le ballon) arrivent au bout de leur
+  /// flèche : l'animation la suivra.
   void addStep(int after) {
-    steps.insert(after, BoardStep(pos: {for (final t in tokens) t.id: positionAt(t, after)}));
+    final pos = {for (final t in tokens) t.id: positionAt(t, after)};
+    for (final a in arrowsAt(after)) {
+      final t = tokenAt(a, after);
+      if (t != null) pos[t.id] = Offset(a.x2, a.y2);
+    }
+    steps.insert(after, BoardStep(pos: pos));
+  }
+
+  /// Distance (en fraction du terrain) sous laquelle une flèche part d'un pion.
+  static const _near = 0.08;
+
+  /// Pion d'où part une flèche à une étape : le ballon pour une trajectoire, un joueur pour une course.
+  BoardToken? tokenAt(BoardArrow a, int step) {
+    final start = Offset(a.x1, a.y1);
+    BoardToken? best;
+    var bestD = _near;
+    for (final t in tokens) {
+      if ((t.kind == 'ball') != (a.kind == 'ball')) continue;
+      final d = (positionAt(t, step) - start).distance;
+      if (d < bestD) {
+        best = t;
+        bestD = d;
+      }
+    }
+    return best;
+  }
+
+  /// Ajoute une flèche tracée à une étape : elle s'accroche au pion d'où elle part, et si l'étape suivante
+  /// existe, ce pion y est placé au bout de la flèche.
+  void addArrow(int step, BoardArrow a) {
+    final t = tokenAt(a, step);
+    if (t != null) {
+      final p = positionAt(t, step);
+      a
+        ..x1 = p.dx
+        ..y1 = p.dy;
+      if (step + 1 < stepCount) setPosition(t, step + 1, Offset(a.x2, a.y2));
+    }
+    arrowsAt(step).add(a);
   }
 
   /// Retire l'étape [step] (1 et plus) ; l'étape 1 reste toujours.
@@ -195,11 +235,10 @@ class TacticBoard {
   Offset _travel(BoardToken tk, int k, int next, double f) {
     final from = positionAt(tk, k), to = positionAt(tk, next);
     if (from == to) return from;
-    const near = 0.08;
     final path = arrowsAt(k).where((a) =>
         a.kind == (tk.kind == 'ball' ? 'ball' : 'run') &&
-        (Offset(a.x1, a.y1) - from).distance < near &&
-        (Offset(a.x2, a.y2) - to).distance < near).firstOrNull;
+        (Offset(a.x1, a.y1) - from).distance < _near &&
+        (Offset(a.x2, a.y2) - to).distance < _near).firstOrNull;
     if (path == null) return Offset.lerp(from, to, f)!;
     // Les extrémités de la flèche sont proches du pion, pas forcément dessus : on corrige l'écart.
     final startGap = from - Offset(path.x1, path.y1), endGap = to - Offset(path.x2, path.y2);
