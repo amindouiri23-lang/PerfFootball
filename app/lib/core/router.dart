@@ -33,6 +33,7 @@ import '../features/team/player_screens.dart';
 import '../features/tactics/tactic_screens.dart';
 import '../features/tests/test_screens.dart';
 import '../features/analytics/analytics_screen.dart';
+import '../features/viewing/viewing_screens.dart';
 import '../features/wellness/wellness_survey_screens.dart';
 import '../features/team/team_form_screen.dart';
 import '../features/team/team_screen.dart';
@@ -65,6 +66,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/forgot-password', builder: (_, _) => const ForgotPasswordScreen()),
       GoRoute(path: '/new-password', builder: (_, _) => const NewPasswordScreen()),
       GoRoute(path: '/sync', builder: (_, _) => const SyncScreen()),
+      // Présentation plein écran : hors de la barre de navigation.
+      GoRoute(path: '/present/:vid', builder: (_, s) => ViewingPresentScreen(id: s.pathParameters['vid']!)),
       StatefulShellRoute.indexedStack(
         builder: (_, _, shell) => AppShell(shell: shell),
         branches: [
@@ -206,6 +209,13 @@ final routerProvider = Provider<GoRouter>((ref) {
                   routes: [GoRoute(path: ':tid', builder: (_, s) => TacticEditorScreen(id: s.pathParameters['tid']!))],
                 ),
                 GoRoute(
+                  path: 'viewing',
+                  builder: (_, _) => const ViewingListScreen(),
+                  routes: [
+                    GoRoute(path: ':vid', builder: (_, s) => ViewingEditorScreen(id: s.pathParameters['vid']!)),
+                  ],
+                ),
+                GoRoute(
                   path: 'tests',
                   builder: (_, _) => const TestDaysScreen(),
                   routes: [
@@ -294,6 +304,7 @@ String? requiredPermission(String location) {
     (RegExp(r'^/team/import$'), 'import.use'),
     (RegExp(r'^/team/tests'), 'tests.view'),
     (RegExp(r'^/team/tactics'), 'tactiques.view'),
+    (RegExp(r'^/(team/viewing|present)'), 'visionnage.view'),
     (RegExp(r'^/team/injuries/new$'), 'blessures.add'),
     (RegExp(r'^/team/injuries'), 'blessures.view'),
     (RegExp(r'^/team/players/(new|club)$'), 'effectif.add'),

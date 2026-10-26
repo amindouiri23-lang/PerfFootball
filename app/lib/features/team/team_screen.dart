@@ -53,7 +53,7 @@ class _TeamScreenState extends ConsumerState<TeamScreen> {
     }
     final goals = <String, int>{}, assists = <String, int>{};
     for (final e in (ref.watch(teamMatchEventsProvider(team.id)).value ?? const <MatchEvent>[]).where((e) => e.type == 'goal')) {
-      goals[e.playerId] = (goals[e.playerId] ?? 0) + 1;
+      goals[e.playerId!] = (goals[e.playerId] ?? 0) + 1;
       if (e.assistPlayerId != null) assists[e.assistPlayerId!] = (assists[e.assistPlayerId!] ?? 0) + 1;
     }
     final q = _query.toLowerCase();
@@ -114,6 +114,16 @@ class _TeamScreenState extends ConsumerState<TeamScreen> {
                         onPressed: () => context.go('/team/tactics'),
                         icon: const Icon(Icons.sports_soccer),
                         label: Text('Tactiques${tacticCount > 0 ? ' ($tacticCount)' : ''}'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                  ],
+                  if (ref.watch(permsProvider).can('visionnage.view')) ...[
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () => context.go('/team/viewing'),
+                        icon: const Icon(Icons.slideshow),
+                        label: const Text('Visionnage'),
                       ),
                     ),
                     const SizedBox(width: 12),

@@ -122,7 +122,7 @@ class _SquadScreenState extends ConsumerState<SquadScreen> {
       ..sort((a, b) => '${b.date} ${b.kickOffTime}'.compareTo('${a.date} ${a.kickOffTime}'));
     if (previous.isEmpty) return const {};
     final reds = ref.watch(teamRedCardsProvider(m.teamId)).value ?? const <MatchEvent>[];
-    return {for (final e in reds.where((e) => e.matchId == previous.first.id)) e.playerId};
+    return {for (final e in reds.where((e) => e.matchId == previous.first.id)) e.playerId!};
   }
 
   Widget _row(Player p, bool injured, bool suspended) {

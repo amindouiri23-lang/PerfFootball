@@ -229,6 +229,7 @@ class _MatchCard extends StatelessWidget {
                     'substitution' => 'Entre ${e['player']}, sort ${e['other']}',
                     'yellow_card' => '${e['player']} · carton jaune',
                     'red_card' => '${e['player']} · carton rouge',
+                    'opponent_goal' => 'But ${m.opponent}${e['player'] == null ? '' : ' · ${e['player']}'}',
                     _ => '${e['player']}',
                   }),
                 ),

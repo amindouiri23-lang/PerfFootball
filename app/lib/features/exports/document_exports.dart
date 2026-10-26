@@ -31,7 +31,7 @@ Future<Map<String, Player>> _players(Ref ref, String teamId) async =>
     {for (final p in await ref.read(playersProvider(teamId).future)) p.id: p};
 
 /// Tactiques rattachées à une séance ou un match, avec leur schéma.
-Future<List<(Tactic, Uint8List)>> _linkedTactics(Ref ref, String teamId, Map<String, Player> players,
+Future<List<(Tactic, List<Uint8List>)>> _linkedTactics(Ref ref, String teamId, Map<String, Player> players,
     {String? sessionId, String? matchId, Set<String> exclude = const {}}) async {
   final links = await ref.read(teamTacticLinksProvider(teamId).future);
   final tactics = {for (final t in await ref.read(tacticsProvider(teamId).future)) t.id: t};
@@ -41,7 +41,7 @@ Future<List<(Tactic, Uint8List)>> _linkedTactics(Ref ref, String teamId, Map<Str
   }.difference(exclude);
   return [
     for (final id in ids)
-      if (tactics[id] case final Tactic t) (t, await renderTacticPng(t, players, width: 900)),
+      if (tactics[id] case final Tactic t) (t, await renderTacticSteps(t, players, width: 900)),
   ];
 }
 
@@ -62,9 +62,9 @@ class DocumentExports {
     final players = await _players(ref, s.teamId);
     final exercises = await ref.read(sessionExercisesProvider(s.id).future);
     final tactics = {for (final t in await ref.read(tacticsProvider(s.teamId).future)) t.id: t};
-    final exerciseTactics = <String, Uint8List>{
+    final exerciseTactics = <String, List<Uint8List>>{
       for (final e in exercises)
-        if (tactics[e.tacticId] case final Tactic t) t.id: await renderTacticPng(t, players, width: 900),
+        if (tactics[e.tacticId] case final Tactic t) t.id: await renderTacticSteps(t, players, width: 900),
     };
     final linked = await _linkedTactics(ref, s.teamId, players, sessionId: s.id, exclude: exerciseTactics.keys.toSet());
     final rows = s.status == 'planned' ? const <SessionPlayer>[] : await ref.read(sessionPlayersProvider(s.id).future);
@@ -94,13 +94,13 @@ class DocumentExports {
           if ((e.description ?? '').isNotEmpty) pw.Padding(padding: const pw.EdgeInsets.only(top: 2), child: pdfText(e.description!)),
           if (tactics[e.tacticId] case final Tactic t) ...[
             pw.SizedBox(height: 6),
-            ...tacticPdfBlock(t, exerciseTactics[t.id], players, width: 260),
+            ...tacticPdfBlock(t, exerciseTactics[t.id] ?? const [], players, width: 300),
           ] else
             pw.SizedBox(height: 10),
         ],
         if (linked.isNotEmpty) ...[
           pdfSection('Tactiques travaillées'),
-          for (final (t, png) in linked) ...tacticPdfBlock(t, png, players, width: 260),
+          for (final (t, pngs) in linked) ...tacticPdfBlock(t, pngs, players, width: 300),
         ],
         if (rows.isNotEmpty) ...[
           pdfSection('Présence · ${present.length} présent${present.length > 1 ? 's' : ''}, ${absent.length} absent${absent.length > 1 ? 's' : ''}'),
@@ -152,13 +152,17 @@ class DocumentExports {
     final subs = rows.where((r) => r.present && r.role == 'sub').toList()..sort((a, b) => name(a.playerId).compareTo(name(b.playerId)));
     final others = rows.where((r) => r.present && r.role != 'starter' && r.role != 'sub').toList();
     final absent = rows.where((r) => !r.present).toList()..sort((a, b) => name(a.playerId).compareTo(name(b.playerId)));
-    final score = m.goalsFor == null || m.goalsAgainst == null ? null : '${m.goalsFor} - ${m.goalsAgainst}';
+    // Match en cours : le score se lit sur les buts saisis, comme sur l'écran du match.
+    final score = m.status == 'in_progress'
+        ? '${events.where((e) => e.type == 'goal').length} - ${m.goalsAgainst ?? 0}'
+        : m.goalsFor == null || m.goalsAgainst == null ? null : '${m.goalsFor} - ${m.goalsAgainst}';
     final team = _teamName(ref, m.teamId);
     final venue = m.homeAway == 'A' ? '${m.opponent} - $team' : '$team - ${m.opponent}';
 
     String eventLine(MatchEvent e) => switch (e.type) {
           'goal' => 'But de ${name(e.playerId)}${e.assistPlayerId == null ? '' : ' (passe de ${name(e.assistPlayerId)})'}',
           'substitution' => 'Entrée de ${name(e.playerId)}${e.assistPlayerId == null ? '' : ', sortie de ${name(e.assistPlayerId)}'}',
+          'opponent_goal' => 'But de ${m.opponent}${e.remark == null ? '' : ' (${e.remark})'}',
           _ => '${eventTypes[e.type] ?? e.type} : ${name(e.playerId)}',
         };
 
@@ -222,7 +226,7 @@ class DocumentExports {
         ],
         if (linked.isNotEmpty) ...[
           pdfSection('Tactiques prévues'),
-          for (final (t, png) in linked) ...tacticPdfBlock(t, png, players, width: 260),
+          for (final (t, pngs) in linked) ...tacticPdfBlock(t, pngs, players, width: 300),
         ],
       ],
     );

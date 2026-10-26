@@ -4,9 +4,11 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 // Tableau tactique : pions et flèches posés sur un terrain vu de dessus, but attaqué (ou défendu) en haut.
-// Positions en fraction du terrain affiché (0 à 1) : la même tactique s'affiche sur téléphone, tablette et PC.
+// Positions en fraction du terrain en portrait (x : largeur, y : longueur, 0 à 1) : la même tactique
+// s'affiche en portrait ou à l'horizontale (but à droite), sur téléphone, tablette et PC.
+// Une tactique animée a plusieurs étapes : chaque étape déplace des pions et porte ses propres flèches.
 
-/// Pion : us = notre joueur, them = adversaire, ball = ballon.
+/// Pion : us = notre joueur, them = adversaire, ball = ballon. x, y : position à l'étape 1.
 class BoardToken {
   BoardToken({required this.id, required this.kind, required this.x, required this.y, this.label, this.role, this.playerId});
 
@@ -30,53 +32,184 @@ class BoardToken {
         'id': id, 'kind': kind, 'x': _round(x), 'y': _round(y),
         if (label != null) 'label': label, if (role != null) 'role': role, if (playerId != null) 'playerId': playerId,
       };
+
+  BoardToken copyAt(Offset p) => BoardToken(id: id, kind: kind, x: p.dx, y: p.dy, label: label, role: role, playerId: playerId);
 }
 
-/// Flèche : run = course d'un joueur, ball = trajectoire du ballon.
+/// Flèche : run = course d'un joueur, ball = trajectoire du ballon. (cx, cy) : point de contrôle d'une
+/// flèche courbe (courbe de Bézier quadratique) ; null = flèche droite.
 class BoardArrow {
-  BoardArrow({required this.id, required this.kind, required this.x1, required this.y1, required this.x2, required this.y2});
+  BoardArrow({required this.id, required this.kind, required this.x1, required this.y1, required this.x2, required this.y2,
+      this.cx, this.cy});
 
   final String id;
   final String kind;
   double x1, y1, x2, y2;
+  double? cx, cy;
+
+  bool get curved => cx != null && cy != null;
 
   factory BoardArrow.fromJson(Map<String, dynamic> j) => BoardArrow(
         id: j['id'] as String, kind: j['kind'] as String,
         x1: (j['x1'] as num).toDouble(), y1: (j['y1'] as num).toDouble(),
         x2: (j['x2'] as num).toDouble(), y2: (j['y2'] as num).toDouble(),
+        cx: (j['cx'] as num?)?.toDouble(), cy: (j['cy'] as num?)?.toDouble(),
       );
 
-  Map<String, dynamic> toJson() =>
-      {'id': id, 'kind': kind, 'x1': _round(x1), 'y1': _round(y1), 'x2': _round(x2), 'y2': _round(y2)};
+  Map<String, dynamic> toJson() => {
+        'id': id, 'kind': kind, 'x1': _round(x1), 'y1': _round(y1), 'x2': _round(x2), 'y2': _round(y2),
+        if (curved) 'cx': _round(cx!), if (curved) 'cy': _round(cy!),
+      };
+
+  /// Point de la flèche à t (0 = départ, 1 = arrivée), en fraction du terrain.
+  Offset point(double t) {
+    final p1 = Offset(x1, y1), p2 = Offset(x2, y2);
+    if (!curved) return Offset.lerp(p1, p2, t)!;
+    final c = Offset(cx!, cy!);
+    final u = 1 - t;
+    return p1 * (u * u) + c * (2 * u * t) + p2 * (t * t);
+  }
+
+  /// Courbe la flèche pour qu'elle passe par [m] en son milieu (poignée de l'éditeur).
+  void bendThrough(Offset m) {
+    cx = (2 * m.dx - (x1 + x2) / 2).clamp(-0.2, 1.2);
+    cy = (2 * m.dy - (y1 + y2) / 2).clamp(-0.2, 1.2);
+  }
+
+  void straighten() {
+    cx = null;
+    cy = null;
+  }
+
+  BoardArrow copy() => BoardArrow(id: id, kind: kind, x1: x1, y1: y1, x2: x2, y2: y2, cx: cx, cy: cy);
 }
 
 double _round(double v) => (v * 1000).round() / 1000;
 
+/// Étape 2 et suivantes d'une tactique animée : positions des pions déplacés (les autres gardent leur
+/// position de l'étape précédente) et flèches de l'étape.
+class BoardStep {
+  BoardStep({Map<String, Offset>? pos, List<BoardArrow>? arrows}) : pos = pos ?? {}, arrows = arrows ?? [];
+
+  final Map<String, Offset> pos;
+  final List<BoardArrow> arrows;
+
+  factory BoardStep.fromJson(Map<String, dynamic> j) => BoardStep(
+        pos: {
+          for (final e in (j['pos'] as Map<String, dynamic>? ?? const {}).entries)
+            e.key: Offset(((e.value as List)[0] as num).toDouble(), ((e.value as List)[1] as num).toDouble()),
+        },
+        arrows: [for (final a in (j['arrows'] as List? ?? const [])) BoardArrow.fromJson(a as Map<String, dynamic>)],
+      );
+
+  Map<String, dynamic> toJson() => {
+        'pos': {for (final e in pos.entries) e.key: [_round(e.value.dx), _round(e.value.dy)]},
+        'arrows': [for (final a in arrows) a.toJson()],
+      };
+}
+
 class TacticBoard {
-  TacticBoard({List<BoardToken>? tokens, List<BoardArrow>? arrows}) : tokens = tokens ?? [], arrows = arrows ?? [];
+  TacticBoard({List<BoardToken>? tokens, List<BoardArrow>? arrows, List<BoardStep>? steps})
+      : tokens = tokens ?? [],
+        arrows = arrows ?? [],
+        steps = steps ?? [];
 
   final List<BoardToken> tokens;
+  /// Flèches de l'étape 1.
   final List<BoardArrow> arrows;
+  /// Étapes 2, 3… d'une tactique animée (vide : tactique fixe).
+  final List<BoardStep> steps;
 
   factory TacticBoard.decode(String text) {
     final j = text.trim().isEmpty ? const <String, dynamic>{} : jsonDecode(text) as Map<String, dynamic>;
     return TacticBoard(
       tokens: [for (final t in (j['tokens'] as List? ?? const [])) BoardToken.fromJson(t as Map<String, dynamic>)],
       arrows: [for (final a in (j['arrows'] as List? ?? const [])) BoardArrow.fromJson(a as Map<String, dynamic>)],
+      steps: [for (final s in (j['steps'] as List? ?? const [])) BoardStep.fromJson(s as Map<String, dynamic>)],
     );
   }
 
-  String encode() => jsonEncode({'tokens': [for (final t in tokens) t.toJson()], 'arrows': [for (final a in arrows) a.toJson()]});
+  String encode() => jsonEncode({
+        'tokens': [for (final t in tokens) t.toJson()],
+        'arrows': [for (final a in arrows) a.toJson()],
+        if (steps.isNotEmpty) 'steps': [for (final s in steps) s.toJson()],
+      });
+
+  int get stepCount => 1 + steps.length;
+  bool get animated => steps.isNotEmpty;
+
+  /// Position d'un pion à une étape (0 = étape 1) : la dernière position connue jusqu'à cette étape.
+  Offset positionAt(BoardToken t, int step) {
+    for (var s = step.clamp(0, steps.length); s > 0; s--) {
+      final p = steps[s - 1].pos[t.id];
+      if (p != null) return p;
+    }
+    return Offset(t.x, t.y);
+  }
+
+  void setPosition(BoardToken t, int step, Offset p) {
+    if (step == 0) {
+      t
+        ..x = p.dx
+        ..y = p.dy;
+    } else {
+      steps[step - 1].pos[t.id] = p;
+    }
+  }
+
+  List<BoardArrow> arrowsAt(int step) => step == 0 ? arrows : steps[step - 1].arrows;
+
+  /// Ajoute une étape juste après l'étape [after] (0 = étape 1) : les pions partent de ses positions, sans flèche.
+  void addStep(int after) {
+    steps.insert(after, BoardStep(pos: {for (final t in tokens) t.id: positionAt(t, after)}));
+  }
+
+  /// Retire l'étape [step] (1 et plus) ; l'étape 1 reste toujours.
+  void removeStep(int step) {
+    if (step >= 1 && step <= steps.length) steps.removeAt(step - 1);
+  }
+
+  void removeToken(BoardToken t) {
+    tokens.remove(t);
+    for (final s in steps) {
+      s.pos.remove(t.id);
+    }
+  }
+
+  /// Image d'un instant de l'animation : [t] de 0 (étape 1) à stepCount - 1 (dernière étape). Les pions
+  /// glissent d'une étape à la suivante ; les flèches affichées sont celles de l'étape de départ.
+  TacticBoard frameAt(double t) {
+    final at = t.clamp(0.0, (stepCount - 1).toDouble());
+    final k = at.floor();
+    final f = Curves.easeInOut.transform(at - k);
+    final next = math.min(k + 1, stepCount - 1);
+    return TacticBoard(
+      tokens: [for (final tk in tokens) tk.copyAt(Offset.lerp(positionAt(tk, k), positionAt(tk, next), f)!)],
+      arrows: [for (final a in arrowsAt(f > 0.98 ? next : k)) a.copy()],
+    );
+  }
+
+  /// L'étape [step] figée, comme une tactique fixe (export en image, diapositive).
+  TacticBoard stepBoard(int step) => frameAt(step.toDouble());
 
   /// Symétrie gauche / droite : un corner à gauche devient un corner à droite.
   void mirror() {
-    for (final t in tokens) {
-      t.x = 1 - t.x;
-    }
-    for (final a in arrows) {
+    void flip(BoardArrow a) {
       a
         ..x1 = 1 - a.x1
         ..x2 = 1 - a.x2;
+      if (a.cx != null) a.cx = 1 - a.cx!;
+    }
+
+    for (final t in tokens) {
+      t.x = 1 - t.x;
+    }
+    arrows.forEach(flip);
+    for (final s in steps) {
+      for (final e in s.pos.entries.toList()) {
+        s.pos[e.key] = Offset(1 - e.value.dx, e.value.dy);
+      }
+      s.arrows.forEach(flip);
     }
   }
 
@@ -87,6 +220,20 @@ class TacticBoard {
 const pitchWidthM = 68.0;
 double pitchLengthM(String pitch) => pitch == 'full' ? 105.0 : 52.5;
 
+/// Rapport largeur / hauteur du terrain affiché.
+double pitchAspect(String pitch, {bool horizontal = false}) =>
+    horizontal ? pitchLengthM(pitch) / pitchWidthM : pitchWidthM / pitchLengthM(pitch);
+
+/// Fraction du terrain (repère portrait) → point à l'écran. À l'horizontale, le but du haut passe à droite.
+Offset boardToScreen(Offset f, Size size, bool horizontal) =>
+    horizontal ? Offset((1 - f.dy) * size.width, f.dx * size.height) : Offset(f.dx * size.width, f.dy * size.height);
+
+/// Point à l'écran → fraction du terrain (repère portrait), bornée au terrain.
+Offset screenToBoard(Offset p, Size size, bool horizontal) {
+  final f = horizontal ? Offset(p.dy / size.height, 1 - p.dx / size.width) : Offset(p.dx / size.width, p.dy / size.height);
+  return Offset(f.dx.clamp(0.0, 1.0), f.dy.clamp(0.0, 1.0));
+}
+
 /// Couleurs fixes du tableau : un terrain reste vert en thème clair comme en thème sombre.
 const tokenUsColor = Color(0xFFE30613);
 const tokenThemColor = Color(0xFF1E6FD9);
@@ -96,15 +243,27 @@ const _runColor = Color(0xFFFFC94D);
 
 /// Dessin du terrain et des flèches. Les pions sont des widgets posés par-dessus (déplaçables).
 class PitchPainter extends CustomPainter {
-  PitchPainter({required this.pitch, required this.arrows, this.preview});
+  PitchPainter({required this.pitch, required this.arrows, this.preview, this.horizontal = false});
 
   final String pitch;
   final List<BoardArrow> arrows;
   /// Flèche en cours de tracé.
   final BoardArrow? preview;
+  /// Terrain couché, but du haut à droite.
+  final bool horizontal;
 
   @override
   void paint(Canvas canvas, Size size) {
+    if (!horizontal) return _paintPortrait(canvas, size);
+    // À l'horizontale : le dessin en portrait, tourné d'un quart de tour (le haut passe à droite).
+    canvas.save();
+    canvas.translate(size.width, 0);
+    canvas.rotate(math.pi / 2);
+    _paintPortrait(canvas, Size(size.height, size.width));
+    canvas.restore();
+  }
+
+  void _paintPortrait(Canvas canvas, Size size) {
     final s = size.width / pitchWidthM; // pixels par mètre
     // Bandes de tonte.
     const bands = 10;
@@ -154,24 +313,35 @@ class PitchPainter extends CustomPainter {
   }
 
   void _arrow(Canvas canvas, Size size, BoardArrow a) {
-    final p1 = Offset(a.x1 * size.width, a.y1 * size.height);
-    final p2 = Offset(a.x2 * size.width, a.y2 * size.height);
+    Offset px(double x, double y) => Offset(x * size.width, y * size.height);
+    final p1 = px(a.x1, a.y1);
+    final p2 = px(a.x2, a.y2);
+    final c = a.curved ? px(a.cx!, a.cy!) : null;
     final run = a.kind == 'run';
     final paint = Paint()
       ..color = run ? _runColor : Colors.white
       ..strokeWidth = (size.width / 160).clamp(1.0, run ? 2.5 : 2.0)
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
-    // Trait discontinu : tirets pour une course, pointillés pour le ballon.
-    final d = p2 - p1;
-    final len = d.distance;
-    if (len < 1) return;
-    final dir = d / len;
+    final path = Path()..moveTo(p1.dx, p1.dy);
+    if (c != null) {
+      path.quadraticBezierTo(c.dx, c.dy, p2.dx, p2.dy);
+    } else {
+      path.lineTo(p2.dx, p2.dy);
+    }
+    final metric = path.computeMetrics().firstOrNull;
+    if (metric == null || metric.length < 1) return;
+    final len = metric.length;
+    // Trait discontinu : tirets pour une course, pointillés pour le ballon, le long de la courbe.
     final (dash, gap) = run ? (8.0, 5.0) : (2.0, 5.0);
     for (var t = 0.0; t < len - 6; t += dash + gap) {
-      canvas.drawLine(p1 + dir * t, p1 + dir * math.min(t + dash, len - 6), paint);
+      canvas.drawPath(metric.extractPath(t, math.min(t + dash, len - 6)), paint);
     }
-    // Pointe, proportionnée au terrain (petite sur une miniature).
+    // Pointe, dans l'axe de la fin de la flèche, proportionnée au terrain.
+    final from = c ?? p1;
+    final d = p2 - from;
+    if (d.distance < 0.01) return;
+    final dir = d / d.distance;
     final normal = Offset(-dir.dy, dir.dx);
     final h = (size.width * 0.03).clamp(3.0, 11.0);
     final head = Path()
@@ -186,15 +356,20 @@ class PitchPainter extends CustomPainter {
   bool shouldRepaint(PitchPainter old) => true;
 }
 
-/// Distance d'un point au segment d'une flèche (en pixels) : sert à toucher une flèche pour la supprimer.
-double distanceToArrow(Offset p, BoardArrow a, Size size) {
-  final p1 = Offset(a.x1 * size.width, a.y1 * size.height);
-  final p2 = Offset(a.x2 * size.width, a.y2 * size.height);
-  final d = p2 - p1;
-  final l2 = d.dx * d.dx + d.dy * d.dy;
-  if (l2 == 0) return (p - p1).distance;
-  final t = (((p - p1).dx * d.dx + (p - p1).dy * d.dy) / l2).clamp(0.0, 1.0);
-  return (p - (p1 + d * t)).distance;
+/// Distance d'un point à l'écran au tracé d'une flèche (en pixels) : sert à toucher une flèche.
+double distanceToArrow(Offset p, BoardArrow a, Size size, {bool horizontal = false}) {
+  var best = double.infinity;
+  Offset at(double t) => boardToScreen(a.point(t), size, horizontal);
+  var prev = at(0);
+  for (var i = 1; i <= 24; i++) {
+    final next = at(i / 24);
+    final d = next - prev;
+    final l2 = d.dx * d.dx + d.dy * d.dy;
+    final t = l2 == 0 ? 0.0 : (((p - prev).dx * d.dx + (p - prev).dy * d.dy) / l2).clamp(0.0, 1.0);
+    best = math.min(best, (p - (prev + d * t)).distance);
+    prev = next;
+  }
+  return best;
 }
 
 /// Pion dessiné : rond coloré, texte au centre, rôle en dessous.
