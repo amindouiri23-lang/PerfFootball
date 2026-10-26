@@ -1,8 +1,10 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/browser_fullscreen.dart';
 import '../../core/permissions.dart';
 import '../../core/pdf_kit.dart';
 import '../../core/router.dart';
@@ -11,7 +13,10 @@ import '../../core/widgets/sync_indicator.dart';
 import '../../data/database.dart';
 import '../team/team_repository.dart';
 import '../team/team_screen.dart' show NoTeamScreen;
+import '../../core/theme.dart';
 import 'tactic_board.dart';
+import 'tactic_equipment.dart';
+import 'tactic_layouts.dart';
 import 'tactic_export.dart';
 import 'tactic_render.dart';
 import 'tactic_repository.dart';
@@ -251,7 +256,8 @@ class _BoardViewState extends State<BoardView> {
                   final p = screen(widget.board.positionAt(t, widget.step));
                   return Positioned(
                     left: p.dx - ts * 2,
-                    top: p.dy - (t.kind == 'ball' ? ts * 0.35 : ts / 2),
+                    // Matériel centré sur sa position ; joueur : le rond sur la position, la légende dessous.
+                    top: p.dy - (isPlayerToken(t.kind) ? ts / 2 : equipmentSize(t.kind, ts).height / 2),
                     width: ts * 4,
                     child: Align(
                       alignment: Alignment.topCenter,
@@ -283,9 +289,13 @@ class _BoardViewState extends State<BoardView> {
 /// courbes), étapes d'une tactique animée et lecture de l'animation. Chaque geste est enregistré sur
 /// l'appareil puis synchronisé.
 class TacticEditorScreen extends ConsumerStatefulWidget {
-  const TacticEditorScreen({super.key, required this.id});
+  const TacticEditorScreen({super.key, required this.id, this.fullscreen = false, this.initialStep = 0});
 
   final String id;
+  /// Plein écran : sans barre de titre ni navigation, le terrain occupe tout l'écran.
+  final bool fullscreen;
+  /// Étape affichée à l'ouverture (celle de l'éditeur d'où l'on passe en plein écran).
+  final int initialStep;
 
   @override
   ConsumerState<TacticEditorScreen> createState() => _TacticEditorScreenState();
@@ -296,18 +306,50 @@ class _TacticEditorScreenState extends ConsumerState<TacticEditorScreen> with Si
   final List<String> _undo = [];
   String? _arrowMode;
   /// Étape modifiée (0 = étape 1).
-  int _step = 0;
+  late int _step = widget.initialStep;
   /// Zoom du terrain ; « Déplacer » active le pincement et le glissé de la vue (sinon le doigt bouge les pions).
   final _zoom = TransformationController();
   bool _panMode = false;
   Size _boardSize = Size.zero;
   late final AnimationController _play = AnimationController(vsync: this)..addListener(() => setState(() {}));
   bool _playing = false;
+  bool _orientationSet = false;
+  /// Plein écran : barre d'outils dépliée.
+  bool _toolsOpen = true;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.fullscreen) {
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+      enterBrowserFullscreen();
+    }
+  }
+
+  /// Ouvre le même tableau en plein écran ; au retour, reprend le tableau tel qu'il y a été modifié.
+  Future<void> _openFullscreen(Tactic t) async {
+    final result = await context.push<String>('/fullscreen/tactic/${t.id}?step=$_step');
+    if (!mounted) return;
+    setState(() {
+      _board = result == null ? null : TacticBoard.decode(result);
+      _undo.clear();
+    });
+  }
+
+  void _leaveFullscreen() {
+    exitBrowserFullscreen();
+    context.pop(_board?.encode());
+  }
 
   TacticRepository get _repo => ref.read(tacticRepositoryProvider);
 
   @override
   void dispose() {
+    if (widget.fullscreen) {
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+      SystemChrome.setPreferredOrientations(const []);
+      exitBrowserFullscreen();
+    }
     _play.dispose();
     _zoom.dispose();
     super.dispose();
@@ -458,21 +500,232 @@ class _TacticEditorScreenState extends ConsumerState<TacticEditorScreen> with Si
             ),
           );
 
+    // Étapes d'une tactique animée.
+    final steps = board.animated || editable ? SizedBox(
+              height: 48,
+              child: ListView(scrollDirection: Axis.horizontal, padding: const EdgeInsets.symmetric(horizontal: 12), children: [
+                for (var s = 0; s < board.stepCount; s++)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 6, top: 6, bottom: 6),
+                    child: ChoiceChip(
+                      label: Text(board.animated ? 'Étape ${s + 1}' : 'Étape unique'),
+                      selected: !_playing && _step == s,
+                      onSelected: _playing ? null : (_) => setState(() => _step = s),
+                    ),
+                  ),
+                if (editable)
+                  IconButton(
+                    tooltip: 'Ajouter une étape (animation)',
+                    icon: const Icon(Icons.add_circle_outline),
+                    onPressed: () => _change(() {
+                      board.addStep(_step);
+                      _step++;
+                    }),
+                  ),
+                if (editable && _step > 0)
+                  IconButton(
+                    tooltip: 'Supprimer l\'étape ${_step + 1}',
+                    icon: const Icon(Icons.remove_circle_outline),
+                    onPressed: () => _change(() {
+                      board.removeStep(_step);
+                      _step--;
+                    }),
+                  ),
+                if (board.animated)
+                  TextButton.icon(
+                    onPressed: _togglePlay,
+                    icon: Icon(_playing ? Icons.stop : Icons.play_arrow),
+                    label: Text(_playing ? 'Arrêter' : 'Lire l\'animation'),
+                  ),
+              ]),
+            ) : null;
+    final tools = editable && !_panMode ? Padding(
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+            child: Wrap(spacing: 8, runSpacing: 4, alignment: WrapAlignment.center, children: [
+              ActionChip(
+                avatar: const CircleAvatar(backgroundColor: tokenUsColor, radius: 8),
+                label: const Text('Joueur'),
+                onPressed: () => _addPlayer(players),
+              ),
+              ActionChip(
+                avatar: const CircleAvatar(backgroundColor: tokenThemColor, radius: 8),
+                label: const Text('Adversaire'),
+                onPressed: () => _change(() => board.tokens.add(_newToken('them', board))),
+              ),
+              if (board.ball == null)
+                ActionChip(
+                  avatar: const Icon(Icons.sports_soccer, size: 18),
+                  label: const Text('Ballon'),
+                  onPressed: () => _change(() => board.tokens.add(BoardToken(id: 'ball', kind: 'ball', x: 0.5, y: 0.5))),
+                ),
+              ActionChip(
+                avatar: const Icon(Icons.grid_view, size: 18),
+                label: const Text('Dispositions'),
+                onPressed: () => _pickLayout(t.pitch),
+              ),
+              ActionChip(
+                avatar: const Icon(Icons.sports, size: 18),
+                label: const Text('Matériel'),
+                onPressed: _pickEquipment,
+              ),
+              FilterChip(
+                avatar: const Icon(Icons.trending_up, size: 18),
+                label: const Text('Course'),
+                selected: _arrowMode == 'run',
+                onSelected: (v) => setState(() => _arrowMode = v ? 'run' : null),
+              ),
+              FilterChip(
+                avatar: const Icon(Icons.more_horiz, size: 18),
+                label: const Text('Ballon →'),
+                selected: _arrowMode == 'ball',
+                onSelected: (v) => setState(() => _arrowMode = v ? 'ball' : null),
+              ),
+              ActionChip(
+                avatar: const Icon(Icons.flip, size: 18),
+                label: const Text('Symétrie'),
+                onPressed: () {
+                  _change(board.mirror);
+                  showMessage(context, 'Tactique retournée : côté opposé du terrain');
+                },
+              ),
+            ]),
+          ) : null;
+    // Le plus grand terrain horizontal qui tient dans la place disponible, avec ses boutons de zoom.
+    Widget pitchArea(EdgeInsets padding) => Padding(padding: padding, child: LayoutBuilder(builder: (context, c) {
+                // Le plus grand terrain horizontal qui tient dans la place disponible.
+                final aspect = pitchAspect(t.pitch, horizontal: true);
+                var w = c.maxWidth, h = w / aspect;
+                if (h > c.maxHeight) {
+                  h = c.maxHeight;
+                  w = h * aspect;
+                }
+                _boardSize = Size(w, h);
+                return Stack(children: [
+                  Center(
+                    child: SizedBox(
+                      width: w,
+                      height: h,
+                      child: _panMode
+                          ? InteractiveViewer(transformationController: _zoom, minScale: 1, maxScale: 5, child: view)
+                          : Listener(
+                              // Molette de la souris : zoom sous le pointeur.
+                              onPointerSignal: (e) {
+                                if (e is PointerScrollEvent) _zoomBy(e.scrollDelta.dy < 0 ? 1.15 : 1 / 1.15, e.localPosition);
+                              },
+                              child: ClipRect(child: Transform(transform: _zoom.value, child: view)),
+                            ),
+                    ),
+                  ),
+                  // À gauche : notre moitié de terrain ; le but et les coins sont à droite.
+                  Positioned(
+                    left: 0,
+                    top: 0,
+                    child: Card(
+                      margin: EdgeInsets.zero,
+                      child: Column(mainAxisSize: MainAxisSize.min, children: [
+                        IconButton(tooltip: 'Zoomer', icon: const Icon(Icons.zoom_in), onPressed: () => _zoomBy(1.4)),
+                        IconButton(tooltip: 'Dézoomer', icon: const Icon(Icons.zoom_out), onPressed: () => _zoomBy(1 / 1.4)),
+                        IconButton(
+                          tooltip: 'Terrain entier',
+                          icon: const Icon(Icons.fit_screen),
+                          onPressed: () => setState(() => _zoom.value = Matrix4.identity()),
+                        ),
+                        IconButton(
+                          tooltip: _panMode ? 'Revenir à l\'édition' : 'Déplacer la vue',
+                          isSelected: _panMode,
+                          icon: const Icon(Icons.pan_tool_outlined),
+                          selectedIcon: const Icon(Icons.pan_tool),
+                          onPressed: () => setState(() => _panMode = !_panMode),
+                        ),
+                      ]),
+                    ),
+                  ),
+                ]);
+              }));
+    final undo = IconButton(
+      tooltip: 'Annuler la dernière modification',
+      icon: const Icon(Icons.undo),
+      onPressed: _undo.isEmpty
+          ? null
+          : () {
+              setState(() => _board = TacticBoard.decode(_undo.removeLast()));
+              _save();
+            },
+    );
+
+    if (widget.fullscreen) {
+      // Plein écran : tout l'écran pour le terrain ; outils posés dessus, sur un fond sombre translucide.
+      final glass = Colors.black.withValues(alpha: 0.55);
+      if (!_orientationSet) {
+        _orientationSet = true;
+        // Terrain entier : bien plus large que haut, il occupe l'écran d'un téléphone tenu à l'horizontale.
+        if (t.pitch == 'full') {
+          SystemChrome.setPreferredOrientations([DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight]);
+        }
+      }
+      return PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, _) {
+          if (!didPop) _leaveFullscreen();
+        },
+        child: Theme(
+          data: ThemeData.dark(useMaterial3: true).copyWith(colorScheme: theme.colorScheme),
+          child: Scaffold(
+            backgroundColor: const Color(0xFF0E0F12),
+            body: Stack(children: [
+              Positioned.fill(child: pitchArea(const EdgeInsets.fromLTRB(56, 52, 4, 4))),
+              Positioned(
+                left: 4,
+                top: 4,
+                child: Material(
+                  color: glass,
+                  borderRadius: BorderRadius.circular(12),
+                  child: Row(mainAxisSize: MainAxisSize.min, children: [
+                    IconButton(tooltip: 'Quitter le plein écran', icon: const Icon(Icons.fullscreen_exit), onPressed: _leaveFullscreen),
+                    if (editable) undo,
+                  ]),
+                ),
+              ),
+              if (steps != null)
+                Positioned(
+                  left: 120,
+                  right: 4,
+                  top: 4,
+                  child: Align(
+                    alignment: Alignment.topRight,
+                    child: Material(color: glass, borderRadius: BorderRadius.circular(12), child: steps),
+                  ),
+                ),
+              if (tools != null)
+                Positioned(
+                  left: 56,
+                  right: 4,
+                  bottom: 4,
+                  child: Center(
+                    child: Material(
+                      color: glass,
+                      borderRadius: BorderRadius.circular(16),
+                      child: _toolsOpen
+                          ? Row(mainAxisSize: MainAxisSize.min, children: [
+                              Flexible(child: tools),
+                              IconButton(tooltip: 'Masquer les outils', icon: const Icon(Icons.expand_more), onPressed: () => setState(() => _toolsOpen = false)),
+                            ])
+                          : IconButton(tooltip: 'Afficher les outils', icon: const Icon(Icons.construction), onPressed: () => setState(() => _toolsOpen = true)),
+                    ),
+                  ),
+                ),
+            ]),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Text(t.name),
         actions: [
-          if (editable)
-          IconButton(
-            tooltip: 'Annuler la dernière modification',
-            icon: const Icon(Icons.undo),
-            onPressed: _undo.isEmpty
-                ? null
-                : () {
-                    setState(() => _board = TacticBoard.decode(_undo.removeLast()));
-                    _save();
-                  },
-          ),
+          if (editable) undo,
+          IconButton(tooltip: 'Plein écran', icon: const Icon(Icons.fullscreen), onPressed: () => _openFullscreen(t)),
           PopupMenuButton<String>(
             onSelected: (v) async {
               switch (v) {
@@ -531,144 +784,9 @@ class _TacticEditorScreenState extends ConsumerState<TacticEditorScreen> with Si
               ),
             ]),
           ),
-          // Étapes d'une tactique animée.
-          if (board.animated || editable)
-            SizedBox(
-              height: 48,
-              child: ListView(scrollDirection: Axis.horizontal, padding: const EdgeInsets.symmetric(horizontal: 12), children: [
-                for (var s = 0; s < board.stepCount; s++)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 6, top: 6, bottom: 6),
-                    child: ChoiceChip(
-                      label: Text(board.animated ? 'Étape ${s + 1}' : 'Étape unique'),
-                      selected: !_playing && _step == s,
-                      onSelected: _playing ? null : (_) => setState(() => _step = s),
-                    ),
-                  ),
-                if (editable)
-                  IconButton(
-                    tooltip: 'Ajouter une étape (animation)',
-                    icon: const Icon(Icons.add_circle_outline),
-                    onPressed: () => _change(() {
-                      board.addStep(_step);
-                      _step++;
-                    }),
-                  ),
-                if (editable && _step > 0)
-                  IconButton(
-                    tooltip: 'Supprimer l\'étape ${_step + 1}',
-                    icon: const Icon(Icons.remove_circle_outline),
-                    onPressed: () => _change(() {
-                      board.removeStep(_step);
-                      _step--;
-                    }),
-                  ),
-                if (board.animated)
-                  TextButton.icon(
-                    onPressed: _togglePlay,
-                    icon: Icon(_playing ? Icons.stop : Icons.play_arrow),
-                    label: Text(_playing ? 'Arrêter' : 'Lire l\'animation'),
-                  ),
-              ]),
-            ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
-              child: LayoutBuilder(builder: (context, c) {
-                // Le plus grand terrain horizontal qui tient dans la place disponible.
-                final aspect = pitchAspect(t.pitch, horizontal: true);
-                var w = c.maxWidth, h = w / aspect;
-                if (h > c.maxHeight) {
-                  h = c.maxHeight;
-                  w = h * aspect;
-                }
-                _boardSize = Size(w, h);
-                return Stack(children: [
-                  Center(
-                    child: SizedBox(
-                      width: w,
-                      height: h,
-                      child: _panMode
-                          ? InteractiveViewer(transformationController: _zoom, minScale: 1, maxScale: 5, child: view)
-                          : Listener(
-                              // Molette de la souris : zoom sous le pointeur.
-                              onPointerSignal: (e) {
-                                if (e is PointerScrollEvent) _zoomBy(e.scrollDelta.dy < 0 ? 1.15 : 1 / 1.15, e.localPosition);
-                              },
-                              child: ClipRect(child: Transform(transform: _zoom.value, child: view)),
-                            ),
-                    ),
-                  ),
-                  // À gauche : notre moitié de terrain ; le but et les coins sont à droite.
-                  Positioned(
-                    left: 0,
-                    top: 0,
-                    child: Card(
-                      margin: EdgeInsets.zero,
-                      child: Column(mainAxisSize: MainAxisSize.min, children: [
-                        IconButton(tooltip: 'Zoomer', icon: const Icon(Icons.zoom_in), onPressed: () => _zoomBy(1.4)),
-                        IconButton(tooltip: 'Dézoomer', icon: const Icon(Icons.zoom_out), onPressed: () => _zoomBy(1 / 1.4)),
-                        IconButton(
-                          tooltip: 'Terrain entier',
-                          icon: const Icon(Icons.fit_screen),
-                          onPressed: () => setState(() => _zoom.value = Matrix4.identity()),
-                        ),
-                        IconButton(
-                          tooltip: _panMode ? 'Revenir à l\'édition' : 'Déplacer la vue',
-                          isSelected: _panMode,
-                          icon: const Icon(Icons.pan_tool_outlined),
-                          selectedIcon: const Icon(Icons.pan_tool),
-                          onPressed: () => setState(() => _panMode = !_panMode),
-                        ),
-                      ]),
-                    ),
-                  ),
-                ]);
-              }),
-            ),
-          ),
-          if (editable && !_panMode)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
-            child: Wrap(spacing: 8, runSpacing: 4, alignment: WrapAlignment.center, children: [
-              ActionChip(
-                avatar: const CircleAvatar(backgroundColor: tokenUsColor, radius: 8),
-                label: const Text('Joueur'),
-                onPressed: () => _addPlayer(players),
-              ),
-              ActionChip(
-                avatar: const CircleAvatar(backgroundColor: tokenThemColor, radius: 8),
-                label: const Text('Adversaire'),
-                onPressed: () => _change(() => board.tokens.add(_newToken('them', board))),
-              ),
-              if (board.ball == null)
-                ActionChip(
-                  avatar: const Icon(Icons.sports_soccer, size: 18),
-                  label: const Text('Ballon'),
-                  onPressed: () => _change(() => board.tokens.add(BoardToken(id: 'ball', kind: 'ball', x: 0.5, y: 0.5))),
-                ),
-              FilterChip(
-                avatar: const Icon(Icons.trending_up, size: 18),
-                label: const Text('Course'),
-                selected: _arrowMode == 'run',
-                onSelected: (v) => setState(() => _arrowMode = v ? 'run' : null),
-              ),
-              FilterChip(
-                avatar: const Icon(Icons.more_horiz, size: 18),
-                label: const Text('Ballon →'),
-                selected: _arrowMode == 'ball',
-                onSelected: (v) => setState(() => _arrowMode = v ? 'ball' : null),
-              ),
-              ActionChip(
-                avatar: const Icon(Icons.flip, size: 18),
-                label: const Text('Symétrie'),
-                onPressed: () {
-                  _change(board.mirror);
-                  showMessage(context, 'Tactique retournée : côté opposé du terrain');
-                },
-              ),
-            ]),
-          ),
+          ?steps,
+          Expanded(child: pitchArea(const EdgeInsets.fromLTRB(12, 4, 12, 0))),
+          ?tools,
         ]),
       ),
     );
@@ -698,16 +816,110 @@ class _TacticEditorScreenState extends ConsumerState<TacticEditorScreen> with Si
     _change(() => board.tokens.add(_newToken('us', board, playerId: choice.isEmpty ? null : choice, label: choice.isEmpty ? '$n' : null)));
   }
 
+  /// Disposition prête : dispositif, coup de pied arrêté ou atelier ; ajoutée au terrain, ou à la place.
+  Future<void> _pickLayout(String pitch) async {
+    final board = _board!;
+    var replace = false;
+    final layout = await showModalBottomSheet<TacticLayout>(
+      context: context,
+      isScrollControlled: true,
+      useRootNavigator: true,
+      useSafeArea: true,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setSheet) => DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.75,
+          maxChildSize: 0.95,
+          builder: (context, scroll) => ListView(controller: scroll, children: [
+            ListTile(title: Text('Dispositions prêtes', style: Theme.of(context).textTheme.titleMedium)),
+            if (board.tokens.isNotEmpty)
+              SwitchListTile(
+                title: const Text('Vider le terrain avant'),
+                subtitle: const Text('Sinon la disposition s\'ajoute à ce qui est déjà placé'),
+                value: replace,
+                onChanged: (v) => setSheet(() => replace = v),
+              ),
+            for (final cat in layoutCategories) ...[
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                child: Text(cat.toUpperCase(), style: sectionLabel(context)),
+              ),
+              for (final l in tacticLayouts.where((l) => l.category == cat))
+                ListTile(
+                  dense: true,
+                  title: Text(l.name),
+                  subtitle: l.description == null ? null : Text(l.description!),
+                  onTap: () => Navigator.of(context).pop(l),
+                ),
+            ],
+          ]),
+        ),
+      ),
+    );
+    if (layout == null) return;
+    _change(() {
+      if (replace) {
+        for (final tk in [...board.tokens]) {
+          board.removeToken(tk);
+        }
+        board.arrowsAt(_step).clear();
+      }
+      for (final tk in layoutTokens(layout, pitch)) {
+        board.tokens.add(tk);
+        // À une étape suivante, la disposition apparaît où elle est posée.
+        if (_step > 0) board.setPosition(tk, _step, Offset(tk.x, tk.y));
+      }
+    });
+  }
+
+  /// Matériel d'entraînement : posé au centre du terrain, à déplacer ensuite.
+  Future<void> _pickEquipment() async {
+    final board = _board!;
+    final kind = await showModalBottomSheet<String>(
+      context: context,
+      useRootNavigator: true,
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text('Matériel', style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 12),
+            Wrap(spacing: 8, runSpacing: 8, children: [
+              for (final e in equipmentKinds.entries)
+                ActionChip(
+                  avatar: Icon(equipmentIcons[e.key], size: 18),
+                  label: Text(e.value),
+                  onPressed: () => Navigator.of(context).pop(e.key),
+                ),
+            ]),
+          ]),
+        ),
+      ),
+    );
+    if (kind == null) return;
+    final n = board.tokens.where((tk) => tk.kind == kind).length;
+    final tk = BoardToken(
+      id: '${kind}_${DateTime.now().microsecondsSinceEpoch}',
+      kind: kind,
+      x: (0.42 + (n % 4) * 0.05).clamp(0.0, 1.0),
+      y: (0.45 + (n ~/ 4) * 0.06).clamp(0.0, 1.0),
+    );
+    _change(() {
+      board.tokens.add(tk);
+      if (_step > 0) board.setPosition(tk, _step, Offset(tk.x, tk.y));
+    });
+  }
+
   /// Toucher un pion : rôle, joueur, numéro, suppression.
   Future<void> _editToken(BoardToken token, Map<String, Player> players) async {
     final board = _board!;
-    if (token.kind == 'ball') {
+    if (!isPlayerToken(token.kind)) {
       final remove = await showModalBottomSheet<bool>(
         context: context,
         builder: (context) => SafeArea(
           child: ListTile(
             leading: const Icon(Icons.delete_outline),
-            title: const Text('Retirer le ballon'),
+            title: Text('Retirer : ${(equipmentKinds[token.kind] ?? 'élément').toLowerCase()}'),
             onTap: () => Navigator.of(context).pop(true),
           ),
         ),
