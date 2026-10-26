@@ -86,6 +86,8 @@ Future<String?> showViewingInfoSheet(BuildContext context, WidgetRef ref, {requi
   return showModalBottomSheet<String>(
     context: context,
     isScrollControlled: true,
+    useRootNavigator: true,
+    useSafeArea: true,
     builder: (context) => StatefulBuilder(
       builder: (context, setState) => Padding(
         padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + MediaQuery.viewInsetsOf(context).bottom),
@@ -271,6 +273,7 @@ class ViewingEditorScreen extends ConsumerWidget {
   Future<void> _addSlide(BuildContext context, WidgetRef ref, ViewingSession v) async {
     final kind = await showModalBottomSheet<String>(
       context: context,
+      useRootNavigator: true,
       builder: (context) => SafeArea(
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           for (final e in slideKinds.entries)
@@ -304,6 +307,8 @@ Future<void> showSlideSheet(BuildContext context, WidgetRef ref, ViewingSession 
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
+    useRootNavigator: true,
+    useSafeArea: true,
     builder: (context) => Consumer(
       builder: (context, ref, _) {
         final tactics = ref.watch(tacticsProvider(v.teamId)).value ?? const <Tactic>[];
@@ -318,8 +323,10 @@ Future<void> showSlideSheet(BuildContext context, WidgetRef ref, ViewingSession 
           String? opt(TextEditingController c) => c.text.trim().isEmpty ? null : c.text.trim();
           return Padding(
             padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + MediaQuery.viewInsetsOf(context).bottom),
-            child: SingleChildScrollView(
-              child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              Flexible(
+                child: SingleChildScrollView(
+                  child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                 Text('${slide == null ? 'Nouvelle diapositive' : 'Diapositive'} · ${slideKinds[kind]}',
                     style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(height: 12),
@@ -357,6 +364,9 @@ Future<void> showSlideSheet(BuildContext context, WidgetRef ref, ViewingSession 
                           : urlOk
                               ? 'Lien ouvert dans le navigateur pendant la présentation'
                               : null,
+                      errorText: url.text.trim().isNotEmpty && !urlOk
+                          ? 'Collez le lien complet, qui commence par https://'
+                          : null,
                     ),
                     onChanged: (_) => setState(() {}),
                   ),
@@ -383,19 +393,26 @@ Future<void> showSlideSheet(BuildContext context, WidgetRef ref, ViewingSession 
                   ),
                   onChanged: (_) => setState(() {}),
                 ),
-                const SizedBox(height: 8),
-                Row(children: [
-                  if (slide != null)
-                    TextButton.icon(
-                      onPressed: () async {
-                        await repo.deleteSlide(slide.id);
-                        if (context.mounted) Navigator.of(context).pop();
-                      },
-                      icon: const Icon(Icons.delete_outline),
-                      label: const Text('Supprimer'),
+                  ]),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Row(children: [
+                  if (slide != null) ...[
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () async {
+                          await repo.deleteSlide(slide.id);
+                          if (context.mounted) Navigator.of(context).pop();
+                        },
+                        icon: const Icon(Icons.delete_outline),
+                        label: const Text('Supprimer'),
+                      ),
                     ),
-                  const Spacer(),
-                  FilledButton(
+                    const SizedBox(width: 12),
+                  ],
+                  Expanded(
+                    child: FilledButton(
                     onPressed: !ok
                         ? null
                         : () async {
@@ -408,9 +425,9 @@ Future<void> showSlideSheet(BuildContext context, WidgetRef ref, ViewingSession 
                           },
                     child: Text(slide == null ? 'Ajouter' : 'Enregistrer'),
                   ),
+                  ),
                 ]),
-              ]),
-            ),
+            ]),
           );
         });
       },

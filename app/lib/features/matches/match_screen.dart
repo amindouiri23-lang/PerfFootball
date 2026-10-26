@@ -607,6 +607,8 @@ Future<void> showOpponentGoalSheet(BuildContext context, WidgetRef ref, Football
   await showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
+    useRootNavigator: true,
+    useSafeArea: true,
     builder: (context) => StatefulBuilder(builder: (context, setState) {
       final min = int.tryParse(minute.text);
       final ok = min != null && min >= 1 && min <= 130;
@@ -644,17 +646,20 @@ Future<void> showOpponentGoalSheet(BuildContext context, WidgetRef ref, Football
           ),
           const SizedBox(height: 8),
           Row(children: [
-            if (event != null)
-              TextButton.icon(
-                onPressed: () async {
-                  await repo.removeOpponentGoal(m, id: event.id);
-                  if (context.mounted) Navigator.of(context).pop();
-                },
-                icon: const Icon(Icons.delete_outline),
-                label: const Text('Supprimer'),
+            if (event != null) ...[
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () async {
+                    await repo.removeOpponentGoal(m, id: event.id);
+                    if (context.mounted) Navigator.of(context).pop();
+                  },
+                  icon: const Icon(Icons.delete_outline),
+                  label: const Text('Supprimer'),
+                ),
               ),
-            const Spacer(),
-            FilledButton(onPressed: ok ? save : null, child: const Text('Enregistrer')),
+              const SizedBox(width: 12),
+            ],
+            Expanded(child: FilledButton(onPressed: ok ? save : null, child: const Text('Enregistrer'))),
           ]),
         ]),
       );
