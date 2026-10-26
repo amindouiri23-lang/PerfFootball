@@ -184,9 +184,26 @@ class TacticBoard {
     final f = Curves.easeInOut.transform(at - k);
     final next = math.min(k + 1, stepCount - 1);
     return TacticBoard(
-      tokens: [for (final tk in tokens) tk.copyAt(Offset.lerp(positionAt(tk, k), positionAt(tk, next), f)!)],
+      tokens: [for (final tk in tokens) tk.copyAt(_travel(tk, k, next, f))],
       arrows: [for (final a in arrowsAt(f > 0.98 ? next : k)) a.copy()],
     );
+  }
+
+  /// Position d'un pion entre deux étapes : le long de sa flèche si l'étape de départ en porte une qui part
+  /// de lui et arrive à sa position suivante (trajectoire du ballon pour le ballon, course pour un joueur,
+  /// droite ou courbe) ; sinon en ligne droite.
+  Offset _travel(BoardToken tk, int k, int next, double f) {
+    final from = positionAt(tk, k), to = positionAt(tk, next);
+    if (from == to) return from;
+    const near = 0.08;
+    final path = arrowsAt(k).where((a) =>
+        a.kind == (tk.kind == 'ball' ? 'ball' : 'run') &&
+        (Offset(a.x1, a.y1) - from).distance < near &&
+        (Offset(a.x2, a.y2) - to).distance < near).firstOrNull;
+    if (path == null) return Offset.lerp(from, to, f)!;
+    // Les extrémités de la flèche sont proches du pion, pas forcément dessus : on corrige l'écart.
+    final startGap = from - Offset(path.x1, path.y1), endGap = to - Offset(path.x2, path.y2);
+    return path.point(f) + Offset.lerp(startGap, endGap, f)!;
   }
 
   /// L'étape [step] figée, comme une tactique fixe (export en image, diapositive).

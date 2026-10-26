@@ -24,6 +24,27 @@ void main() {
     expect(back.positionAt(back.tokens.single, 2), const Offset(0.6, 0.4));
   });
 
+  test('animation : trois étapes enchaînées, ballon le long de sa trajectoire courbe', () {
+    final ball = BoardToken(id: 'ball', kind: 'ball', x: 0, y: 0);
+    final p = token();
+    final board = TacticBoard(tokens: [ball, p], arrows: [
+      BoardArrow(id: 'b', kind: 'ball', x1: 0, y1: 0, x2: 1, y2: 0)..bendThrough(const Offset(0.5, 0.4)),
+    ]);
+    board
+      ..addStep(0)
+      ..addStep(1);
+    board.setPosition(ball, 1, const Offset(1, 0));
+    board.setPosition(p, 2, const Offset(0.6, 0.2));
+    // Étape 1 → 2 : le ballon suit la courbe (passe par le milieu de la flèche), pas la ligne droite.
+    final mid = board.frameAt(0.5).tokens.firstWhere((t) => t.kind == 'ball');
+    expect(mid.x, closeTo(0.5, 1e-9));
+    expect(mid.y, closeTo(0.4, 1e-9));
+    // Étape 2 → 3 : le joueur glisse aussi (pas de saut).
+    final p25 = board.frameAt(1.5).tokens.firstWhere((t) => t.id == 'a');
+    expect(p25.x, closeTo(0.4, 1e-9));
+    expect(p25.y, closeTo(0.5, 1e-9));
+  });
+
   test('flèche courbe : passe par la poignée, se relit, se redresse', () {
     final a = BoardArrow(id: 'r', kind: 'run', x1: 0, y1: 0, x2: 1, y2: 0)..bendThrough(const Offset(0.5, 0.3));
     expect(a.point(0.5).dx, closeTo(0.5, 1e-9));

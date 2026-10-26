@@ -361,7 +361,13 @@ class _TacticEditorScreenState extends ConsumerState<TacticEditorScreen> with Si
       ..duration = Duration(milliseconds: 1500 * (board.stepCount - 1))
       ..value = 0;
     await _play.forward().orCancel.catchError((_) {});
-    if (mounted) setState(() => _playing = false);
+    // Lecture finie : on reste sur l'étape atteinte (la dernière), sans revenir en arrière.
+    if (mounted) {
+      setState(() {
+        if (_playing) _step = (_play.value * (board.stepCount - 1)).round();
+        _playing = false;
+      });
+    }
   }
 
   Future<void> _arrowActions(BoardArrow a) async {
@@ -413,7 +419,8 @@ class _TacticEditorScreenState extends ConsumerState<TacticEditorScreen> with Si
     final editable = perms.can('tactiques.edit') && !_playing;
 
     final view = _playing
-        ? BoardView(board: board.frameAt(_play.value), pitch: t.pitch, players: players, horizontal: true)
+        // _play va de 0 à 1 : toute l'animation, de l'étape 1 à la dernière.
+        ? BoardView(board: board.frameAt(_play.value * (board.stepCount - 1)), pitch: t.pitch, players: players, horizontal: true)
         : IgnorePointer(
             ignoring: !editable || _panMode,
             child: BoardView(
