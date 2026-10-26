@@ -271,7 +271,13 @@ class _BoardViewState extends State<BoardView> {
                             widget.onTokenMoved?.call(t, Offset(f.dx.clamp(0.0, 1.0), f.dy.clamp(0.0, 1.0)));
                           },
                           onPanEnd: (_) => widget.onTokenMoveEnd?.call(),
-                          child: TokenView(kind: t.kind, text: _text(t), caption: widget.showCaptions ? _caption(t) : null, size: ts),
+                          child: TokenView(
+                            kind: t.kind,
+                            text: _text(t),
+                            caption: widget.showCaptions ? _caption(t) : null,
+                            size: ts,
+                            angle: t.angle,
+                          ),
                         ),
                       ),
                     ),
@@ -914,17 +920,67 @@ class _TacticEditorScreenState extends ConsumerState<TacticEditorScreen> with Si
   Future<void> _editToken(BoardToken token, Map<String, Player> players) async {
     final board = _board!;
     if (!isPlayerToken(token.kind)) {
+      // Matériel : orientation (visible tout de suite sur le terrain) ou retrait.
+      final before = token.angle;
+      _snapshot();
       final remove = await showModalBottomSheet<bool>(
         context: context,
-        builder: (context) => SafeArea(
-          child: ListTile(
-            leading: const Icon(Icons.delete_outline),
-            title: Text('Retirer : ${(equipmentKinds[token.kind] ?? 'élément').toLowerCase()}'),
-            onTap: () => Navigator.of(context).pop(true),
-          ),
+        useRootNavigator: true,
+        barrierColor: Colors.black26,
+        builder: (context) => StatefulBuilder(
+          builder: (context, setSheet) {
+            void turn(double d) {
+              setSheet(() {});
+              setState(() => token.rotate(d));
+            }
+
+            return SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                  Text('${equipmentKinds[token.kind] ?? 'Matériel'} · orientation ${token.angle.round()}°',
+                      style: Theme.of(context).textTheme.titleMedium),
+                  const SizedBox(height: 8),
+                  Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                    IconButton.filledTonal(tooltip: 'Tourner de 45° à gauche', onPressed: () => turn(-45), icon: const Icon(Icons.rotate_left)),
+                    const SizedBox(width: 8),
+                    IconButton.filledTonal(tooltip: 'Tourner de 15° à gauche', onPressed: () => turn(-15), icon: const Icon(Icons.chevron_left)),
+                    const SizedBox(width: 8),
+                    IconButton.filledTonal(tooltip: 'Quart de tour', onPressed: () => turn(90), icon: const Icon(Icons.screen_rotation_alt)),
+                    const SizedBox(width: 8),
+                    IconButton.filledTonal(tooltip: 'Tourner de 15° à droite', onPressed: () => turn(15), icon: const Icon(Icons.chevron_right)),
+                    const SizedBox(width: 8),
+                    IconButton.filledTonal(tooltip: 'Tourner de 45° à droite', onPressed: () => turn(45), icon: const Icon(Icons.rotate_right)),
+                  ]),
+                  Slider(
+                    value: token.angle,
+                    max: 359,
+                    divisions: 72,
+                    label: '${token.angle.round()}°',
+                    onChanged: (v) {
+                      setSheet(() {});
+                      setState(() => token.angle = v);
+                    },
+                  ),
+                  TextButton.icon(
+                    onPressed: () => Navigator.of(context).pop(true),
+                    icon: const Icon(Icons.delete_outline),
+                    label: Text('Retirer : ${(equipmentKinds[token.kind] ?? 'élément').toLowerCase()}'),
+                  ),
+                ]),
+              ),
+            );
+          },
         ),
       );
-      if (remove == true) _change(() => board.removeToken(token));
+      if (remove == true) {
+        setState(() => board.removeToken(token));
+        _save();
+      } else if (token.angle != before) {
+        _save();
+      } else {
+        _undo.removeLast(); // rien n'a changé : pas d'étape d'annulation
+      }
       return;
     }
     final role = TextEditingController(text: token.role ?? '');

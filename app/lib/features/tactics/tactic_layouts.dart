@@ -6,7 +6,7 @@ import 'tactic_board.dart';
 // y depuis le but du haut (le but attaqué ; à l'horizontale, il est à droite).
 
 /// Un élément d'une disposition : sorte de pion, position, texte du pion et légende.
-typedef LayoutItem = ({String kind, double x, double y, String? label, String? role});
+typedef LayoutItem = ({String kind, double x, double y, String? label, String? role, double angle});
 
 class TacticLayout {
   const TacticLayout(this.name, this.category, this.items, {this.description});
@@ -17,7 +17,8 @@ class TacticLayout {
   final List<LayoutItem> Function(String pitch) items;
 }
 
-LayoutItem _i(String kind, double x, double y, [String? label, String? role]) => (kind: kind, x: x, y: y, label: label, role: role);
+LayoutItem _i(String kind, double x, double y, [String? label, String? role, double angle = 0]) =>
+    (kind: kind, x: x, y: y, label: label, role: role, angle: angle);
 
 /// Profondeur d'un dispositif (y de 0,17 à 0,92 sur terrain entier) ramenée au terrain affiché.
 double _depth(double y, String pitch) => pitch == 'full' ? y : 0.12 + (y - 0.17) * (0.83 / 0.75);
@@ -86,8 +87,9 @@ final tacticLayouts = <TacticLayout>[
         _i('ball', 0.5, 0.38),
       ], description: 'Carré de plots, 4 joueurs sur les côtés, 2 au milieu'),
   TacticLayout('Jeu réduit 4 contre 4 (mini-buts)', layoutCategories[3], (_) => [
-        _i('minigoal', 0.5, 0.25),
-        _i('minigoal', 0.5, 0.8),
+        // Les deux mini-buts se font face.
+        _i('minigoal', 0.5, 0.25, null, null, 90),
+        _i('minigoal', 0.5, 0.8, null, null, 270),
         for (final (x, y) in [(0.25, 0.25), (0.75, 0.25), (0.25, 0.8), (0.75, 0.8)]) _i('cone', x, y),
         for (final (i, (x, y)) in [(0.35, 0.62), (0.65, 0.62), (0.4, 0.5), (0.6, 0.5)].indexed) _i('us', x, y, '${i + 1}'),
         for (final (i, (x, y)) in [(0.35, 0.4), (0.65, 0.4), (0.45, 0.45), (0.55, 0.56)].indexed) _i('them', x, y, '${i + 1}'),
@@ -95,14 +97,16 @@ final tacticLayouts = <TacticLayout>[
       ]),
   TacticLayout('Parcours de vitesse et coordination', layoutCategories[3], (_) => [
         _i('ladder', 0.5, 0.78),
-        for (var k = 0; k < 3; k++) _i('hurdle', 0.5, 0.62 - k * 0.07),
+        // Haies en travers de la course.
+        for (var k = 0; k < 3; k++) _i('hurdle', 0.5, 0.62 - k * 0.07, null, null, 90),
         for (var k = 0; k < 4; k++) _i('pole', k.isEven ? 0.46 : 0.54, 0.38 - k * 0.06),
         _i('cone', 0.44, 0.15),
         _i('cone', 0.56, 0.15),
         _i('us', 0.5, 0.9, '1', 'Départ'),
       ], description: 'Échelle, haies, piquets puis sprint jusqu\'aux plots'),
   TacticLayout('Frappes au but contre mannequins', layoutCategories[3], (_) => [
-        for (final x in [0.44, 0.5, 0.56]) _i('dummy', x, 0.2),
+        // Mannequins de face, épaules en travers de la frappe.
+        for (final x in [0.44, 0.5, 0.56]) _i('dummy', x, 0.2, null, null, 90),
         for (final x in [0.35, 0.5, 0.65]) _i('ball', x, 0.32),
         _i('us', 0.5, 0.38, '9', 'Tireur'),
         _i('them', 0.5, 0.015, 'G', 'Gardien'),
@@ -114,6 +118,8 @@ List<BoardToken> layoutTokens(TacticLayout l, String pitch) {
   final base = DateTime.now().microsecondsSinceEpoch;
   return [
     for (final (i, it) in l.items(pitch).indexed)
-      BoardToken(id: '${base}_$i', kind: it.kind, x: it.x.clamp(0.0, 1.0), y: it.y.clamp(0.0, 1.0), label: it.label, role: it.role),
+      BoardToken(
+          id: '${base}_$i', kind: it.kind, x: it.x.clamp(0.0, 1.0), y: it.y.clamp(0.0, 1.0), label: it.label, role: it.role,
+          angle: it.angle),
   ];
 }
