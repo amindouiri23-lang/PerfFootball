@@ -159,4 +159,35 @@ void main() {
     expect(r.campaign, isNull);
     await db.close();
   });
+
+  test('migration v11 → v12 (but adverse sans joueur, séances de visionnage)', () async {
+    final file = File('${Directory.systemTemp.createTempSync('perffoot').path}/v11.sqlite');
+    final v12 = AppDatabase(NativeDatabase(file));
+    await v12.customSelect('SELECT 1').get();
+    await v12.close();
+    final raw = sqlite3.open(file.path);
+    raw.execute('DROP TABLE viewing_slides');
+    raw.execute('DROP TABLE viewing_sessions');
+    // match_events telle qu'en v11 : player_id obligatoire.
+    raw.execute('DROP TABLE match_events');
+    raw.execute('CREATE TABLE match_events (id TEXT NOT NULL PRIMARY KEY, created_at TEXT NOT NULL, updated_at TEXT NOT NULL, '
+        'server_updated_at TEXT NULL, deleted INTEGER NOT NULL DEFAULT 0, is_dirty INTEGER NOT NULL DEFAULT 0, '
+        'team_id TEXT NOT NULL, match_id TEXT NOT NULL, player_id TEXT NOT NULL, type TEXT NOT NULL, minute INTEGER NOT NULL, '
+        'assist_player_id TEXT NULL, remark TEXT NULL)');
+    raw.execute("INSERT INTO match_events (id, created_at, updated_at, team_id, match_id, player_id, type, minute) "
+        "VALUES ('e1', 'x', 'x', 't1', 'm1', 'p1', 'goal', 12)");
+    raw.execute('PRAGMA user_version = 11');
+    raw.close();
+
+    final db = AppDatabase(NativeDatabase(file));
+    final e = await db.select(db.matchEvents).getSingle();
+    expect(e.playerId, 'p1');
+    expect(e.minute, 12);
+    await db.into(db.matchEvents).insert(MatchEventsCompanion.insert(
+        id: 'e2', teamId: 't1', matchId: 'm1', type: 'opponent_goal', minute: 30, createdAt: 'x', updatedAt: 'x'));
+    expect((await db.select(db.matchEvents).get()).length, 2);
+    expect(await db.select(db.viewingSessions).get(), isEmpty);
+    expect(await db.select(db.viewingSlides).get(), isEmpty);
+    await db.close();
+  });
 }

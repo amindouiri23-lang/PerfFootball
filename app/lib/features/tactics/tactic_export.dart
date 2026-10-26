@@ -20,14 +20,23 @@ List<List<Object?>> tacticLegend(Tactic t, Map<String, Player> players) => [
           [tokenText(b, players), players[b.playerId]?.fullName ?? '', b.role ?? ''],
     ];
 
-/// Bloc d'une tactique dans un PDF : nom, type, schéma, notes et légende.
-List<pw.Widget> tacticPdfBlock(Tactic t, Uint8List? png, Map<String, Player> players, {double width = 300}) {
+/// Schémas d'une tactique : un par étape, numérotés si la tactique est animée.
+List<pw.Widget> _stepImages(Tactic t, List<Uint8List> pngs, double width) => [
+      for (final (i, png) in pngs.indexed) ...[
+        if (pngs.length > 1) pdfText('Étape ${i + 1} / ${pngs.length}', size: 9, bold: true, color: pdfGrey),
+        pdfImage(png, width: t.pitch == 'full' ? width : width * 0.7),
+        pw.SizedBox(height: 6),
+      ],
+    ];
+
+/// Bloc d'une tactique dans un PDF : nom, type, schémas (toutes les étapes), notes et légende.
+List<pw.Widget> tacticPdfBlock(Tactic t, List<Uint8List> pngs, Map<String, Player> players, {double width = 300}) {
   final legend = tacticLegend(t, players);
   return [
     pdfText(t.name, size: 11, bold: true),
     pdfText(tacticLabel(t), size: 9, color: pdfGrey),
     pw.SizedBox(height: 6),
-    if (png != null) pdfImage(png, width: t.pitch == 'full' ? width * 0.75 : width),
+    ..._stepImages(t, pngs, width),
     if ((t.notes ?? '').isNotEmpty) ...[pw.SizedBox(height: 6), pdfText(t.notes!, size: 9)],
     if (legend.isNotEmpty) ...[pw.SizedBox(height: 6), pdfTable(const ['Pion', 'Joueur', 'Rôle'], legend)],
     pw.SizedBox(height: 10),
@@ -35,12 +44,12 @@ List<pw.Widget> tacticPdfBlock(Tactic t, Uint8List? png, Map<String, Player> pla
 }
 
 /// Une tactique seule, sur une page A4.
-Future<Uint8List> buildTacticPdf({required Tactic tactic, required Uint8List? png, required Map<String, Player> players, required String team}) =>
+Future<Uint8List> buildTacticPdf({required Tactic tactic, required List<Uint8List> pngs, required Map<String, Player> players, required String team}) =>
     buildPdfDocument(
       title: tactic.name,
-      subtitle: '$team · ${tacticLabel(tactic)}',
+      subtitle: '$team · ${tacticLabel(tactic)}${pngs.length > 1 ? ' · animée, ${pngs.length} étapes' : ''}',
       body: () => [
-        if (png != null) pdfImage(png, width: tactic.pitch == 'full' ? 300 : 430),
+        ..._stepImages(tactic, pngs, 470),
         if ((tactic.notes ?? '').isNotEmpty) ...[pdfSection('Notes'), pdfText(tactic.notes!)],
         if (tacticLegend(tactic, players).isNotEmpty) ...[
           pdfSection('Joueurs et rôles'),

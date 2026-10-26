@@ -58,17 +58,23 @@ class MatchScreen extends ConsumerWidget {
             title: Row(children: [
               Icon(eventIcons[e.type], color: eventColors[e.type], size: 20),
               const SizedBox(width: 8),
-              Expanded(child: Text(e.type == 'substitution' ? '${name(e.playerId)} ↔ ${name(e.assistPlayerId)}' : name(e.playerId))),
+              Expanded(child: Text(switch (e.type) {
+                'substitution' => '${name(e.playerId)} ↔ ${name(e.assistPlayerId)}',
+                'opponent_goal' => 'But ${m.opponent}${e.remark == null ? '' : ' · ${e.remark}'}',
+                _ => name(e.playerId),
+              })),
             ]),
             subtitle: Text([
               if (e.type == 'substitution') 'Changement : entre ${name(e.playerId)}, sort ${name(e.assistPlayerId)}'
               else eventTypes[e.type]!,
               if (e.type == 'goal' && e.assistPlayerId != null) 'passe de ${name(e.assistPlayerId)}',
-              if (e.remark != null) e.remark!,
+              if (e.remark != null && e.type != 'opponent_goal') e.remark!,
             ].join(' · ')),
-            onTap: () => e.type == 'substitution'
-                ? showSubstitutionSheet(context, ref, m, present, players, events, event: e)
-                : showEventSheet(context, ref, m, present, players, event: e),
+            onTap: () => switch (e.type) {
+              'substitution' => showSubstitutionSheet(context, ref, m, present, players, events, event: e),
+              'opponent_goal' => play ? showOpponentGoalSheet(context, ref, m, event: e) : null,
+              _ => showEventSheet(context, ref, m, present, players, event: e),
+            },
           ),
         ),
       for (final i in injuries)
@@ -171,13 +177,13 @@ class MatchScreen extends ConsumerWidget {
                   IconButton(
                     tooltip: 'Moins un but adverse',
                     color: theme.colorScheme.onPrimary,
-                    onPressed: goalsAgainst > 0 ? () => repo.setGoalsAgainst(m.id, goalsAgainst - 1) : null,
+                    onPressed: goalsAgainst > 0 ? () => repo.removeOpponentGoal(m) : null,
                     icon: const Icon(Icons.remove_circle_outline),
                   ),
                   IconButton(
                     tooltip: 'Plus un but adverse',
                     color: theme.colorScheme.onPrimary,
-                    onPressed: () => repo.setGoalsAgainst(m.id, goalsAgainst + 1),
+                    onPressed: () => showOpponentGoalSheet(context, ref, m),
                     icon: const Icon(Icons.add_circle_outline),
                   ),
                 ]),
@@ -507,10 +513,10 @@ Future<void> showSubstitutionSheet(BuildContext context, WidgetRef ref, Football
   final used = <String>{};
   for (final s in others) {
     onField.remove(s.assistPlayerId);
-    onField.add(s.playerId);
-    used..add(s.playerId)..add(s.assistPlayerId!);
+    onField.add(s.playerId!);
+    used..add(s.playerId!)..add(s.assistPlayerId!);
   }
-  onField.removeAll(events.where((e) => e.type == 'red_card').map((e) => e.playerId));
+  onField.removeAll(events.where((e) => e.type == 'red_card').map((e) => e.playerId!));
   final bench = [for (final r in present) if (!onField.contains(r.playerId) && !used.contains(r.playerId)) r.playerId];
   final minute = TextEditingController(text: (event?.minute ?? m.liveMinute)?.toString() ?? '');
   String? out = event?.assistPlayerId;
@@ -592,6 +598,70 @@ Future<void> showSubstitutionSheet(BuildContext context, WidgetRef ref, Football
 }
 
 /// E24 — Ajouter ou modifier un but / carton, dans un panneau par-dessus le match.
+/// But adverse : minute (pré-remplie par le chrono) et buteur adverse facultatif ; en modification, suppression.
+Future<void> showOpponentGoalSheet(BuildContext context, WidgetRef ref, FootballMatch m, {MatchEvent? event}) async {
+  final repo = ref.read(matchRepositoryProvider);
+  final minute = TextEditingController(text: (event?.minute ?? m.liveMinute)?.toString() ?? '');
+  final scorer = TextEditingController(text: event?.remark ?? '');
+  var saving = false;
+  await showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    builder: (context) => StatefulBuilder(builder: (context, setState) {
+      final min = int.tryParse(minute.text);
+      final ok = min != null && min >= 1 && min <= 130;
+      Future<void> save() async {
+        if (!ok || saving) return;
+        saving = true;
+        final s = scorer.text.trim().isEmpty ? null : scorer.text.trim();
+        if (event == null) {
+          await repo.addOpponentGoal(m, minute: min, scorer: s);
+        } else {
+          await repo.updateOpponentGoal(event.id, minute: min, scorer: s);
+        }
+        if (context.mounted) Navigator.of(context).pop();
+      }
+
+      return Padding(
+        padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + MediaQuery.viewInsetsOf(context).bottom),
+        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Text(event == null ? 'But de ${m.opponent}' : 'Modifier le but adverse', style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 12),
+          TextField(
+            controller: minute,
+            autofocus: event == null,
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            onChanged: (_) => setState(() {}),
+            decoration: InputDecoration(labelText: 'Minute *', errorText: minute.text.isNotEmpty && !ok ? 'Entre 1 et 130' : null),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: scorer,
+            textCapitalization: TextCapitalization.words,
+            maxLength: 150,
+            decoration: const InputDecoration(labelText: 'Buteur adverse (facultatif)', hintText: 'Nom ou numéro'),
+          ),
+          const SizedBox(height: 8),
+          Row(children: [
+            if (event != null)
+              TextButton.icon(
+                onPressed: () async {
+                  await repo.removeOpponentGoal(m, id: event.id);
+                  if (context.mounted) Navigator.of(context).pop();
+                },
+                icon: const Icon(Icons.delete_outline),
+                label: const Text('Supprimer'),
+              ),
+            const Spacer(),
+            FilledButton(onPressed: ok ? save : null, child: const Text('Enregistrer')),
+          ]),
+        ]),
+      );
+    }),
+  );
+}
+
 Future<void> showEventSheet(BuildContext context, WidgetRef ref, FootballMatch m, List<MatchPlayer> present,
     Map<String, Player> players, {String? type, MatchEvent? event}) async {
   final repo = ref.read(matchRepositoryProvider);
@@ -618,7 +688,7 @@ Future<void> showEventSheet(BuildContext context, WidgetRef ref, FootballMatch m
             Text(event == null ? 'Ajouter un événement' : 'Modifier l\'événement', style: theme.textTheme.titleMedium),
             const SizedBox(height: 12),
             Wrap(spacing: 8, children: [
-              for (final e in eventTypes.entries.where((e) => e.key != 'substitution'))
+              for (final e in eventTypes.entries.where((e) => e.key != 'substitution' && e.key != 'opponent_goal'))
                 ChoiceChip(label: Text(e.value), selected: kind == e.key, onSelected: (_) => setState(() => kind = e.key)),
             ]),
             const SizedBox(height: 12),

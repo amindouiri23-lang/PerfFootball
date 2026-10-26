@@ -24,23 +24,26 @@ String? tokenCaption(BoardToken t, Map<String, Player> players) {
   return t.role == null ? name : '$name · ${t.role}';
 }
 
-/// Tableau en PNG, [width] pixels de large (hauteur selon le terrain).
+/// Tableau en PNG, [width] pixels de large (hauteur selon le terrain), à l'étape [step].
 Future<Uint8List> renderBoardPng({
   required TacticBoard board,
   required String pitch,
   required String Function(BoardToken) text,
   required String? Function(BoardToken) caption,
   double width = 900,
-  /// Diamètre d'un pion, en fraction de la largeur (plus grand pour une composition sur terrain entier).
+  /// Diamètre d'un pion, en fraction de la largeur du terrain (68 m) ; plus grand pour une composition.
   double tokenSize = 0.06,
+  /// Terrain couché, but du haut à droite (comme dans l'éditeur).
+  bool horizontal = false,
+  int step = 0,
 }) async {
-  final size = Size(width, width * pitchLengthM(pitch) / pitchWidthM);
+  final size = Size(width, width / pitchAspect(pitch, horizontal: horizontal));
   final recorder = ui.PictureRecorder();
   final canvas = Canvas(recorder, Offset.zero & size);
-  PitchPainter(pitch: pitch, arrows: board.arrows).paint(canvas, size);
-  final ts = width * tokenSize;
+  PitchPainter(pitch: pitch, arrows: board.arrowsAt(step), horizontal: horizontal).paint(canvas, size);
+  final ts = (horizontal ? size.height : size.width) * tokenSize;
   for (final t in board.tokens) {
-    final c = Offset(t.x * size.width, t.y * size.height);
+    final c = boardToScreen(board.positionAt(t, step), size, horizontal);
     if (t.kind == 'ball') {
       final r = ts * 0.35;
       canvas.drawCircle(c, r, Paint()..color = Colors.white);
@@ -102,11 +105,18 @@ void _paintText(Canvas canvas, String s, Offset center, double fontSize, Color c
   tp.paint(canvas, center - Offset(tp.width / 2, tp.height / 2));
 }
 
-/// Une tactique enregistrée, telle qu'elle s'affiche dans l'éditeur.
-Future<Uint8List> renderTacticPng(Tactic t, Map<String, Player> players, {double width = 900}) => renderBoardPng(
+/// Une tactique enregistrée, telle qu'elle s'affiche dans l'éditeur (à l'horizontale), à l'étape [step].
+Future<Uint8List> renderTacticPng(Tactic t, Map<String, Player> players, {double width = 900, int step = 0}) => renderBoardPng(
       board: TacticBoard.decode(t.board),
       pitch: t.pitch,
       text: (b) => tokenText(b, players),
       caption: (b) => tokenCaption(b, players),
       width: width,
+      horizontal: true,
+      step: step,
     );
+
+/// Toutes les étapes d'une tactique (une seule pour une tactique fixe).
+Future<List<Uint8List>> renderTacticSteps(Tactic t, Map<String, Player> players, {double width = 900}) async => [
+      for (var s = 0; s < TacticBoard.decode(t.board).stepCount; s++) await renderTacticPng(t, players, width: width, step: s),
+    ];

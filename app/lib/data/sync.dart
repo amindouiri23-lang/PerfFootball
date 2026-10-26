@@ -46,6 +46,8 @@ const _tables = [
   _SyncTable('tactics'),
   _SyncTable('tactic_links'), // après tactics, sessions et matches, qu'elle référence
   _SyncTable('session_exercises'), // après tactics
+  _SyncTable('viewing_sessions'),
+  _SyncTable('viewing_slides'), // après viewing_sessions et tactics
 ];
 
 /// Synchronisation hors ligne d'abord (docs/01 §6) :

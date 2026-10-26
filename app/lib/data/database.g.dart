@@ -7433,9 +7433,9 @@ class $MatchEventsTable extends MatchEvents
   late final GeneratedColumn<String> playerId = GeneratedColumn<String>(
     'player_id',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.string,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
   );
   static const VerificationMeta _typeMeta = const VerificationMeta('type');
   @override
@@ -7566,8 +7566,6 @@ class $MatchEventsTable extends MatchEvents
         _playerIdMeta,
         playerId.isAcceptableOrUnknown(data['player_id']!, _playerIdMeta),
       );
-    } else if (isInserting) {
-      context.missing(_playerIdMeta);
     }
     if (data.containsKey('type')) {
       context.handle(
@@ -7644,7 +7642,7 @@ class $MatchEventsTable extends MatchEvents
       playerId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}player_id'],
-      )!,
+      ),
       type: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}type'],
@@ -7681,7 +7679,9 @@ class MatchEvent extends DataClass implements Insertable<MatchEvent> {
   final bool isDirty;
   final String teamId;
   final String matchId;
-  final String playerId;
+
+  /// Null pour un but adverse (type opponent_goal) : le buteur adverse éventuel est dans la remarque.
+  final String? playerId;
   final String type;
   final int minute;
   final String? assistPlayerId;
@@ -7695,7 +7695,7 @@ class MatchEvent extends DataClass implements Insertable<MatchEvent> {
     required this.isDirty,
     required this.teamId,
     required this.matchId,
-    required this.playerId,
+    this.playerId,
     required this.type,
     required this.minute,
     this.assistPlayerId,
@@ -7714,7 +7714,9 @@ class MatchEvent extends DataClass implements Insertable<MatchEvent> {
     map['is_dirty'] = Variable<bool>(isDirty);
     map['team_id'] = Variable<String>(teamId);
     map['match_id'] = Variable<String>(matchId);
-    map['player_id'] = Variable<String>(playerId);
+    if (!nullToAbsent || playerId != null) {
+      map['player_id'] = Variable<String>(playerId);
+    }
     map['type'] = Variable<String>(type);
     map['minute'] = Variable<int>(minute);
     if (!nullToAbsent || assistPlayerId != null) {
@@ -7738,7 +7740,9 @@ class MatchEvent extends DataClass implements Insertable<MatchEvent> {
       isDirty: Value(isDirty),
       teamId: Value(teamId),
       matchId: Value(matchId),
-      playerId: Value(playerId),
+      playerId: playerId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(playerId),
       type: Value(type),
       minute: Value(minute),
       assistPlayerId: assistPlayerId == null && nullToAbsent
@@ -7764,7 +7768,7 @@ class MatchEvent extends DataClass implements Insertable<MatchEvent> {
       isDirty: serializer.fromJson<bool>(json['isDirty']),
       teamId: serializer.fromJson<String>(json['teamId']),
       matchId: serializer.fromJson<String>(json['matchId']),
-      playerId: serializer.fromJson<String>(json['playerId']),
+      playerId: serializer.fromJson<String?>(json['playerId']),
       type: serializer.fromJson<String>(json['type']),
       minute: serializer.fromJson<int>(json['minute']),
       assistPlayerId: serializer.fromJson<String?>(json['assistPlayerId']),
@@ -7783,7 +7787,7 @@ class MatchEvent extends DataClass implements Insertable<MatchEvent> {
       'isDirty': serializer.toJson<bool>(isDirty),
       'teamId': serializer.toJson<String>(teamId),
       'matchId': serializer.toJson<String>(matchId),
-      'playerId': serializer.toJson<String>(playerId),
+      'playerId': serializer.toJson<String?>(playerId),
       'type': serializer.toJson<String>(type),
       'minute': serializer.toJson<int>(minute),
       'assistPlayerId': serializer.toJson<String?>(assistPlayerId),
@@ -7800,7 +7804,7 @@ class MatchEvent extends DataClass implements Insertable<MatchEvent> {
     bool? isDirty,
     String? teamId,
     String? matchId,
-    String? playerId,
+    Value<String?> playerId = const Value.absent(),
     String? type,
     int? minute,
     Value<String?> assistPlayerId = const Value.absent(),
@@ -7816,7 +7820,7 @@ class MatchEvent extends DataClass implements Insertable<MatchEvent> {
     isDirty: isDirty ?? this.isDirty,
     teamId: teamId ?? this.teamId,
     matchId: matchId ?? this.matchId,
-    playerId: playerId ?? this.playerId,
+    playerId: playerId.present ? playerId.value : this.playerId,
     type: type ?? this.type,
     minute: minute ?? this.minute,
     assistPlayerId: assistPlayerId.present
@@ -7910,7 +7914,7 @@ class MatchEventsCompanion extends UpdateCompanion<MatchEvent> {
   final Value<bool> isDirty;
   final Value<String> teamId;
   final Value<String> matchId;
-  final Value<String> playerId;
+  final Value<String?> playerId;
   final Value<String> type;
   final Value<int> minute;
   final Value<String?> assistPlayerId;
@@ -7941,7 +7945,7 @@ class MatchEventsCompanion extends UpdateCompanion<MatchEvent> {
     this.isDirty = const Value.absent(),
     required String teamId,
     required String matchId,
-    required String playerId,
+    this.playerId = const Value.absent(),
     required String type,
     required int minute,
     this.assistPlayerId = const Value.absent(),
@@ -7952,7 +7956,6 @@ class MatchEventsCompanion extends UpdateCompanion<MatchEvent> {
        updatedAt = Value(updatedAt),
        teamId = Value(teamId),
        matchId = Value(matchId),
-       playerId = Value(playerId),
        type = Value(type),
        minute = Value(minute);
   static Insertable<MatchEvent> custom({
@@ -7998,7 +8001,7 @@ class MatchEventsCompanion extends UpdateCompanion<MatchEvent> {
     Value<bool>? isDirty,
     Value<String>? teamId,
     Value<String>? matchId,
-    Value<String>? playerId,
+    Value<String?>? playerId,
     Value<String>? type,
     Value<int>? minute,
     Value<String?>? assistPlayerId,
@@ -17490,6 +17493,1422 @@ class WellnessSurveyPlayersCompanion
   }
 }
 
+class $ViewingSessionsTable extends ViewingSessions
+    with TableInfo<$ViewingSessionsTable, ViewingSession> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ViewingSessionsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<String> createdAt = GeneratedColumn<String>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<String> updatedAt = GeneratedColumn<String>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _serverUpdatedAtMeta = const VerificationMeta(
+    'serverUpdatedAt',
+  );
+  @override
+  late final GeneratedColumn<String> serverUpdatedAt = GeneratedColumn<String>(
+    'server_updated_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deletedMeta = const VerificationMeta(
+    'deleted',
+  );
+  @override
+  late final GeneratedColumn<bool> deleted = GeneratedColumn<bool>(
+    'deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _isDirtyMeta = const VerificationMeta(
+    'isDirty',
+  );
+  @override
+  late final GeneratedColumn<bool> isDirty = GeneratedColumn<bool>(
+    'is_dirty',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_dirty" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _teamIdMeta = const VerificationMeta('teamId');
+  @override
+  late final GeneratedColumn<String> teamId = GeneratedColumn<String>(
+    'team_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+    'title',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _dateMeta = const VerificationMeta('date');
+  @override
+  late final GeneratedColumn<String> date = GeneratedColumn<String>(
+    'date',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _notesMeta = const VerificationMeta('notes');
+  @override
+  late final GeneratedColumn<String> notes = GeneratedColumn<String>(
+    'notes',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    createdAt,
+    updatedAt,
+    serverUpdatedAt,
+    deleted,
+    isDirty,
+    teamId,
+    title,
+    date,
+    notes,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'viewing_sessions';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ViewingSession> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('server_updated_at')) {
+      context.handle(
+        _serverUpdatedAtMeta,
+        serverUpdatedAt.isAcceptableOrUnknown(
+          data['server_updated_at']!,
+          _serverUpdatedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('deleted')) {
+      context.handle(
+        _deletedMeta,
+        deleted.isAcceptableOrUnknown(data['deleted']!, _deletedMeta),
+      );
+    }
+    if (data.containsKey('is_dirty')) {
+      context.handle(
+        _isDirtyMeta,
+        isDirty.isAcceptableOrUnknown(data['is_dirty']!, _isDirtyMeta),
+      );
+    }
+    if (data.containsKey('team_id')) {
+      context.handle(
+        _teamIdMeta,
+        teamId.isAcceptableOrUnknown(data['team_id']!, _teamIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_teamIdMeta);
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+        _titleMeta,
+        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_titleMeta);
+    }
+    if (data.containsKey('date')) {
+      context.handle(
+        _dateMeta,
+        date.isAcceptableOrUnknown(data['date']!, _dateMeta),
+      );
+    }
+    if (data.containsKey('notes')) {
+      context.handle(
+        _notesMeta,
+        notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ViewingSession map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ViewingSession(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      serverUpdatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}server_updated_at'],
+      ),
+      deleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}deleted'],
+      )!,
+      isDirty: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_dirty'],
+      )!,
+      teamId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}team_id'],
+      )!,
+      title: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}title'],
+      )!,
+      date: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}date'],
+      ),
+      notes: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}notes'],
+      ),
+    );
+  }
+
+  @override
+  $ViewingSessionsTable createAlias(String alias) {
+    return $ViewingSessionsTable(attachedDatabase, alias);
+  }
+}
+
+class ViewingSession extends DataClass implements Insertable<ViewingSession> {
+  final String id;
+  final String createdAt;
+  final String updatedAt;
+  final String? serverUpdatedAt;
+  final bool deleted;
+
+  /// Modifiée localement et pas encore envoyée. Jamais synchronisée.
+  final bool isDirty;
+  final String teamId;
+  final String title;
+  final String? date;
+  final String? notes;
+  const ViewingSession({
+    required this.id,
+    required this.createdAt,
+    required this.updatedAt,
+    this.serverUpdatedAt,
+    required this.deleted,
+    required this.isDirty,
+    required this.teamId,
+    required this.title,
+    this.date,
+    this.notes,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['created_at'] = Variable<String>(createdAt);
+    map['updated_at'] = Variable<String>(updatedAt);
+    if (!nullToAbsent || serverUpdatedAt != null) {
+      map['server_updated_at'] = Variable<String>(serverUpdatedAt);
+    }
+    map['deleted'] = Variable<bool>(deleted);
+    map['is_dirty'] = Variable<bool>(isDirty);
+    map['team_id'] = Variable<String>(teamId);
+    map['title'] = Variable<String>(title);
+    if (!nullToAbsent || date != null) {
+      map['date'] = Variable<String>(date);
+    }
+    if (!nullToAbsent || notes != null) {
+      map['notes'] = Variable<String>(notes);
+    }
+    return map;
+  }
+
+  ViewingSessionsCompanion toCompanion(bool nullToAbsent) {
+    return ViewingSessionsCompanion(
+      id: Value(id),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      serverUpdatedAt: serverUpdatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(serverUpdatedAt),
+      deleted: Value(deleted),
+      isDirty: Value(isDirty),
+      teamId: Value(teamId),
+      title: Value(title),
+      date: date == null && nullToAbsent ? const Value.absent() : Value(date),
+      notes: notes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(notes),
+    );
+  }
+
+  factory ViewingSession.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ViewingSession(
+      id: serializer.fromJson<String>(json['id']),
+      createdAt: serializer.fromJson<String>(json['createdAt']),
+      updatedAt: serializer.fromJson<String>(json['updatedAt']),
+      serverUpdatedAt: serializer.fromJson<String?>(json['serverUpdatedAt']),
+      deleted: serializer.fromJson<bool>(json['deleted']),
+      isDirty: serializer.fromJson<bool>(json['isDirty']),
+      teamId: serializer.fromJson<String>(json['teamId']),
+      title: serializer.fromJson<String>(json['title']),
+      date: serializer.fromJson<String?>(json['date']),
+      notes: serializer.fromJson<String?>(json['notes']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'createdAt': serializer.toJson<String>(createdAt),
+      'updatedAt': serializer.toJson<String>(updatedAt),
+      'serverUpdatedAt': serializer.toJson<String?>(serverUpdatedAt),
+      'deleted': serializer.toJson<bool>(deleted),
+      'isDirty': serializer.toJson<bool>(isDirty),
+      'teamId': serializer.toJson<String>(teamId),
+      'title': serializer.toJson<String>(title),
+      'date': serializer.toJson<String?>(date),
+      'notes': serializer.toJson<String?>(notes),
+    };
+  }
+
+  ViewingSession copyWith({
+    String? id,
+    String? createdAt,
+    String? updatedAt,
+    Value<String?> serverUpdatedAt = const Value.absent(),
+    bool? deleted,
+    bool? isDirty,
+    String? teamId,
+    String? title,
+    Value<String?> date = const Value.absent(),
+    Value<String?> notes = const Value.absent(),
+  }) => ViewingSession(
+    id: id ?? this.id,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    serverUpdatedAt: serverUpdatedAt.present
+        ? serverUpdatedAt.value
+        : this.serverUpdatedAt,
+    deleted: deleted ?? this.deleted,
+    isDirty: isDirty ?? this.isDirty,
+    teamId: teamId ?? this.teamId,
+    title: title ?? this.title,
+    date: date.present ? date.value : this.date,
+    notes: notes.present ? notes.value : this.notes,
+  );
+  ViewingSession copyWithCompanion(ViewingSessionsCompanion data) {
+    return ViewingSession(
+      id: data.id.present ? data.id.value : this.id,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      serverUpdatedAt: data.serverUpdatedAt.present
+          ? data.serverUpdatedAt.value
+          : this.serverUpdatedAt,
+      deleted: data.deleted.present ? data.deleted.value : this.deleted,
+      isDirty: data.isDirty.present ? data.isDirty.value : this.isDirty,
+      teamId: data.teamId.present ? data.teamId.value : this.teamId,
+      title: data.title.present ? data.title.value : this.title,
+      date: data.date.present ? data.date.value : this.date,
+      notes: data.notes.present ? data.notes.value : this.notes,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ViewingSession(')
+          ..write('id: $id, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('serverUpdatedAt: $serverUpdatedAt, ')
+          ..write('deleted: $deleted, ')
+          ..write('isDirty: $isDirty, ')
+          ..write('teamId: $teamId, ')
+          ..write('title: $title, ')
+          ..write('date: $date, ')
+          ..write('notes: $notes')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    createdAt,
+    updatedAt,
+    serverUpdatedAt,
+    deleted,
+    isDirty,
+    teamId,
+    title,
+    date,
+    notes,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ViewingSession &&
+          other.id == this.id &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.serverUpdatedAt == this.serverUpdatedAt &&
+          other.deleted == this.deleted &&
+          other.isDirty == this.isDirty &&
+          other.teamId == this.teamId &&
+          other.title == this.title &&
+          other.date == this.date &&
+          other.notes == this.notes);
+}
+
+class ViewingSessionsCompanion extends UpdateCompanion<ViewingSession> {
+  final Value<String> id;
+  final Value<String> createdAt;
+  final Value<String> updatedAt;
+  final Value<String?> serverUpdatedAt;
+  final Value<bool> deleted;
+  final Value<bool> isDirty;
+  final Value<String> teamId;
+  final Value<String> title;
+  final Value<String?> date;
+  final Value<String?> notes;
+  final Value<int> rowid;
+  const ViewingSessionsCompanion({
+    this.id = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.serverUpdatedAt = const Value.absent(),
+    this.deleted = const Value.absent(),
+    this.isDirty = const Value.absent(),
+    this.teamId = const Value.absent(),
+    this.title = const Value.absent(),
+    this.date = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ViewingSessionsCompanion.insert({
+    required String id,
+    required String createdAt,
+    required String updatedAt,
+    this.serverUpdatedAt = const Value.absent(),
+    this.deleted = const Value.absent(),
+    this.isDirty = const Value.absent(),
+    required String teamId,
+    required String title,
+    this.date = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt),
+       teamId = Value(teamId),
+       title = Value(title);
+  static Insertable<ViewingSession> custom({
+    Expression<String>? id,
+    Expression<String>? createdAt,
+    Expression<String>? updatedAt,
+    Expression<String>? serverUpdatedAt,
+    Expression<bool>? deleted,
+    Expression<bool>? isDirty,
+    Expression<String>? teamId,
+    Expression<String>? title,
+    Expression<String>? date,
+    Expression<String>? notes,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (serverUpdatedAt != null) 'server_updated_at': serverUpdatedAt,
+      if (deleted != null) 'deleted': deleted,
+      if (isDirty != null) 'is_dirty': isDirty,
+      if (teamId != null) 'team_id': teamId,
+      if (title != null) 'title': title,
+      if (date != null) 'date': date,
+      if (notes != null) 'notes': notes,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ViewingSessionsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? createdAt,
+    Value<String>? updatedAt,
+    Value<String?>? serverUpdatedAt,
+    Value<bool>? deleted,
+    Value<bool>? isDirty,
+    Value<String>? teamId,
+    Value<String>? title,
+    Value<String?>? date,
+    Value<String?>? notes,
+    Value<int>? rowid,
+  }) {
+    return ViewingSessionsCompanion(
+      id: id ?? this.id,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      serverUpdatedAt: serverUpdatedAt ?? this.serverUpdatedAt,
+      deleted: deleted ?? this.deleted,
+      isDirty: isDirty ?? this.isDirty,
+      teamId: teamId ?? this.teamId,
+      title: title ?? this.title,
+      date: date ?? this.date,
+      notes: notes ?? this.notes,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<String>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<String>(updatedAt.value);
+    }
+    if (serverUpdatedAt.present) {
+      map['server_updated_at'] = Variable<String>(serverUpdatedAt.value);
+    }
+    if (deleted.present) {
+      map['deleted'] = Variable<bool>(deleted.value);
+    }
+    if (isDirty.present) {
+      map['is_dirty'] = Variable<bool>(isDirty.value);
+    }
+    if (teamId.present) {
+      map['team_id'] = Variable<String>(teamId.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (date.present) {
+      map['date'] = Variable<String>(date.value);
+    }
+    if (notes.present) {
+      map['notes'] = Variable<String>(notes.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ViewingSessionsCompanion(')
+          ..write('id: $id, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('serverUpdatedAt: $serverUpdatedAt, ')
+          ..write('deleted: $deleted, ')
+          ..write('isDirty: $isDirty, ')
+          ..write('teamId: $teamId, ')
+          ..write('title: $title, ')
+          ..write('date: $date, ')
+          ..write('notes: $notes, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $ViewingSlidesTable extends ViewingSlides
+    with TableInfo<$ViewingSlidesTable, ViewingSlide> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ViewingSlidesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<String> createdAt = GeneratedColumn<String>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<String> updatedAt = GeneratedColumn<String>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _serverUpdatedAtMeta = const VerificationMeta(
+    'serverUpdatedAt',
+  );
+  @override
+  late final GeneratedColumn<String> serverUpdatedAt = GeneratedColumn<String>(
+    'server_updated_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deletedMeta = const VerificationMeta(
+    'deleted',
+  );
+  @override
+  late final GeneratedColumn<bool> deleted = GeneratedColumn<bool>(
+    'deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _isDirtyMeta = const VerificationMeta(
+    'isDirty',
+  );
+  @override
+  late final GeneratedColumn<bool> isDirty = GeneratedColumn<bool>(
+    'is_dirty',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_dirty" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _teamIdMeta = const VerificationMeta('teamId');
+  @override
+  late final GeneratedColumn<String> teamId = GeneratedColumn<String>(
+    'team_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sessionIdMeta = const VerificationMeta(
+    'sessionId',
+  );
+  @override
+  late final GeneratedColumn<String> sessionId = GeneratedColumn<String>(
+    'session_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sortOrderMeta = const VerificationMeta(
+    'sortOrder',
+  );
+  @override
+  late final GeneratedColumn<int> sortOrder = GeneratedColumn<int>(
+    'sort_order',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _kindMeta = const VerificationMeta('kind');
+  @override
+  late final GeneratedColumn<String> kind = GeneratedColumn<String>(
+    'kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+    'title',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _bodyMeta = const VerificationMeta('body');
+  @override
+  late final GeneratedColumn<String> body = GeneratedColumn<String>(
+    'body',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _tacticIdMeta = const VerificationMeta(
+    'tacticId',
+  );
+  @override
+  late final GeneratedColumn<String> tacticId = GeneratedColumn<String>(
+    'tactic_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _videoUrlMeta = const VerificationMeta(
+    'videoUrl',
+  );
+  @override
+  late final GeneratedColumn<String> videoUrl = GeneratedColumn<String>(
+    'video_url',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    createdAt,
+    updatedAt,
+    serverUpdatedAt,
+    deleted,
+    isDirty,
+    teamId,
+    sessionId,
+    sortOrder,
+    kind,
+    title,
+    body,
+    tacticId,
+    videoUrl,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'viewing_slides';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ViewingSlide> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('server_updated_at')) {
+      context.handle(
+        _serverUpdatedAtMeta,
+        serverUpdatedAt.isAcceptableOrUnknown(
+          data['server_updated_at']!,
+          _serverUpdatedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('deleted')) {
+      context.handle(
+        _deletedMeta,
+        deleted.isAcceptableOrUnknown(data['deleted']!, _deletedMeta),
+      );
+    }
+    if (data.containsKey('is_dirty')) {
+      context.handle(
+        _isDirtyMeta,
+        isDirty.isAcceptableOrUnknown(data['is_dirty']!, _isDirtyMeta),
+      );
+    }
+    if (data.containsKey('team_id')) {
+      context.handle(
+        _teamIdMeta,
+        teamId.isAcceptableOrUnknown(data['team_id']!, _teamIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_teamIdMeta);
+    }
+    if (data.containsKey('session_id')) {
+      context.handle(
+        _sessionIdMeta,
+        sessionId.isAcceptableOrUnknown(data['session_id']!, _sessionIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_sessionIdMeta);
+    }
+    if (data.containsKey('sort_order')) {
+      context.handle(
+        _sortOrderMeta,
+        sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta),
+      );
+    }
+    if (data.containsKey('kind')) {
+      context.handle(
+        _kindMeta,
+        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_kindMeta);
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+        _titleMeta,
+        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
+      );
+    }
+    if (data.containsKey('body')) {
+      context.handle(
+        _bodyMeta,
+        body.isAcceptableOrUnknown(data['body']!, _bodyMeta),
+      );
+    }
+    if (data.containsKey('tactic_id')) {
+      context.handle(
+        _tacticIdMeta,
+        tacticId.isAcceptableOrUnknown(data['tactic_id']!, _tacticIdMeta),
+      );
+    }
+    if (data.containsKey('video_url')) {
+      context.handle(
+        _videoUrlMeta,
+        videoUrl.isAcceptableOrUnknown(data['video_url']!, _videoUrlMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ViewingSlide map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ViewingSlide(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      serverUpdatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}server_updated_at'],
+      ),
+      deleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}deleted'],
+      )!,
+      isDirty: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_dirty'],
+      )!,
+      teamId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}team_id'],
+      )!,
+      sessionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}session_id'],
+      )!,
+      sortOrder: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sort_order'],
+      )!,
+      kind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}kind'],
+      )!,
+      title: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}title'],
+      ),
+      body: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}body'],
+      ),
+      tacticId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tactic_id'],
+      ),
+      videoUrl: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}video_url'],
+      ),
+    );
+  }
+
+  @override
+  $ViewingSlidesTable createAlias(String alias) {
+    return $ViewingSlidesTable(attachedDatabase, alias);
+  }
+}
+
+class ViewingSlide extends DataClass implements Insertable<ViewingSlide> {
+  final String id;
+  final String createdAt;
+  final String updatedAt;
+  final String? serverUpdatedAt;
+  final bool deleted;
+
+  /// Modifiée localement et pas encore envoyée. Jamais synchronisée.
+  final bool isDirty;
+  final String teamId;
+  final String sessionId;
+  final int sortOrder;
+  final String kind;
+  final String? title;
+  final String? body;
+  final String? tacticId;
+  final String? videoUrl;
+  const ViewingSlide({
+    required this.id,
+    required this.createdAt,
+    required this.updatedAt,
+    this.serverUpdatedAt,
+    required this.deleted,
+    required this.isDirty,
+    required this.teamId,
+    required this.sessionId,
+    required this.sortOrder,
+    required this.kind,
+    this.title,
+    this.body,
+    this.tacticId,
+    this.videoUrl,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['created_at'] = Variable<String>(createdAt);
+    map['updated_at'] = Variable<String>(updatedAt);
+    if (!nullToAbsent || serverUpdatedAt != null) {
+      map['server_updated_at'] = Variable<String>(serverUpdatedAt);
+    }
+    map['deleted'] = Variable<bool>(deleted);
+    map['is_dirty'] = Variable<bool>(isDirty);
+    map['team_id'] = Variable<String>(teamId);
+    map['session_id'] = Variable<String>(sessionId);
+    map['sort_order'] = Variable<int>(sortOrder);
+    map['kind'] = Variable<String>(kind);
+    if (!nullToAbsent || title != null) {
+      map['title'] = Variable<String>(title);
+    }
+    if (!nullToAbsent || body != null) {
+      map['body'] = Variable<String>(body);
+    }
+    if (!nullToAbsent || tacticId != null) {
+      map['tactic_id'] = Variable<String>(tacticId);
+    }
+    if (!nullToAbsent || videoUrl != null) {
+      map['video_url'] = Variable<String>(videoUrl);
+    }
+    return map;
+  }
+
+  ViewingSlidesCompanion toCompanion(bool nullToAbsent) {
+    return ViewingSlidesCompanion(
+      id: Value(id),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      serverUpdatedAt: serverUpdatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(serverUpdatedAt),
+      deleted: Value(deleted),
+      isDirty: Value(isDirty),
+      teamId: Value(teamId),
+      sessionId: Value(sessionId),
+      sortOrder: Value(sortOrder),
+      kind: Value(kind),
+      title: title == null && nullToAbsent
+          ? const Value.absent()
+          : Value(title),
+      body: body == null && nullToAbsent ? const Value.absent() : Value(body),
+      tacticId: tacticId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(tacticId),
+      videoUrl: videoUrl == null && nullToAbsent
+          ? const Value.absent()
+          : Value(videoUrl),
+    );
+  }
+
+  factory ViewingSlide.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ViewingSlide(
+      id: serializer.fromJson<String>(json['id']),
+      createdAt: serializer.fromJson<String>(json['createdAt']),
+      updatedAt: serializer.fromJson<String>(json['updatedAt']),
+      serverUpdatedAt: serializer.fromJson<String?>(json['serverUpdatedAt']),
+      deleted: serializer.fromJson<bool>(json['deleted']),
+      isDirty: serializer.fromJson<bool>(json['isDirty']),
+      teamId: serializer.fromJson<String>(json['teamId']),
+      sessionId: serializer.fromJson<String>(json['sessionId']),
+      sortOrder: serializer.fromJson<int>(json['sortOrder']),
+      kind: serializer.fromJson<String>(json['kind']),
+      title: serializer.fromJson<String?>(json['title']),
+      body: serializer.fromJson<String?>(json['body']),
+      tacticId: serializer.fromJson<String?>(json['tacticId']),
+      videoUrl: serializer.fromJson<String?>(json['videoUrl']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'createdAt': serializer.toJson<String>(createdAt),
+      'updatedAt': serializer.toJson<String>(updatedAt),
+      'serverUpdatedAt': serializer.toJson<String?>(serverUpdatedAt),
+      'deleted': serializer.toJson<bool>(deleted),
+      'isDirty': serializer.toJson<bool>(isDirty),
+      'teamId': serializer.toJson<String>(teamId),
+      'sessionId': serializer.toJson<String>(sessionId),
+      'sortOrder': serializer.toJson<int>(sortOrder),
+      'kind': serializer.toJson<String>(kind),
+      'title': serializer.toJson<String?>(title),
+      'body': serializer.toJson<String?>(body),
+      'tacticId': serializer.toJson<String?>(tacticId),
+      'videoUrl': serializer.toJson<String?>(videoUrl),
+    };
+  }
+
+  ViewingSlide copyWith({
+    String? id,
+    String? createdAt,
+    String? updatedAt,
+    Value<String?> serverUpdatedAt = const Value.absent(),
+    bool? deleted,
+    bool? isDirty,
+    String? teamId,
+    String? sessionId,
+    int? sortOrder,
+    String? kind,
+    Value<String?> title = const Value.absent(),
+    Value<String?> body = const Value.absent(),
+    Value<String?> tacticId = const Value.absent(),
+    Value<String?> videoUrl = const Value.absent(),
+  }) => ViewingSlide(
+    id: id ?? this.id,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    serverUpdatedAt: serverUpdatedAt.present
+        ? serverUpdatedAt.value
+        : this.serverUpdatedAt,
+    deleted: deleted ?? this.deleted,
+    isDirty: isDirty ?? this.isDirty,
+    teamId: teamId ?? this.teamId,
+    sessionId: sessionId ?? this.sessionId,
+    sortOrder: sortOrder ?? this.sortOrder,
+    kind: kind ?? this.kind,
+    title: title.present ? title.value : this.title,
+    body: body.present ? body.value : this.body,
+    tacticId: tacticId.present ? tacticId.value : this.tacticId,
+    videoUrl: videoUrl.present ? videoUrl.value : this.videoUrl,
+  );
+  ViewingSlide copyWithCompanion(ViewingSlidesCompanion data) {
+    return ViewingSlide(
+      id: data.id.present ? data.id.value : this.id,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      serverUpdatedAt: data.serverUpdatedAt.present
+          ? data.serverUpdatedAt.value
+          : this.serverUpdatedAt,
+      deleted: data.deleted.present ? data.deleted.value : this.deleted,
+      isDirty: data.isDirty.present ? data.isDirty.value : this.isDirty,
+      teamId: data.teamId.present ? data.teamId.value : this.teamId,
+      sessionId: data.sessionId.present ? data.sessionId.value : this.sessionId,
+      sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
+      kind: data.kind.present ? data.kind.value : this.kind,
+      title: data.title.present ? data.title.value : this.title,
+      body: data.body.present ? data.body.value : this.body,
+      tacticId: data.tacticId.present ? data.tacticId.value : this.tacticId,
+      videoUrl: data.videoUrl.present ? data.videoUrl.value : this.videoUrl,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ViewingSlide(')
+          ..write('id: $id, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('serverUpdatedAt: $serverUpdatedAt, ')
+          ..write('deleted: $deleted, ')
+          ..write('isDirty: $isDirty, ')
+          ..write('teamId: $teamId, ')
+          ..write('sessionId: $sessionId, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('kind: $kind, ')
+          ..write('title: $title, ')
+          ..write('body: $body, ')
+          ..write('tacticId: $tacticId, ')
+          ..write('videoUrl: $videoUrl')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    createdAt,
+    updatedAt,
+    serverUpdatedAt,
+    deleted,
+    isDirty,
+    teamId,
+    sessionId,
+    sortOrder,
+    kind,
+    title,
+    body,
+    tacticId,
+    videoUrl,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ViewingSlide &&
+          other.id == this.id &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.serverUpdatedAt == this.serverUpdatedAt &&
+          other.deleted == this.deleted &&
+          other.isDirty == this.isDirty &&
+          other.teamId == this.teamId &&
+          other.sessionId == this.sessionId &&
+          other.sortOrder == this.sortOrder &&
+          other.kind == this.kind &&
+          other.title == this.title &&
+          other.body == this.body &&
+          other.tacticId == this.tacticId &&
+          other.videoUrl == this.videoUrl);
+}
+
+class ViewingSlidesCompanion extends UpdateCompanion<ViewingSlide> {
+  final Value<String> id;
+  final Value<String> createdAt;
+  final Value<String> updatedAt;
+  final Value<String?> serverUpdatedAt;
+  final Value<bool> deleted;
+  final Value<bool> isDirty;
+  final Value<String> teamId;
+  final Value<String> sessionId;
+  final Value<int> sortOrder;
+  final Value<String> kind;
+  final Value<String?> title;
+  final Value<String?> body;
+  final Value<String?> tacticId;
+  final Value<String?> videoUrl;
+  final Value<int> rowid;
+  const ViewingSlidesCompanion({
+    this.id = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.serverUpdatedAt = const Value.absent(),
+    this.deleted = const Value.absent(),
+    this.isDirty = const Value.absent(),
+    this.teamId = const Value.absent(),
+    this.sessionId = const Value.absent(),
+    this.sortOrder = const Value.absent(),
+    this.kind = const Value.absent(),
+    this.title = const Value.absent(),
+    this.body = const Value.absent(),
+    this.tacticId = const Value.absent(),
+    this.videoUrl = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ViewingSlidesCompanion.insert({
+    required String id,
+    required String createdAt,
+    required String updatedAt,
+    this.serverUpdatedAt = const Value.absent(),
+    this.deleted = const Value.absent(),
+    this.isDirty = const Value.absent(),
+    required String teamId,
+    required String sessionId,
+    this.sortOrder = const Value.absent(),
+    required String kind,
+    this.title = const Value.absent(),
+    this.body = const Value.absent(),
+    this.tacticId = const Value.absent(),
+    this.videoUrl = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt),
+       teamId = Value(teamId),
+       sessionId = Value(sessionId),
+       kind = Value(kind);
+  static Insertable<ViewingSlide> custom({
+    Expression<String>? id,
+    Expression<String>? createdAt,
+    Expression<String>? updatedAt,
+    Expression<String>? serverUpdatedAt,
+    Expression<bool>? deleted,
+    Expression<bool>? isDirty,
+    Expression<String>? teamId,
+    Expression<String>? sessionId,
+    Expression<int>? sortOrder,
+    Expression<String>? kind,
+    Expression<String>? title,
+    Expression<String>? body,
+    Expression<String>? tacticId,
+    Expression<String>? videoUrl,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (serverUpdatedAt != null) 'server_updated_at': serverUpdatedAt,
+      if (deleted != null) 'deleted': deleted,
+      if (isDirty != null) 'is_dirty': isDirty,
+      if (teamId != null) 'team_id': teamId,
+      if (sessionId != null) 'session_id': sessionId,
+      if (sortOrder != null) 'sort_order': sortOrder,
+      if (kind != null) 'kind': kind,
+      if (title != null) 'title': title,
+      if (body != null) 'body': body,
+      if (tacticId != null) 'tactic_id': tacticId,
+      if (videoUrl != null) 'video_url': videoUrl,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ViewingSlidesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? createdAt,
+    Value<String>? updatedAt,
+    Value<String?>? serverUpdatedAt,
+    Value<bool>? deleted,
+    Value<bool>? isDirty,
+    Value<String>? teamId,
+    Value<String>? sessionId,
+    Value<int>? sortOrder,
+    Value<String>? kind,
+    Value<String?>? title,
+    Value<String?>? body,
+    Value<String?>? tacticId,
+    Value<String?>? videoUrl,
+    Value<int>? rowid,
+  }) {
+    return ViewingSlidesCompanion(
+      id: id ?? this.id,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      serverUpdatedAt: serverUpdatedAt ?? this.serverUpdatedAt,
+      deleted: deleted ?? this.deleted,
+      isDirty: isDirty ?? this.isDirty,
+      teamId: teamId ?? this.teamId,
+      sessionId: sessionId ?? this.sessionId,
+      sortOrder: sortOrder ?? this.sortOrder,
+      kind: kind ?? this.kind,
+      title: title ?? this.title,
+      body: body ?? this.body,
+      tacticId: tacticId ?? this.tacticId,
+      videoUrl: videoUrl ?? this.videoUrl,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<String>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<String>(updatedAt.value);
+    }
+    if (serverUpdatedAt.present) {
+      map['server_updated_at'] = Variable<String>(serverUpdatedAt.value);
+    }
+    if (deleted.present) {
+      map['deleted'] = Variable<bool>(deleted.value);
+    }
+    if (isDirty.present) {
+      map['is_dirty'] = Variable<bool>(isDirty.value);
+    }
+    if (teamId.present) {
+      map['team_id'] = Variable<String>(teamId.value);
+    }
+    if (sessionId.present) {
+      map['session_id'] = Variable<String>(sessionId.value);
+    }
+    if (sortOrder.present) {
+      map['sort_order'] = Variable<int>(sortOrder.value);
+    }
+    if (kind.present) {
+      map['kind'] = Variable<String>(kind.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (body.present) {
+      map['body'] = Variable<String>(body.value);
+    }
+    if (tacticId.present) {
+      map['tactic_id'] = Variable<String>(tacticId.value);
+    }
+    if (videoUrl.present) {
+      map['video_url'] = Variable<String>(videoUrl.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ViewingSlidesCompanion(')
+          ..write('id: $id, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('serverUpdatedAt: $serverUpdatedAt, ')
+          ..write('deleted: $deleted, ')
+          ..write('isDirty: $isDirty, ')
+          ..write('teamId: $teamId, ')
+          ..write('sessionId: $sessionId, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('kind: $kind, ')
+          ..write('title: $title, ')
+          ..write('body: $body, ')
+          ..write('tacticId: $tacticId, ')
+          ..write('videoUrl: $videoUrl, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $SyncStateTable extends SyncState
     with TableInfo<$SyncStateTable, SyncStateData> {
   @override
@@ -17945,6 +19364,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   );
   late final $WellnessSurveyPlayersTable wellnessSurveyPlayers =
       $WellnessSurveyPlayersTable(this);
+  late final $ViewingSessionsTable viewingSessions = $ViewingSessionsTable(
+    this,
+  );
+  late final $ViewingSlidesTable viewingSlides = $ViewingSlidesTable(this);
   late final $SyncStateTable syncState = $SyncStateTable(this);
   late final $LocalSettingsTable localSettings = $LocalSettingsTable(this);
   @override
@@ -17972,6 +19395,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     sessionComments,
     wellnessSurveys,
     wellnessSurveyPlayers,
+    viewingSessions,
+    viewingSlides,
     syncState,
     localSettings,
   ];
@@ -21349,7 +22774,7 @@ typedef $$MatchEventsTableCreateCompanionBuilder =
       Value<bool> isDirty,
       required String teamId,
       required String matchId,
-      required String playerId,
+      Value<String?> playerId,
       required String type,
       required int minute,
       Value<String?> assistPlayerId,
@@ -21366,7 +22791,7 @@ typedef $$MatchEventsTableUpdateCompanionBuilder =
       Value<bool> isDirty,
       Value<String> teamId,
       Value<String> matchId,
-      Value<String> playerId,
+      Value<String?> playerId,
       Value<String> type,
       Value<int> minute,
       Value<String?> assistPlayerId,
@@ -21616,7 +23041,7 @@ class $$MatchEventsTableTableManager
                 Value<bool> isDirty = const Value.absent(),
                 Value<String> teamId = const Value.absent(),
                 Value<String> matchId = const Value.absent(),
-                Value<String> playerId = const Value.absent(),
+                Value<String?> playerId = const Value.absent(),
                 Value<String> type = const Value.absent(),
                 Value<int> minute = const Value.absent(),
                 Value<String?> assistPlayerId = const Value.absent(),
@@ -21648,7 +23073,7 @@ class $$MatchEventsTableTableManager
                 Value<bool> isDirty = const Value.absent(),
                 required String teamId,
                 required String matchId,
-                required String playerId,
+                Value<String?> playerId = const Value.absent(),
                 required String type,
                 required int minute,
                 Value<String?> assistPlayerId = const Value.absent(),
@@ -26113,6 +27538,700 @@ typedef $$WellnessSurveyPlayersTableProcessedTableManager =
       WellnessSurveyPlayer,
       PrefetchHooks Function()
     >;
+typedef $$ViewingSessionsTableCreateCompanionBuilder =
+    ViewingSessionsCompanion Function({
+      required String id,
+      required String createdAt,
+      required String updatedAt,
+      Value<String?> serverUpdatedAt,
+      Value<bool> deleted,
+      Value<bool> isDirty,
+      required String teamId,
+      required String title,
+      Value<String?> date,
+      Value<String?> notes,
+      Value<int> rowid,
+    });
+typedef $$ViewingSessionsTableUpdateCompanionBuilder =
+    ViewingSessionsCompanion Function({
+      Value<String> id,
+      Value<String> createdAt,
+      Value<String> updatedAt,
+      Value<String?> serverUpdatedAt,
+      Value<bool> deleted,
+      Value<bool> isDirty,
+      Value<String> teamId,
+      Value<String> title,
+      Value<String?> date,
+      Value<String?> notes,
+      Value<int> rowid,
+    });
+
+class $$ViewingSessionsTableFilterComposer
+    extends Composer<_$AppDatabase, $ViewingSessionsTable> {
+  $$ViewingSessionsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get serverUpdatedAt => $composableBuilder(
+    column: $table.serverUpdatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get deleted => $composableBuilder(
+    column: $table.deleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDirty => $composableBuilder(
+    column: $table.isDirty,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get teamId => $composableBuilder(
+    column: $table.teamId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get date => $composableBuilder(
+    column: $table.date,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$ViewingSessionsTableOrderingComposer
+    extends Composer<_$AppDatabase, $ViewingSessionsTable> {
+  $$ViewingSessionsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get serverUpdatedAt => $composableBuilder(
+    column: $table.serverUpdatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get deleted => $composableBuilder(
+    column: $table.deleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDirty => $composableBuilder(
+    column: $table.isDirty,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get teamId => $composableBuilder(
+    column: $table.teamId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get date => $composableBuilder(
+    column: $table.date,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ViewingSessionsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ViewingSessionsTable> {
+  $$ViewingSessionsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get serverUpdatedAt => $composableBuilder(
+    column: $table.serverUpdatedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get deleted =>
+      $composableBuilder(column: $table.deleted, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDirty =>
+      $composableBuilder(column: $table.isDirty, builder: (column) => column);
+
+  GeneratedColumn<String> get teamId =>
+      $composableBuilder(column: $table.teamId, builder: (column) => column);
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get date =>
+      $composableBuilder(column: $table.date, builder: (column) => column);
+
+  GeneratedColumn<String> get notes =>
+      $composableBuilder(column: $table.notes, builder: (column) => column);
+}
+
+class $$ViewingSessionsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ViewingSessionsTable,
+          ViewingSession,
+          $$ViewingSessionsTableFilterComposer,
+          $$ViewingSessionsTableOrderingComposer,
+          $$ViewingSessionsTableAnnotationComposer,
+          $$ViewingSessionsTableCreateCompanionBuilder,
+          $$ViewingSessionsTableUpdateCompanionBuilder,
+          (
+            ViewingSession,
+            BaseReferences<
+              _$AppDatabase,
+              $ViewingSessionsTable,
+              ViewingSession
+            >,
+          ),
+          ViewingSession,
+          PrefetchHooks Function()
+        > {
+  $$ViewingSessionsTableTableManager(
+    _$AppDatabase db,
+    $ViewingSessionsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ViewingSessionsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ViewingSessionsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ViewingSessionsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> createdAt = const Value.absent(),
+                Value<String> updatedAt = const Value.absent(),
+                Value<String?> serverUpdatedAt = const Value.absent(),
+                Value<bool> deleted = const Value.absent(),
+                Value<bool> isDirty = const Value.absent(),
+                Value<String> teamId = const Value.absent(),
+                Value<String> title = const Value.absent(),
+                Value<String?> date = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ViewingSessionsCompanion(
+                id: id,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                serverUpdatedAt: serverUpdatedAt,
+                deleted: deleted,
+                isDirty: isDirty,
+                teamId: teamId,
+                title: title,
+                date: date,
+                notes: notes,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String createdAt,
+                required String updatedAt,
+                Value<String?> serverUpdatedAt = const Value.absent(),
+                Value<bool> deleted = const Value.absent(),
+                Value<bool> isDirty = const Value.absent(),
+                required String teamId,
+                required String title,
+                Value<String?> date = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ViewingSessionsCompanion.insert(
+                id: id,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                serverUpdatedAt: serverUpdatedAt,
+                deleted: deleted,
+                isDirty: isDirty,
+                teamId: teamId,
+                title: title,
+                date: date,
+                notes: notes,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$ViewingSessionsTable, ViewingSession>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $ViewingSessionsTable,
+                    ViewingSession
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$ViewingSessionsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ViewingSessionsTable,
+      ViewingSession,
+      $$ViewingSessionsTableFilterComposer,
+      $$ViewingSessionsTableOrderingComposer,
+      $$ViewingSessionsTableAnnotationComposer,
+      $$ViewingSessionsTableCreateCompanionBuilder,
+      $$ViewingSessionsTableUpdateCompanionBuilder,
+      (
+        ViewingSession,
+        BaseReferences<_$AppDatabase, $ViewingSessionsTable, ViewingSession>,
+      ),
+      ViewingSession,
+      PrefetchHooks Function()
+    >;
+typedef $$ViewingSlidesTableCreateCompanionBuilder =
+    ViewingSlidesCompanion Function({
+      required String id,
+      required String createdAt,
+      required String updatedAt,
+      Value<String?> serverUpdatedAt,
+      Value<bool> deleted,
+      Value<bool> isDirty,
+      required String teamId,
+      required String sessionId,
+      Value<int> sortOrder,
+      required String kind,
+      Value<String?> title,
+      Value<String?> body,
+      Value<String?> tacticId,
+      Value<String?> videoUrl,
+      Value<int> rowid,
+    });
+typedef $$ViewingSlidesTableUpdateCompanionBuilder =
+    ViewingSlidesCompanion Function({
+      Value<String> id,
+      Value<String> createdAt,
+      Value<String> updatedAt,
+      Value<String?> serverUpdatedAt,
+      Value<bool> deleted,
+      Value<bool> isDirty,
+      Value<String> teamId,
+      Value<String> sessionId,
+      Value<int> sortOrder,
+      Value<String> kind,
+      Value<String?> title,
+      Value<String?> body,
+      Value<String?> tacticId,
+      Value<String?> videoUrl,
+      Value<int> rowid,
+    });
+
+class $$ViewingSlidesTableFilterComposer
+    extends Composer<_$AppDatabase, $ViewingSlidesTable> {
+  $$ViewingSlidesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get serverUpdatedAt => $composableBuilder(
+    column: $table.serverUpdatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get deleted => $composableBuilder(
+    column: $table.deleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDirty => $composableBuilder(
+    column: $table.isDirty,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get teamId => $composableBuilder(
+    column: $table.teamId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sessionId => $composableBuilder(
+    column: $table.sessionId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get body => $composableBuilder(
+    column: $table.body,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tacticId => $composableBuilder(
+    column: $table.tacticId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get videoUrl => $composableBuilder(
+    column: $table.videoUrl,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$ViewingSlidesTableOrderingComposer
+    extends Composer<_$AppDatabase, $ViewingSlidesTable> {
+  $$ViewingSlidesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get serverUpdatedAt => $composableBuilder(
+    column: $table.serverUpdatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get deleted => $composableBuilder(
+    column: $table.deleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDirty => $composableBuilder(
+    column: $table.isDirty,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get teamId => $composableBuilder(
+    column: $table.teamId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sessionId => $composableBuilder(
+    column: $table.sessionId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get body => $composableBuilder(
+    column: $table.body,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get tacticId => $composableBuilder(
+    column: $table.tacticId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get videoUrl => $composableBuilder(
+    column: $table.videoUrl,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ViewingSlidesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ViewingSlidesTable> {
+  $$ViewingSlidesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get serverUpdatedAt => $composableBuilder(
+    column: $table.serverUpdatedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get deleted =>
+      $composableBuilder(column: $table.deleted, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDirty =>
+      $composableBuilder(column: $table.isDirty, builder: (column) => column);
+
+  GeneratedColumn<String> get teamId =>
+      $composableBuilder(column: $table.teamId, builder: (column) => column);
+
+  GeneratedColumn<String> get sessionId =>
+      $composableBuilder(column: $table.sessionId, builder: (column) => column);
+
+  GeneratedColumn<int> get sortOrder =>
+      $composableBuilder(column: $table.sortOrder, builder: (column) => column);
+
+  GeneratedColumn<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => column);
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get body =>
+      $composableBuilder(column: $table.body, builder: (column) => column);
+
+  GeneratedColumn<String> get tacticId =>
+      $composableBuilder(column: $table.tacticId, builder: (column) => column);
+
+  GeneratedColumn<String> get videoUrl =>
+      $composableBuilder(column: $table.videoUrl, builder: (column) => column);
+}
+
+class $$ViewingSlidesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ViewingSlidesTable,
+          ViewingSlide,
+          $$ViewingSlidesTableFilterComposer,
+          $$ViewingSlidesTableOrderingComposer,
+          $$ViewingSlidesTableAnnotationComposer,
+          $$ViewingSlidesTableCreateCompanionBuilder,
+          $$ViewingSlidesTableUpdateCompanionBuilder,
+          (
+            ViewingSlide,
+            BaseReferences<_$AppDatabase, $ViewingSlidesTable, ViewingSlide>,
+          ),
+          ViewingSlide,
+          PrefetchHooks Function()
+        > {
+  $$ViewingSlidesTableTableManager(_$AppDatabase db, $ViewingSlidesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ViewingSlidesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ViewingSlidesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ViewingSlidesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> createdAt = const Value.absent(),
+                Value<String> updatedAt = const Value.absent(),
+                Value<String?> serverUpdatedAt = const Value.absent(),
+                Value<bool> deleted = const Value.absent(),
+                Value<bool> isDirty = const Value.absent(),
+                Value<String> teamId = const Value.absent(),
+                Value<String> sessionId = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
+                Value<String> kind = const Value.absent(),
+                Value<String?> title = const Value.absent(),
+                Value<String?> body = const Value.absent(),
+                Value<String?> tacticId = const Value.absent(),
+                Value<String?> videoUrl = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ViewingSlidesCompanion(
+                id: id,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                serverUpdatedAt: serverUpdatedAt,
+                deleted: deleted,
+                isDirty: isDirty,
+                teamId: teamId,
+                sessionId: sessionId,
+                sortOrder: sortOrder,
+                kind: kind,
+                title: title,
+                body: body,
+                tacticId: tacticId,
+                videoUrl: videoUrl,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String createdAt,
+                required String updatedAt,
+                Value<String?> serverUpdatedAt = const Value.absent(),
+                Value<bool> deleted = const Value.absent(),
+                Value<bool> isDirty = const Value.absent(),
+                required String teamId,
+                required String sessionId,
+                Value<int> sortOrder = const Value.absent(),
+                required String kind,
+                Value<String?> title = const Value.absent(),
+                Value<String?> body = const Value.absent(),
+                Value<String?> tacticId = const Value.absent(),
+                Value<String?> videoUrl = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ViewingSlidesCompanion.insert(
+                id: id,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                serverUpdatedAt: serverUpdatedAt,
+                deleted: deleted,
+                isDirty: isDirty,
+                teamId: teamId,
+                sessionId: sessionId,
+                sortOrder: sortOrder,
+                kind: kind,
+                title: title,
+                body: body,
+                tacticId: tacticId,
+                videoUrl: videoUrl,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$ViewingSlidesTable, ViewingSlide>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $ViewingSlidesTable,
+                    ViewingSlide
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$ViewingSlidesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ViewingSlidesTable,
+      ViewingSlide,
+      $$ViewingSlidesTableFilterComposer,
+      $$ViewingSlidesTableOrderingComposer,
+      $$ViewingSlidesTableAnnotationComposer,
+      $$ViewingSlidesTableCreateCompanionBuilder,
+      $$ViewingSlidesTableUpdateCompanionBuilder,
+      (
+        ViewingSlide,
+        BaseReferences<_$AppDatabase, $ViewingSlidesTable, ViewingSlide>,
+      ),
+      ViewingSlide,
+      PrefetchHooks Function()
+    >;
 typedef $$SyncStateTableCreateCompanionBuilder = SyncStateCompanion Function({
   required String tableName_,
   required String cursor,
@@ -26456,6 +28575,10 @@ class $AppDatabaseManager {
       $$WellnessSurveysTableTableManager(_db, _db.wellnessSurveys);
   $$WellnessSurveyPlayersTableTableManager get wellnessSurveyPlayers =>
       $$WellnessSurveyPlayersTableTableManager(_db, _db.wellnessSurveyPlayers);
+  $$ViewingSessionsTableTableManager get viewingSessions =>
+      $$ViewingSessionsTableTableManager(_db, _db.viewingSessions);
+  $$ViewingSlidesTableTableManager get viewingSlides =>
+      $$ViewingSlidesTableTableManager(_db, _db.viewingSlides);
   $$SyncStateTableTableManager get syncState =>
       $$SyncStateTableTableManager(_db, _db.syncState);
   $$LocalSettingsTableTableManager get localSettings =>

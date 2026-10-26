@@ -60,6 +60,7 @@ const permissionCatalog = [
   PermissionFeature('blessures', 'Blessures et infirmerie', {'view': 'Voir', 'add': 'Déclarer', 'edit': 'Modifier'}),
   PermissionFeature('tests', 'Tests physiques', {'view': 'Voir', 'add': 'Ajouter', 'edit': 'Modifier', 'delete': 'Supprimer'}),
   PermissionFeature('tactiques', 'Tactiques', {'view': 'Voir', 'add': 'Ajouter', 'edit': 'Modifier', 'delete': 'Supprimer'}),
+  PermissionFeature('visionnage', 'Séances de visionnage', {'view': 'Voir et présenter', 'add': 'Créer', 'edit': 'Modifier les diapositives', 'delete': 'Supprimer'}),
   PermissionFeature('import', 'Import Excel', {'use': 'Importer'}),
   PermissionFeature('equipes', 'Équipes', {'add': 'Créer', 'edit': 'Modifier'}),
   PermissionFeature('analyse', 'Tableau de bord', {'view': 'Voir', 'export': 'Exporter (PDF, Excel)'}),

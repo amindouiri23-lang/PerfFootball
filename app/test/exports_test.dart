@@ -26,7 +26,7 @@ void main() {
     await tester.runAsync(() async {
       final png = await renderTacticPng(tactic, {'p1': player}, width: 400);
       expect(png.sublist(1, 4), 'PNG'.codeUnits);
-      final pdf = await buildTacticPdf(tactic: tactic, png: png, players: {'p1': player}, team: 'Cadet A');
+      final pdf = await buildTacticPdf(tactic: tactic, pngs: [png], players: {'p1': player}, team: 'Cadet A');
       expect(String.fromCharCodes(pdf.take(5)), '%PDF-');
     });
   });

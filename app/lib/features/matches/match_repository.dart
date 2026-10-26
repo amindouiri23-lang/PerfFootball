@@ -25,13 +25,17 @@ const matchAbsenceReasons = {
 };
 const phases = {'first_leg': 'Aller', 'second_leg': 'Retour'};
 const matchRoles = {'starter': 'Titulaire', 'sub': 'Remplaçant'};
-const eventTypes = {'goal': 'But', 'yellow_card': 'Carton jaune', 'red_card': 'Carton rouge', 'substitution': 'Changement'};
+const eventTypes = {
+  'goal': 'But', 'yellow_card': 'Carton jaune', 'red_card': 'Carton rouge', 'substitution': 'Changement',
+  'opponent_goal': 'But adverse',
+};
 const eventIcons = {
   'goal': Icons.sports_soccer, 'yellow_card': Icons.style, 'red_card': Icons.style, 'substitution': Icons.swap_horiz,
+  'opponent_goal': Icons.sports_soccer,
 };
 const eventColors = {
   'goal': Color(0xFF1B5E20), 'yellow_card': Color(0xFFF9A825), 'red_card': Color(0xFFC62828),
-  'substitution': Color(0xFF1565C0),
+  'substitution': Color(0xFF1565C0), 'opponent_goal': Color(0xFF78909C),
 };
 
 extension FootballMatchLabels on FootballMatch {
@@ -200,8 +204,6 @@ class MatchRepository {
 
   Future<void> setRemarks(String id, String? text) => _updateMatch(id, MatchesCompanion(remarks: Value(text)));
 
-  Future<void> setGoalsAgainst(String id, int goals) => _updateMatch(id, MatchesCompanion(goalsAgainst: Value(goals)));
-
   /// Suppression : match, feuille, événements et liens vers les tactiques. Les blessures restent, détachées du match.
   Future<void> deleteMatch(String id) async {
     final now = nowIso();
@@ -351,6 +353,32 @@ class MatchRepository {
       await (_db.update(_db.matchEvents)..where((e) => e.id.equals(id))).write(fields);
     }
     _sync();
+  }
+
+  /// But adverse minuté : l'événement (buteur adverse éventuel en remarque) et le score adverse, ensemble.
+  Future<void> addOpponentGoal(FootballMatch m, {required int minute, String? scorer}) async {
+    final now = nowIso();
+    await _db.into(_db.matchEvents).insert(MatchEventsCompanion.insert(
+          id: _uuid.v4(), teamId: m.teamId, matchId: m.id, type: 'opponent_goal', minute: minute,
+          remark: Value(scorer), createdAt: now, updatedAt: now, isDirty: const Value(true),
+        ));
+    await _updateMatch(m.id, MatchesCompanion(goalsAgainst: Value((m.goalsAgainst ?? 0) + 1)));
+  }
+
+  Future<void> updateOpponentGoal(String id, {required int minute, String? scorer}) async {
+    await (_db.update(_db.matchEvents)..where((e) => e.id.equals(id))).write(MatchEventsCompanion(
+          minute: Value(minute), remark: Value(scorer), updatedAt: Value(nowIso()), isDirty: const Value(true)));
+    _sync();
+  }
+
+  /// Retire un but adverse : le plus tardif si [id] est null. Sans but minuté (saisi avant la version 0.8),
+  /// seul le score baisse.
+  Future<void> removeOpponentGoal(FootballMatch m, {String? id}) async {
+    final goals = (await eventsOf(m.id)).where((e) => e.type == 'opponent_goal').toList()
+      ..sort((a, b) => b.minute.compareTo(a.minute));
+    final target = id ?? goals.firstOrNull?.id;
+    if (target != null) await deleteEvent(target);
+    await _updateMatch(m.id, MatchesCompanion(goalsAgainst: Value(((m.goalsAgainst ?? 0) - 1).clamp(0, 99))));
   }
 
   Future<List<MatchEvent>> eventsOf(String matchId) =>

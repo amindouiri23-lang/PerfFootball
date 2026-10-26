@@ -147,7 +147,8 @@ class MatchPlayers extends Table with SyncColumns {
 class MatchEvents extends Table with SyncColumns {
   TextColumn get teamId => text()();
   TextColumn get matchId => text()();
-  TextColumn get playerId => text()();
+  /// Null pour un but adverse (type opponent_goal) : le buteur adverse éventuel est dans la remarque.
+  TextColumn get playerId => text().nullable()();
   TextColumn get type => text()();
   IntColumn get minute => integer()();
   TextColumn get assistPlayerId => text().nullable()();
@@ -314,17 +315,37 @@ class LocalSettings extends Table {
   Set<Column> get primaryKey => {key};
 }
 
+/// Séance de visionnage : une présentation de diapositives (texte, tactique, vidéo).
+class ViewingSessions extends Table with SyncColumns {
+  TextColumn get teamId => text()();
+  TextColumn get title => text()();
+  TextColumn get date => text().nullable()();
+  TextColumn get notes => text().nullable()();
+}
+
+/// Diapositive d'une séance de visionnage : kind = text, tactic (tacticId) ou video (videoUrl).
+class ViewingSlides extends Table with SyncColumns {
+  TextColumn get teamId => text()();
+  TextColumn get sessionId => text()();
+  IntColumn get sortOrder => integer().withDefault(const Constant(0))();
+  TextColumn get kind => text()();
+  TextColumn get title => text().nullable()();
+  TextColumn get body => text().nullable()();
+  TextColumn get tacticId => text().nullable()();
+  TextColumn get videoUrl => text().nullable()();
+}
+
 @DriftDatabase(tables: [
   Teams, TeamMembers, Players, Sessions, SessionPlayers, Wellness, Matches, MatchPlayers, MatchEvents, Injuries,
   TestTypes, TestResults, PlayerProfiles, PlayerMedical, Tactics, TacticLinks,
-  SessionExercises, SessionComments, WellnessSurveys, WellnessSurveyPlayers,
+  SessionExercises, SessionComments, WellnessSurveys, WellnessSurveyPlayers, ViewingSessions, ViewingSlides,
   SyncState, LocalSettings,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? openConnection());
 
   @override
-  int get schemaVersion => 11;
+  int get schemaVersion => 12;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -423,6 +444,13 @@ class AppDatabase extends _$AppDatabase {
             // v11 : période de la saison des tests physiques.
             final names = {for (final c in await customSelect('PRAGMA table_info(test_results)').get()) c.read<String>('name')};
             if (!names.contains('campaign')) await m.addColumn(testResults, testResults.campaign);
+          }
+          if (from < 12) {
+            // v12 : but adverse sans joueur (player_id nullable : la table est recréée, données gardées),
+            // séances de visionnage.
+            await m.alterTable(TableMigration(matchEvents));
+            await m.createTable(viewingSessions);
+            await m.createTable(viewingSlides);
           }
         },
       );
