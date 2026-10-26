@@ -442,7 +442,7 @@ class _TacticEditorScreenState extends ConsumerState<TacticEditorScreen> with Si
                 _save();
               },
               onTokenTap: (token) => _editToken(token, players),
-              onArrowDrawn: (a) => _change(() => board.arrowsAt(_step).add(a)),
+              onArrowDrawn: (a) => _change(() => board.addArrow(_step, a)),
               onArrowTap: _arrowActions,
               onArrowBent: (a, through) {
                 if (!_dragging) {
@@ -525,7 +525,8 @@ class _TacticEditorScreenState extends ConsumerState<TacticEditorScreen> with Si
                     ? 'Pincez ou glissez pour zoomer et déplacer la vue. Touchez la main pour revenir à l\'édition.'
                     : _arrowMode == null
                         ? 'Glissez les pions pour les placer, le rond d\'une flèche pour la courber. Touchez un pion ou une flèche pour la modifier.'
-                        : 'Glissez sur le terrain pour tracer ${_arrowMode == 'run' ? 'une course' : 'la trajectoire du ballon'}.',
+                        : 'Glissez depuis ${_arrowMode == 'run' ? 'un joueur pour tracer sa course' : 'le ballon pour tracer sa trajectoire'} : '
+                            'à l\'étape suivante, il arrive au bout et l\'animation suit la flèche, même courbée.',
                 style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.primary),
               ),
             ]),
