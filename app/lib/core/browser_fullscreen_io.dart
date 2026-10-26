@@ -1,0 +1,3 @@
+void enterBrowserFullscreen() {}
+
+void exitBrowserFullscreen() {}

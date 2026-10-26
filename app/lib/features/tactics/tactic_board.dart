@@ -3,6 +3,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import 'tactic_equipment.dart';
+
 // Tableau tactique : pions et flèches posés sur un terrain vu de dessus, but attaqué (ou défendu) en haut.
 // Positions en fraction du terrain en portrait (x : largeur, y : longueur, 0 à 1) : la même tactique
 // s'affiche en portrait ou à l'horizontale (but à droite), sur téléphone, tablette et PC.
@@ -180,7 +182,7 @@ class TacticBoard {
     BoardToken? best;
     var bestD = _near;
     for (final t in tokens) {
-      if ((t.kind == 'ball') != (a.kind == 'ball')) continue;
+      if (a.kind == 'ball' ? t.kind != 'ball' : !isPlayerToken(t.kind)) continue;
       final d = (positionAt(t, step) - start).distance;
       if (d < bestD) {
         best = t;
@@ -235,6 +237,7 @@ class TacticBoard {
   Offset _travel(BoardToken tk, int k, int next, double f) {
     final from = positionAt(tk, k), to = positionAt(tk, next);
     if (from == to) return from;
+    if (tk.kind != 'ball' && !isPlayerToken(tk.kind)) return Offset.lerp(from, to, f)!;
     final path = arrowsAt(k).where((a) =>
         a.kind == (tk.kind == 'ball' ? 'ball' : 'run') &&
         (Offset(a.x1, a.y1) - from).distance < _near &&
@@ -440,14 +443,7 @@ class TokenView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (kind == 'ball') {
-      return Container(
-        width: size * 0.7,
-        height: size * 0.7,
-        decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, border: Border.all(color: Colors.black87, width: 1.5)),
-        child: Icon(Icons.sports_soccer, size: size * 0.6, color: Colors.black87),
-      );
-    }
+    if (!isPlayerToken(kind)) return EquipmentView(kind: kind, size: size);
     return Column(mainAxisSize: MainAxisSize.min, children: [
       Container(
         width: size,

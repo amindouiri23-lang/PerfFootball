@@ -66,6 +66,15 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/forgot-password', builder: (_, _) => const ForgotPasswordScreen()),
       GoRoute(path: '/new-password', builder: (_, _) => const NewPasswordScreen()),
       GoRoute(path: '/sync', builder: (_, _) => const SyncScreen()),
+      // Tableau tactique en plein écran : hors de la barre de navigation.
+      GoRoute(
+        path: '/fullscreen/tactic/:tid',
+        builder: (_, s) => TacticEditorScreen(
+          id: s.pathParameters['tid']!,
+          fullscreen: true,
+          initialStep: int.tryParse(s.uri.queryParameters['step'] ?? '') ?? 0,
+        ),
+      ),
       // Présentation plein écran : hors de la barre de navigation.
       GoRoute(path: '/present/:vid', builder: (_, s) => ViewingPresentScreen(id: s.pathParameters['vid']!)),
       StatefulShellRoute.indexedStack(

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../../data/database.dart';
 import '../team/team_repository.dart';
 import 'tactic_board.dart';
+import 'tactic_equipment.dart';
 
 // Dessin d'un tableau tactique en image PNG, sans l'afficher : pour l'export d'une tactique et pour les
 // documents PDF (programme de séance, feuille de match). Même rendu que l'écran : terrain, flèches, pions.
@@ -44,15 +45,8 @@ Future<Uint8List> renderBoardPng({
   final ts = (horizontal ? size.height : size.width) * tokenSize;
   for (final t in board.tokens) {
     final c = boardToScreen(board.positionAt(t, step), size, horizontal);
-    if (t.kind == 'ball') {
-      final r = ts * 0.35;
-      canvas.drawCircle(c, r, Paint()..color = Colors.white);
-      canvas.drawCircle(c, r, Paint()
-        ..color = Colors.black87
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2);
-      _paintText(canvas, String.fromCharCode(Icons.sports_soccer.codePoint), c, r * 1.6, Colors.black87,
-          fontFamily: Icons.sports_soccer.fontFamily, package: Icons.sports_soccer.fontPackage);
+    if (!isPlayerToken(t.kind)) {
+      paintEquipment(canvas, c, t.kind, ts);
       continue;
     }
     final r = ts / 2;
