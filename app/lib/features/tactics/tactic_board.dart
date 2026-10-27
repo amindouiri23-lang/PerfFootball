@@ -2,7 +2,9 @@ import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/photos.dart';
 import 'tactic_equipment.dart';
 
 // Tableau tactique : pions et flèches posés sur un terrain vu de dessus, but attaqué (ou défendu) en haut.
@@ -120,10 +122,14 @@ class BoardStep {
 }
 
 class TacticBoard {
-  TacticBoard({List<BoardToken>? tokens, List<BoardArrow>? arrows, List<BoardStep>? steps})
+  TacticBoard({List<BoardToken>? tokens, List<BoardArrow>? arrows, List<BoardStep>? steps, this.display = 'number'})
       : tokens = tokens ?? [],
         arrows = arrows ?? [],
         steps = steps ?? [];
+
+  /// Ce que montrent les pions des joueurs : number (numéro), initials (initiales du prénom et du nom),
+  /// photo, photo_number (photo et numéro). Sans photo ni numéro, les initiales.
+  String display;
 
   final List<BoardToken> tokens;
   /// Flèches de l'étape 1.
@@ -137,6 +143,7 @@ class TacticBoard {
       tokens: [for (final t in (j['tokens'] as List? ?? const [])) BoardToken.fromJson(t as Map<String, dynamic>)],
       arrows: [for (final a in (j['arrows'] as List? ?? const [])) BoardArrow.fromJson(a as Map<String, dynamic>)],
       steps: [for (final s in (j['steps'] as List? ?? const [])) BoardStep.fromJson(s as Map<String, dynamic>)],
+      display: j['display'] as String? ?? 'number',
     );
   }
 
@@ -144,6 +151,7 @@ class TacticBoard {
         'tokens': [for (final t in tokens) t.toJson()],
         'arrows': [for (final a in arrows) a.toJson()],
         if (steps.isNotEmpty) 'steps': [for (final s in steps) s.toJson()],
+        if (display != 'number') 'display': display,
       });
 
   int get stepCount => 1 + steps.length;
@@ -237,6 +245,7 @@ class TacticBoard {
     return TacticBoard(
       tokens: [for (final tk in tokens) tk.copyAt(_travel(tk, k, next, f))],
       arrows: [for (final a in arrowsAt(f > 0.98 ? next : k)) a.copy()],
+      display: display,
     );
   }
 
@@ -445,7 +454,7 @@ double distanceToArrow(Offset p, BoardArrow a, Size size, {bool horizontal = fal
 /// Pion dessiné : rond coloré, texte au centre, rôle en dessous.
 class TokenView extends StatelessWidget {
   const TokenView({super.key, required this.kind, required this.text, this.caption, this.size = 30, this.selected = false,
-      this.angle = 0});
+      this.angle = 0, this.photoPath, this.badge});
 
   final String kind;
   final String text;
@@ -454,6 +463,10 @@ class TokenView extends StatelessWidget {
   final bool selected;
   /// Orientation du matériel, en degrés.
   final double angle;
+  /// Photo du joueur à afficher dans le rond (le texte s'affiche tant qu'elle charge ou hors ligne).
+  final String? photoPath;
+  /// Numéro en pastille sur la photo.
+  final String? badge;
 
   @override
   Widget build(BuildContext context) {
@@ -470,9 +483,37 @@ class TokenView extends StatelessWidget {
           shape: BoxShape.circle,
           border: Border.all(color: selected ? _runColor : Colors.white, width: selected ? 3 : 2),
         ),
-        child: Text(text,
-            maxLines: 1,
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: size * (text.length > 2 ? 0.32 : 0.42))),
+        child: Stack(clipBehavior: Clip.none, alignment: Alignment.center, children: [
+          Text(text,
+              maxLines: 1,
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: size * (text.length > 2 ? 0.32 : 0.42))),
+          if (photoPath != null)
+            Positioned.fill(
+              child: Consumer(builder: (context, ref, _) {
+                final url = ref.watch(photoUrlProvider(photoPath!)).value;
+                return url == null
+                    ? const SizedBox()
+                    : ClipOval(child: Image.network(url, fit: BoxFit.cover, errorBuilder: (_, _, _) => const SizedBox()));
+              }),
+            ),
+          if (badge != null)
+            Positioned(
+              right: -size * 0.22,
+              bottom: -size * 0.18,
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: size * 0.08),
+                constraints: BoxConstraints(minWidth: size * 0.42),
+                decoration: BoxDecoration(
+                  color: kind == 'us' ? tokenUsColor : tokenThemColor,
+                  borderRadius: BorderRadius.circular(size),
+                  border: Border.all(color: Colors.white, width: 1.5),
+                ),
+                child: Text(badge!,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: size * 0.3)),
+              ),
+            ),
+        ]),
       ),
       if (caption != null && caption!.isNotEmpty)
         Container(

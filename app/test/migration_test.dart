@@ -190,4 +190,23 @@ void main() {
     expect(await db.select(db.viewingSlides).get(), isEmpty);
     await db.close();
   });
+
+  test('migration v12 → v13 (mise en page des diapositives)', () async {
+    final file = File('${Directory.systemTemp.createTempSync('perffoot').path}/v12.sqlite');
+    final v13 = AppDatabase(NativeDatabase(file));
+    await v13.customSelect('SELECT 1').get();
+    await v13.close();
+    final raw = sqlite3.open(file.path);
+    raw.execute('ALTER TABLE viewing_slides DROP COLUMN layout');
+    raw.execute("INSERT INTO viewing_slides (id, created_at, updated_at, team_id, session_id, kind, title) "
+        "VALUES ('s1', 'x', 'x', 't1', 'v1', 'text', 'Consignes')");
+    raw.execute('PRAGMA user_version = 12');
+    raw.close();
+
+    final db = AppDatabase(NativeDatabase(file));
+    final s = await db.select(db.viewingSlides).getSingle();
+    expect(s.title, 'Consignes');
+    expect(s.layout, isNull);
+    await db.close();
+  });
 }

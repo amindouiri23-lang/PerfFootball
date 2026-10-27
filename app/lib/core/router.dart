@@ -33,6 +33,7 @@ import '../features/team/player_screens.dart';
 import '../features/tactics/tactic_screens.dart';
 import '../features/tests/test_screens.dart';
 import '../features/analytics/analytics_screen.dart';
+import '../features/viewing/slide_layout_screen.dart';
 import '../features/viewing/viewing_screens.dart';
 import '../features/wellness/wellness_survey_screens.dart';
 import '../features/team/team_form_screen.dart';
@@ -221,7 +222,16 @@ final routerProvider = Provider<GoRouter>((ref) {
                   path: 'viewing',
                   builder: (_, _) => const ViewingListScreen(),
                   routes: [
-                    GoRoute(path: ':vid', builder: (_, s) => ViewingEditorScreen(id: s.pathParameters['vid']!)),
+                    GoRoute(
+                      path: ':vid',
+                      builder: (_, s) => ViewingEditorScreen(id: s.pathParameters['vid']!),
+                      routes: [
+                        GoRoute(
+                          path: 'slide/:sid',
+                          builder: (_, s) => SlideLayoutScreen(sessionId: s.pathParameters['vid']!, slideId: s.pathParameters['sid']!),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
                 GoRoute(
@@ -313,6 +323,7 @@ String? requiredPermission(String location) {
     (RegExp(r'^/team/import$'), 'import.use'),
     (RegExp(r'^/team/tests'), 'tests.view'),
     (RegExp(r'^/team/tactics'), 'tactiques.view'),
+    (RegExp(r'^/team/viewing/[^/]+/slide/'), 'visionnage.edit'),
     (RegExp(r'^/(team/viewing|present)'), 'visionnage.view'),
     (RegExp(r'^/team/injuries/new$'), 'blessures.add'),
     (RegExp(r'^/team/injuries'), 'blessures.view'),

@@ -12,12 +12,29 @@ import 'tactic_equipment.dart';
 // Dessin d'un tableau tactique en image PNG, sans l'afficher : pour l'export d'une tactique et pour les
 // documents PDF (programme de séance, feuille de match). Même rendu que l'écran : terrain, flèches, pions.
 
-/// Texte du pion : numéro du joueur (ou ses initiales), sinon le texte libre du pion.
-String tokenText(BoardToken t, Map<String, Player> players) {
+/// Affichages des pions des joueurs (choix de la tactique).
+const tokenDisplays = {
+  'number': 'Numéro',
+  'initials': 'Initiales',
+  'photo': 'Photo',
+  'photo_number': 'Photo et numéro',
+};
+
+/// Texte du pion selon l'affichage choisi : numéro, ou initiales du prénom et du nom (aussi quand le joueur
+/// n'a pas de numéro, ou pas de photo en mode photo). Pion sans joueur : son texte libre.
+String tokenText(BoardToken t, Map<String, Player> players, [String display = 'number']) {
   final p = players[t.playerId];
-  if (p != null) return p.shirtNumber?.toString() ?? p.initials;
-  return t.label ?? '';
+  if (p == null) return t.label ?? '';
+  return switch (display) {
+    'initials' => p.initials,
+    'photo' => p.initials,
+    _ => p.shirtNumber?.toString() ?? p.initials,
+  };
 }
+
+/// Photo du joueur à montrer dans le pion (modes photo), null sinon ou s'il n'en a pas.
+String? tokenPhoto(BoardToken t, Map<String, Player> players, String display) =>
+    display == 'photo' || display == 'photo_number' ? players[t.playerId]?.photoPath : null;
 
 /// Sous le pion : le nom du joueur (suivi de son rôle s'il en a un), sinon le rôle seul.
 String? tokenCaption(BoardToken t, Map<String, Player> players) {
@@ -109,7 +126,8 @@ void _paintText(Canvas canvas, String s, Offset center, double fontSize, Color c
 Future<Uint8List> renderTacticPng(Tactic t, Map<String, Player> players, {double width = 900, int step = 0}) => renderBoardPng(
       board: TacticBoard.decode(t.board),
       pitch: t.pitch,
-      text: (b) => tokenText(b, players),
+      // Les images exportées montrent le numéro ou les initiales (pas les photos).
+      text: (b) => tokenText(b, players, TacticBoard.decode(t.board).display),
       caption: (b) => tokenCaption(b, players),
       width: width,
       horizontal: true,
