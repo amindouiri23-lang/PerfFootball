@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../data/local_store.dart';
 import '../../data/sync.dart';
 import '../settings.dart';
 import 'steppers.dart';
@@ -27,6 +29,48 @@ class SyncIndicator extends ConsumerWidget {
       tooltip: 'Synchronisation',
       onPressed: () => context.push('/sync'),
       icon: Badge(isLabelVisible: label != null, label: Text(label ?? ''), child: Icon(icon, color: color)),
+    );
+  }
+}
+
+/// Erreur de la base locale elle-même (fichier abîmé), et non du réseau ou du serveur.
+bool _damaged(String? error) =>
+    error != null && (error.contains('malformed') || error.contains('SqliteException(11)') || error.contains('SqliteException(26)'));
+
+/// Efface la copie locale et la recharge depuis le serveur (la session reste ouverte).
+Future<void> _repair(BuildContext context, WidgetRef ref, int pending, {required bool damaged}) async {
+  final ok = await showDialog<bool>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('Réparer les données de cet appareil ?'),
+      content: Text([
+        'Les données enregistrées sur cet appareil seront effacées puis rechargées depuis le serveur. '
+            'Vous restez connecté.',
+        if (pending > 0 && !damaged)
+          '\n\nAttention : $pending modification${pending > 1 ? 's' : ''} pas encore envoyée${pending > 1 ? 's' : ''} '
+              'sera perdue. Synchronisez d\'abord si le réseau le permet.',
+      ].join()),
+      actions: [
+        TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Annuler')),
+        FilledButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Réparer')),
+      ],
+    ),
+  );
+  if (ok != true) return;
+  try {
+    await ref.read(databaseProvider).close();
+  } catch (_) {} // une base abîmée peut refuser de se fermer proprement
+  await deleteLocalStore();
+  if (!reloadApp() && context.mounted) {
+    // Téléphone : la base est recréée au prochain lancement.
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text('Données effacées'),
+        content: const Text('Fermez puis rouvrez PerfFoot : les données seront rechargées depuis le serveur.'),
+        actions: [FilledButton(onPressed: SystemNavigator.pop, child: const Text('Fermer PerfFoot'))],
+      ),
     );
   }
 }
@@ -79,6 +123,22 @@ class SyncScreen extends ConsumerWidget {
           icon: const Icon(Icons.sync),
           label: const Text('Synchroniser maintenant'),
         ),
+        const SizedBox(height: 8),
+        // Copie locale abîmée (« database disk image is malformed ») : on la reconstruit depuis le serveur.
+        OutlinedButton.icon(
+          onPressed: () => _repair(context, ref, pending, damaged: _damaged(status.error)),
+          icon: const Icon(Icons.build_outlined),
+          label: const Text('Réparer les données de cet appareil'),
+        ),
+        if (_damaged(status.error))
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(
+              'Les données enregistrées sur cet appareil sont abîmées. Touchez « Réparer » : elles seront '
+              'effacées puis rechargées depuis le serveur.',
+              style: TextStyle(color: theme.colorScheme.error),
+            ),
+          ),
         const SizedBox(height: 32),
         Text('Paramètres', style: theme.textTheme.titleMedium),
         const SizedBox(height: 12),
