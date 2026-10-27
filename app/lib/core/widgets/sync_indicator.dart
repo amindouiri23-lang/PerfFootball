@@ -34,11 +34,11 @@ class SyncIndicator extends ConsumerWidget {
 }
 
 /// Erreur de la base locale elle-même (fichier abîmé), et non du réseau ou du serveur.
-bool _damaged(String? error) =>
+bool isLocalStoreDamaged(String? error) =>
     error != null && (error.contains('malformed') || error.contains('SqliteException(11)') || error.contains('SqliteException(26)'));
 
 /// Efface la copie locale et la recharge depuis le serveur (la session reste ouverte).
-Future<void> _repair(BuildContext context, WidgetRef ref, int pending, {required bool damaged}) async {
+Future<void> repairLocalStore(BuildContext context, WidgetRef ref, int pending, {required bool damaged}) async {
   final ok = await showDialog<bool>(
     context: context,
     builder: (context) => AlertDialog(
@@ -126,11 +126,11 @@ class SyncScreen extends ConsumerWidget {
         const SizedBox(height: 8),
         // Copie locale abîmée (« database disk image is malformed ») : on la reconstruit depuis le serveur.
         OutlinedButton.icon(
-          onPressed: () => _repair(context, ref, pending, damaged: _damaged(status.error)),
+          onPressed: () => repairLocalStore(context, ref, pending, damaged: isLocalStoreDamaged(status.error)),
           icon: const Icon(Icons.build_outlined),
           label: const Text('Réparer les données de cet appareil'),
         ),
-        if (_damaged(status.error))
+        if (isLocalStoreDamaged(status.error))
           Padding(
             padding: const EdgeInsets.only(top: 8),
             child: Text(

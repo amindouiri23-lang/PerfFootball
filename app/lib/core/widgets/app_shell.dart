@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../data/sync.dart';
 import '../permissions.dart';
 import '../settings.dart';
+import 'sync_indicator.dart' show isLocalStoreDamaged, repairLocalStore;
 import '../../features/auth/auth_repository.dart';
 
 const _destinations = [
@@ -39,9 +40,14 @@ class _AppShellState extends ConsumerState<AppShell> {
   Future<void> _startSession() async {
     final db = ref.read(databaseProvider);
     final userId = ref.read(supabaseProvider).auth.currentUser!.id;
-    if (await db.setting('owner_user_id') != userId) {
-      await db.wipe(keepSettings: deviceSettingKeys);
-      await db.setSetting('owner_user_id', userId);
+    try {
+      if (await db.setting('owner_user_id') != userId) {
+        await db.wipe(keepSettings: deviceSettingKeys);
+        await db.setSetting('owner_user_id', userId);
+      }
+    } catch (_) {
+      // Base locale illisible (abîmée) : la synchronisation ci-dessous échoue à son tour et l'affiche, avec le
+      // bandeau « Réparer ».
     }
     await ref.read(syncControllerProvider.notifier).sync();
   }
@@ -54,6 +60,26 @@ class _AppShellState extends ConsumerState<AppShell> {
     ref.listen(syncControllerProvider, (prev, next) {
       if (next.notice != null && next.notice != prev?.notice) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(next.notice!)));
+      }
+      // Copie locale abîmée : bandeau sur tous les écrans, avec la réparation à portée de main.
+      final damaged = isLocalStoreDamaged(next.error);
+      if (damaged && !isLocalStoreDamaged(prev?.error)) {
+        ScaffoldMessenger.of(context).showMaterialBanner(MaterialBanner(
+          leading: const Icon(Icons.warning_amber_rounded),
+          content: const Text('Les données enregistrées sur cet appareil sont abîmées. Réparez-les : elles seront '
+              'rechargées depuis le serveur (rien n\'est perdu, tout a été envoyé).'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+                repairLocalStore(context, ref, ref.read(pendingCountProvider).value ?? 0, damaged: true);
+              },
+              child: const Text('Réparer'),
+            ),
+          ],
+        ));
+      } else if (!damaged && isLocalStoreDamaged(prev?.error)) {
+        ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
       }
     });
     // Onglets visibles selon le rôle : Accueil et Profil toujours.

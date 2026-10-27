@@ -21,14 +21,12 @@ Future<bool> claimLocalStore() async {
   return granted.future;
 }
 
-Future<void> deleteLocalStore() {
-  final done = Completer<void>();
-  final req = web.window.indexedDB.deleteDatabase('perffoot');
-  req.onsuccess = ((web.Event _) => done.complete()).toJS;
-  req.onerror = ((web.Event _) => done.completeError(StateError('Effacement refusé par le navigateur'))).toJS;
-  // Bloqué tant qu'un autre onglet garde la base ouverte : l'effacement attend sa fermeture.
-  req.onblocked = ((web.Event _) {}).toJS;
-  return done.future;
+/// Repart sur une base neuve : la base abîmée est encore ouverte par la page (son effacement serait mis en
+/// attente par le navigateur) ; elle est donc mise de côté et effacée au prochain démarrage (connection_web.dart).
+Future<void> deleteLocalStore() async {
+  final storage = web.window.localStorage;
+  storage.setItem('perffoot-db-trash', storage.getItem('perffoot-db') ?? 'perffoot');
+  storage.setItem('perffoot-db', 'perffoot-${DateTime.now().millisecondsSinceEpoch}');
 }
 
 bool reloadApp() {
