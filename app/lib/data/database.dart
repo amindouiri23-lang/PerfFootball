@@ -333,6 +333,8 @@ class ViewingSlides extends Table with SyncColumns {
   TextColumn get body => text().nullable()();
   TextColumn get tacticId => text().nullable()();
   TextColumn get videoUrl => text().nullable()();
+  /// Mise en page (JSON) : position, taille et style du texte, images posées sur la diapositive.
+  TextColumn get layout => text().nullable()();
 }
 
 @DriftDatabase(tables: [
@@ -345,7 +347,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? openConnection());
 
   @override
-  int get schemaVersion => 12;
+  int get schemaVersion => 13;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -451,6 +453,11 @@ class AppDatabase extends _$AppDatabase {
             await m.alterTable(TableMigration(matchEvents));
             await m.createTable(viewingSessions);
             await m.createTable(viewingSlides);
+          }
+          if (from < 13 && from >= 12) {
+            // v13 : mise en page des diapositives (la table créée en v12 l'a déjà).
+            final names = {for (final c in await customSelect('PRAGMA table_info(viewing_slides)').get()) c.read<String>('name')};
+            if (!names.contains('layout')) await m.addColumn(viewingSlides, viewingSlides.layout);
           }
         },
       );

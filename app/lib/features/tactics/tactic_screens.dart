@@ -165,7 +165,7 @@ class _BoardViewState extends State<BoardView> {
   /// Écart entre le doigt et le centre du pion saisi : le pion ne saute pas sous le doigt.
   Offset _grab = Offset.zero;
 
-  String _text(BoardToken t) => tokenText(t, widget.players);
+  String _text(BoardToken t) => tokenText(t, widget.players, widget.board.display);
 
   String? _caption(BoardToken t) => tokenCaption(t, widget.players);
 
@@ -277,6 +277,10 @@ class _BoardViewState extends State<BoardView> {
                             caption: widget.showCaptions ? _caption(t) : null,
                             size: ts,
                             angle: t.angle,
+                            photoPath: tokenPhoto(t, widget.players, widget.board.display),
+                            badge: widget.board.display == 'photo_number' && tokenPhoto(t, widget.players, 'photo_number') != null
+                                ? widget.players[t.playerId]?.shirtNumber?.toString()
+                                : null,
                           ),
                         ),
                       ),
@@ -564,6 +568,18 @@ class _TacticEditorScreenState extends ConsumerState<TacticEditorScreen> with Si
                   label: const Text('Ballon'),
                   onPressed: () => _change(() => board.tokens.add(BoardToken(id: 'ball', kind: 'ball', x: 0.5, y: 0.5))),
                 ),
+              PopupMenuButton<String>(
+                tooltip: 'Affichage des joueurs',
+                initialValue: board.display,
+                onSelected: (d) => _change(() => board.display = d),
+                itemBuilder: (_) => [
+                  for (final e in tokenDisplays.entries) CheckedPopupMenuItem(value: e.key, checked: board.display == e.key, child: Text(e.value)),
+                ],
+                child: Chip(
+                  avatar: const Icon(Icons.badge_outlined, size: 18),
+                  label: Text('Joueurs : ${tokenDisplays[board.display] ?? 'Numéro'}'),
+                ),
+              ),
               ActionChip(
                 avatar: const Icon(Icons.grid_view, size: 18),
                 label: const Text('Dispositions'),

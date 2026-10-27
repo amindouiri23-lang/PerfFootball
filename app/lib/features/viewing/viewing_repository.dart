@@ -96,25 +96,34 @@ class ViewingRepository {
   }
 
   /// Nouvelle diapositive, en fin de présentation.
-  Future<void> addSlide(ViewingSession v, {required String kind, String? title, String? body, String? tacticId, String? videoUrl}) async {
+  Future<String> addSlide(ViewingSession v, {required String kind, String? title, String? body, String? tacticId, String? videoUrl}) async {
     final last = await (_db.selectOnly(_db.viewingSlides)
           ..addColumns([_db.viewingSlides.sortOrder.max()])
           ..where(_db.viewingSlides.sessionId.equals(v.id) & _db.viewingSlides.deleted.equals(false)))
         .map((r) => r.read(_db.viewingSlides.sortOrder.max()))
         .getSingleOrNull();
     final now = nowIso();
+    final id = _uuid.v4();
     await _db.into(_db.viewingSlides).insert(ViewingSlidesCompanion.insert(
-          id: _uuid.v4(), teamId: v.teamId, sessionId: v.id, sortOrder: Value((last ?? -1) + 1), kind: kind,
+          id: id, teamId: v.teamId, sessionId: v.id, sortOrder: Value((last ?? -1) + 1), kind: kind,
           title: Value(title), body: Value(body), tacticId: Value(tacticId), videoUrl: Value(videoUrl),
           createdAt: now, updatedAt: now, isDirty: const Value(true),
         ));
     _sync();
+    return id;
   }
 
   Future<void> updateSlide(String id, {String? title, String? body, String? tacticId, String? videoUrl}) async {
     await (_db.update(_db.viewingSlides)..where((s) => s.id.equals(id))).write(ViewingSlidesCompanion(
           title: Value(title), body: Value(body), tacticId: Value(tacticId), videoUrl: Value(videoUrl),
           updatedAt: Value(nowIso()), isDirty: const Value(true)));
+    _sync();
+  }
+
+  /// Mise en page (position et style du texte, images) d'une diapositive.
+  Future<void> updateLayout(String id, String layout) async {
+    await (_db.update(_db.viewingSlides)..where((s) => s.id.equals(id)))
+        .write(ViewingSlidesCompanion(layout: Value(layout), updatedAt: Value(nowIso()), isDirty: const Value(true)));
     _sync();
   }
 

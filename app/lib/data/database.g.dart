@@ -18264,6 +18264,15 @@ class $ViewingSlidesTable extends ViewingSlides
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _layoutMeta = const VerificationMeta('layout');
+  @override
+  late final GeneratedColumn<String> layout = GeneratedColumn<String>(
+    'layout',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -18280,6 +18289,7 @@ class $ViewingSlidesTable extends ViewingSlides
     body,
     tacticId,
     videoUrl,
+    layout,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -18389,6 +18399,12 @@ class $ViewingSlidesTable extends ViewingSlides
         videoUrl.isAcceptableOrUnknown(data['video_url']!, _videoUrlMeta),
       );
     }
+    if (data.containsKey('layout')) {
+      context.handle(
+        _layoutMeta,
+        layout.isAcceptableOrUnknown(data['layout']!, _layoutMeta),
+      );
+    }
     return context;
   }
 
@@ -18454,6 +18470,10 @@ class $ViewingSlidesTable extends ViewingSlides
         DriftSqlType.string,
         data['${effectivePrefix}video_url'],
       ),
+      layout: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}layout'],
+      ),
     );
   }
 
@@ -18480,6 +18500,9 @@ class ViewingSlide extends DataClass implements Insertable<ViewingSlide> {
   final String? body;
   final String? tacticId;
   final String? videoUrl;
+
+  /// Mise en page (JSON) : position, taille et style du texte, images posées sur la diapositive.
+  final String? layout;
   const ViewingSlide({
     required this.id,
     required this.createdAt,
@@ -18495,6 +18518,7 @@ class ViewingSlide extends DataClass implements Insertable<ViewingSlide> {
     this.body,
     this.tacticId,
     this.videoUrl,
+    this.layout,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -18523,6 +18547,9 @@ class ViewingSlide extends DataClass implements Insertable<ViewingSlide> {
     if (!nullToAbsent || videoUrl != null) {
       map['video_url'] = Variable<String>(videoUrl);
     }
+    if (!nullToAbsent || layout != null) {
+      map['layout'] = Variable<String>(layout);
+    }
     return map;
   }
 
@@ -18550,6 +18577,9 @@ class ViewingSlide extends DataClass implements Insertable<ViewingSlide> {
       videoUrl: videoUrl == null && nullToAbsent
           ? const Value.absent()
           : Value(videoUrl),
+      layout: layout == null && nullToAbsent
+          ? const Value.absent()
+          : Value(layout),
     );
   }
 
@@ -18573,6 +18603,7 @@ class ViewingSlide extends DataClass implements Insertable<ViewingSlide> {
       body: serializer.fromJson<String?>(json['body']),
       tacticId: serializer.fromJson<String?>(json['tacticId']),
       videoUrl: serializer.fromJson<String?>(json['videoUrl']),
+      layout: serializer.fromJson<String?>(json['layout']),
     );
   }
   @override
@@ -18593,6 +18624,7 @@ class ViewingSlide extends DataClass implements Insertable<ViewingSlide> {
       'body': serializer.toJson<String?>(body),
       'tacticId': serializer.toJson<String?>(tacticId),
       'videoUrl': serializer.toJson<String?>(videoUrl),
+      'layout': serializer.toJson<String?>(layout),
     };
   }
 
@@ -18611,6 +18643,7 @@ class ViewingSlide extends DataClass implements Insertable<ViewingSlide> {
     Value<String?> body = const Value.absent(),
     Value<String?> tacticId = const Value.absent(),
     Value<String?> videoUrl = const Value.absent(),
+    Value<String?> layout = const Value.absent(),
   }) => ViewingSlide(
     id: id ?? this.id,
     createdAt: createdAt ?? this.createdAt,
@@ -18628,6 +18661,7 @@ class ViewingSlide extends DataClass implements Insertable<ViewingSlide> {
     body: body.present ? body.value : this.body,
     tacticId: tacticId.present ? tacticId.value : this.tacticId,
     videoUrl: videoUrl.present ? videoUrl.value : this.videoUrl,
+    layout: layout.present ? layout.value : this.layout,
   );
   ViewingSlide copyWithCompanion(ViewingSlidesCompanion data) {
     return ViewingSlide(
@@ -18647,6 +18681,7 @@ class ViewingSlide extends DataClass implements Insertable<ViewingSlide> {
       body: data.body.present ? data.body.value : this.body,
       tacticId: data.tacticId.present ? data.tacticId.value : this.tacticId,
       videoUrl: data.videoUrl.present ? data.videoUrl.value : this.videoUrl,
+      layout: data.layout.present ? data.layout.value : this.layout,
     );
   }
 
@@ -18666,7 +18701,8 @@ class ViewingSlide extends DataClass implements Insertable<ViewingSlide> {
           ..write('title: $title, ')
           ..write('body: $body, ')
           ..write('tacticId: $tacticId, ')
-          ..write('videoUrl: $videoUrl')
+          ..write('videoUrl: $videoUrl, ')
+          ..write('layout: $layout')
           ..write(')'))
         .toString();
   }
@@ -18687,6 +18723,7 @@ class ViewingSlide extends DataClass implements Insertable<ViewingSlide> {
     body,
     tacticId,
     videoUrl,
+    layout,
   );
   @override
   bool operator ==(Object other) =>
@@ -18705,7 +18742,8 @@ class ViewingSlide extends DataClass implements Insertable<ViewingSlide> {
           other.title == this.title &&
           other.body == this.body &&
           other.tacticId == this.tacticId &&
-          other.videoUrl == this.videoUrl);
+          other.videoUrl == this.videoUrl &&
+          other.layout == this.layout);
 }
 
 class ViewingSlidesCompanion extends UpdateCompanion<ViewingSlide> {
@@ -18723,6 +18761,7 @@ class ViewingSlidesCompanion extends UpdateCompanion<ViewingSlide> {
   final Value<String?> body;
   final Value<String?> tacticId;
   final Value<String?> videoUrl;
+  final Value<String?> layout;
   final Value<int> rowid;
   const ViewingSlidesCompanion({
     this.id = const Value.absent(),
@@ -18739,6 +18778,7 @@ class ViewingSlidesCompanion extends UpdateCompanion<ViewingSlide> {
     this.body = const Value.absent(),
     this.tacticId = const Value.absent(),
     this.videoUrl = const Value.absent(),
+    this.layout = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   ViewingSlidesCompanion.insert({
@@ -18756,6 +18796,7 @@ class ViewingSlidesCompanion extends UpdateCompanion<ViewingSlide> {
     this.body = const Value.absent(),
     this.tacticId = const Value.absent(),
     this.videoUrl = const Value.absent(),
+    this.layout = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        createdAt = Value(createdAt),
@@ -18778,6 +18819,7 @@ class ViewingSlidesCompanion extends UpdateCompanion<ViewingSlide> {
     Expression<String>? body,
     Expression<String>? tacticId,
     Expression<String>? videoUrl,
+    Expression<String>? layout,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -18795,6 +18837,7 @@ class ViewingSlidesCompanion extends UpdateCompanion<ViewingSlide> {
       if (body != null) 'body': body,
       if (tacticId != null) 'tactic_id': tacticId,
       if (videoUrl != null) 'video_url': videoUrl,
+      if (layout != null) 'layout': layout,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -18814,6 +18857,7 @@ class ViewingSlidesCompanion extends UpdateCompanion<ViewingSlide> {
     Value<String?>? body,
     Value<String?>? tacticId,
     Value<String?>? videoUrl,
+    Value<String?>? layout,
     Value<int>? rowid,
   }) {
     return ViewingSlidesCompanion(
@@ -18831,6 +18875,7 @@ class ViewingSlidesCompanion extends UpdateCompanion<ViewingSlide> {
       body: body ?? this.body,
       tacticId: tacticId ?? this.tacticId,
       videoUrl: videoUrl ?? this.videoUrl,
+      layout: layout ?? this.layout,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -18880,6 +18925,9 @@ class ViewingSlidesCompanion extends UpdateCompanion<ViewingSlide> {
     if (videoUrl.present) {
       map['video_url'] = Variable<String>(videoUrl.value);
     }
+    if (layout.present) {
+      map['layout'] = Variable<String>(layout.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -18903,6 +18951,7 @@ class ViewingSlidesCompanion extends UpdateCompanion<ViewingSlide> {
           ..write('body: $body, ')
           ..write('tacticId: $tacticId, ')
           ..write('videoUrl: $videoUrl, ')
+          ..write('layout: $layout, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -27866,6 +27915,7 @@ typedef $$ViewingSlidesTableCreateCompanionBuilder =
       Value<String?> body,
       Value<String?> tacticId,
       Value<String?> videoUrl,
+      Value<String?> layout,
       Value<int> rowid,
     });
 typedef $$ViewingSlidesTableUpdateCompanionBuilder =
@@ -27884,6 +27934,7 @@ typedef $$ViewingSlidesTableUpdateCompanionBuilder =
       Value<String?> body,
       Value<String?> tacticId,
       Value<String?> videoUrl,
+      Value<String?> layout,
       Value<int> rowid,
     });
 
@@ -27963,6 +28014,11 @@ class $$ViewingSlidesTableFilterComposer
 
   ColumnFilters<String> get videoUrl => $composableBuilder(
     column: $table.videoUrl,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get layout => $composableBuilder(
+    column: $table.layout,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -28045,6 +28101,11 @@ class $$ViewingSlidesTableOrderingComposer
     column: $table.videoUrl,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get layout => $composableBuilder(
+    column: $table.layout,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$ViewingSlidesTableAnnotationComposer
@@ -28099,6 +28160,9 @@ class $$ViewingSlidesTableAnnotationComposer
 
   GeneratedColumn<String> get videoUrl =>
       $composableBuilder(column: $table.videoUrl, builder: (column) => column);
+
+  GeneratedColumn<String> get layout =>
+      $composableBuilder(column: $table.layout, builder: (column) => column);
 }
 
 class $$ViewingSlidesTableTableManager
@@ -28146,6 +28210,7 @@ class $$ViewingSlidesTableTableManager
                 Value<String?> body = const Value.absent(),
                 Value<String?> tacticId = const Value.absent(),
                 Value<String?> videoUrl = const Value.absent(),
+                Value<String?> layout = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ViewingSlidesCompanion(
                 id: id,
@@ -28162,6 +28227,7 @@ class $$ViewingSlidesTableTableManager
                 body: body,
                 tacticId: tacticId,
                 videoUrl: videoUrl,
+                layout: layout,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -28180,6 +28246,7 @@ class $$ViewingSlidesTableTableManager
                 Value<String?> body = const Value.absent(),
                 Value<String?> tacticId = const Value.absent(),
                 Value<String?> videoUrl = const Value.absent(),
+                Value<String?> layout = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ViewingSlidesCompanion.insert(
                 id: id,
@@ -28196,6 +28263,7 @@ class $$ViewingSlidesTableTableManager
                 body: body,
                 tacticId: tacticId,
                 videoUrl: videoUrl,
+                layout: layout,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

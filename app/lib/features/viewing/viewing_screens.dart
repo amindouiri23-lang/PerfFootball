@@ -18,6 +18,8 @@ import '../tactics/tactic_screens.dart' show BoardView, TacticThumbnail;
 import '../team/team_filter.dart';
 import '../team/team_repository.dart';
 import '../team/team_screen.dart' show NoTeamScreen;
+import 'slide_layout.dart';
+import 'slide_stage.dart';
 import 'video_view.dart';
 import 'viewing_export.dart';
 import 'viewing_repository.dart';
@@ -242,6 +244,7 @@ class ViewingEditorScreen extends ConsumerWidget {
                   itemBuilder: (context, i) {
                     final s = slides[i];
                     final t = tactics[s.tacticId];
+                    final images = SlideLayout.decode(s.layout).images.length;
                     return ListTile(
                       key: ValueKey(s.id),
                       leading: s.kind == 'tactic' && t != null
@@ -249,18 +252,28 @@ class ViewingEditorScreen extends ConsumerWidget {
                           : CircleAvatar(child: Icon(_slideIcons[s.kind])),
                       title: Text('${i + 1}. ${slideTitle(s, t)}'),
                       subtitle: Text(
-                        switch (s.kind) {
-                          'tactic' => [
-                              'Tactique',
-                              if (t != null && TacticBoard.decode(t.board).animated) 'animée',
-                              if (s.body != null) s.body!,
-                            ].join(' · '),
-                          'video' => 'Vidéo · ${s.videoUrl}',
-                          _ => s.body ?? 'Texte',
-                        },
+                        [
+                          switch (s.kind) {
+                            'tactic' => [
+                                'Tactique',
+                                if (t != null && TacticBoard.decode(t.board).animated) 'animée',
+                                if (s.body != null) s.body!,
+                              ].join(' · '),
+                            'video' => 'Vidéo · ${s.videoUrl}',
+                            _ => s.body ?? (images > 0 ? 'Images' : 'Texte'),
+                          },
+                          if (images > 0) '$images image${images > 1 ? 's' : ''}',
+                        ].join(' · '),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
+                      trailing: !editable
+                          ? null
+                          : IconButton(
+                              tooltip: 'Mise en page et images',
+                              icon: const Icon(Icons.dashboard_customize_outlined),
+                              onPressed: () => context.go('/team/viewing/$id/slide/${s.id}'),
+                            ),
                       onTap: editable ? () => showSlideSheet(context, ref, v, kind: s.kind, slide: s) : null,
                     );
                   },
@@ -281,16 +294,27 @@ class ViewingEditorScreen extends ConsumerWidget {
               leading: Icon(_slideIcons[e.key]),
               title: Text(e.value),
               subtitle: Text(switch (e.key) {
-                'text' => 'Un titre et un texte, comme une diapositive',
+                'text' => 'Un titre et un texte, à placer où vous voulez',
                 'tactic' => 'Une tactique de l\'équipe, animée si elle a plusieurs étapes',
                 _ => 'Un lien YouTube, Vimeo ou un fichier vidéo',
               }),
               onTap: () => Navigator.of(context).pop(e.key),
             ),
+          ListTile(
+            leading: const Icon(Icons.photo_library_outlined),
+            title: const Text('Images'),
+            subtitle: const Text('Une ou plusieurs images, à placer et redimensionner'),
+            onTap: () => Navigator.of(context).pop('images'),
+          ),
         ]),
       ),
     );
-    if (kind != null && context.mounted) await showSlideSheet(context, ref, v, kind: kind);
+    if (kind == 'images') {
+      final slideId = await ref.read(viewingRepositoryProvider).addSlide(v, kind: 'text');
+      if (context.mounted) context.go('/team/viewing/${v.id}/slide/$slideId');
+    } else if (kind != null && context.mounted) {
+      await showSlideSheet(context, ref, v, kind: kind);
+    }
   }
 }
 
@@ -515,7 +539,24 @@ class _ViewingPresentScreenState extends ConsumerState<ViewingPresentScreen> {
                         controller: _pages,
                         itemCount: count,
                         onPageChanged: (i) => setState(() => _index = i),
-                        itemBuilder: (context, i) => _SlideView(slide: slides[i], tactic: tactics[slides[i].tacticId], players: players),
+                        itemBuilder: (context, i) {
+                          final s = slides[i];
+                          final t = tactics[s.tacticId];
+                          return Center(
+                            child: SlideStage(
+                              slide: s,
+                              layout: SlideLayout.decode(s.layout),
+                              title: slideTitle(s, t),
+                              content: switch (s.kind) {
+                                'tactic' => t == null
+                                    ? const Center(child: Text('Tactique supprimée.'))
+                                    : _AnimatedTactic(tactic: t, players: players),
+                                'video' => _Video(url: s.videoUrl ?? ''),
+                                _ => null,
+                              },
+                            ),
+                          );
+                        },
                       ),
               ),
               Padding(
@@ -539,62 +580,6 @@ class _ViewingPresentScreenState extends ConsumerState<ViewingPresentScreen> {
         ),
       ),
     );
-  }
-}
-
-class _SlideView extends StatelessWidget {
-  const _SlideView({required this.slide, required this.tactic, required this.players});
-
-  final ViewingSlide slide;
-  final Tactic? tactic;
-  final Map<String, Player> players;
-
-  @override
-  Widget build(BuildContext context) {
-    final title = slideTitle(slide, tactic);
-    return LayoutBuilder(builder: (context, c) {
-      final big = c.maxWidth > 700;
-      final titleStyle = TextStyle(fontSize: big ? 34 : 24, fontWeight: FontWeight.bold, color: Colors.white);
-      final bodyStyle = TextStyle(fontSize: big ? 22 : 16, color: Colors.white70, height: 1.4);
-      return Padding(
-        padding: EdgeInsets.symmetric(horizontal: big ? 48 : 16, vertical: 8),
-        child: switch (slide.kind) {
-          'tactic' => Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-              Text(title, style: titleStyle, textAlign: TextAlign.center),
-              if (slide.body != null) Text(slide.body!, style: bodyStyle, textAlign: TextAlign.center),
-              const SizedBox(height: 12),
-              Expanded(
-                child: tactic == null
-                    ? const Center(child: Text('Tactique supprimée.'))
-                    : _AnimatedTactic(tactic: tactic!, players: players),
-              ),
-            ]),
-          'video' => Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-              Text(title, style: titleStyle, textAlign: TextAlign.center),
-              if (slide.body != null) Text(slide.body!, style: bodyStyle, textAlign: TextAlign.center),
-              const SizedBox(height: 12),
-              Expanded(child: _Video(url: slide.videoUrl ?? '')),
-            ]),
-          _ => SingleChildScrollView(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: c.maxHeight - 16),
-                child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  if (slide.title != null) Text(slide.title!, style: titleStyle.copyWith(fontSize: big ? 44 : 28)),
-                  if (slide.title != null && slide.body != null) const SizedBox(height: 24),
-                  for (final line in (slide.body ?? '').split('\n').where((l) => l.trim().isNotEmpty))
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 10),
-                      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        Text('•  ', style: bodyStyle.copyWith(color: const Color(0xFFE30613), fontWeight: FontWeight.bold)),
-                        Expanded(child: Text(line.trim().replaceFirst(RegExp(r'^[-•*]\s*'), ''), style: bodyStyle.copyWith(color: Colors.white))),
-                      ]),
-                    ),
-                ]),
-              ),
-            ),
-        },
-      );
-    });
   }
 }
 
