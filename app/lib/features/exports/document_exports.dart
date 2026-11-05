@@ -159,6 +159,11 @@ class DocumentExports {
     final team = _teamName(ref, m.teamId);
     final venue = m.homeAway == 'A' ? '${m.opponent} - $team' : '$team - ${m.opponent}';
 
+    // Changements : entrant (playerId) et sortant (assistPlayerId), par minute.
+    final changes = events.where((e) => e.type == 'substitution' && e.playerId != null && e.assistPlayerId != null).toList();
+    final cameIn = {for (final e in changes) e.playerId!: e};
+    final wentOut = {for (final e in changes) e.assistPlayerId!: e};
+
     String eventLine(MatchEvent e) => switch (e.type) {
           'goal' => 'But de ${name(e.playerId)}${e.assistPlayerId == null ? '' : ' (passe de ${name(e.assistPlayerId)})'}',
           'substitution' => 'Entrée de ${name(e.playerId)}${e.assistPlayerId == null ? '' : ', sortie de ${name(e.assistPlayerId)}'}',
@@ -193,13 +198,38 @@ class DocumentExports {
         if (starters.isEmpty && others.isEmpty)
           pdfText('Aucun titulaire saisi.', color: pdfGrey, italic: true)
         else
-          pdfTable(const ['N°', 'Joueur', 'Poste'], [
+          pdfTable(const ['N°', 'Joueur', 'Poste', 'Changement'], [
             for (final r in [...starters, ...others])
-              [number(r.playerId), name(r.playerId), slots != null && r.slot != null && r.slot! < slots.length ? slots[r.slot!].$1 : ''],
+              [
+                number(r.playerId),
+                name(r.playerId),
+                slots != null && r.slot != null && r.slot! < slots.length ? slots[r.slot!].$1 : '',
+                switch (wentOut[r.playerId]) {
+                  final MatchEvent e => "Remplacé à ${e.minute}' par ${name(e.playerId)}",
+                  _ => '',
+                },
+              ],
           ]),
         if (subs.isNotEmpty) ...[
           pdfSection('Remplaçants'),
-          pdfTable(const ['N°', 'Joueur'], [for (final r in subs) [number(r.playerId), name(r.playerId)]]),
+          pdfTable(const ['N°', 'Joueur', 'Changement'], [
+            for (final r in subs)
+              [
+                number(r.playerId),
+                name(r.playerId),
+                switch (cameIn[r.playerId]) {
+                  final MatchEvent e => "Entré à ${e.minute}' à la place de ${name(e.assistPlayerId)}",
+                  _ => 'Non entré',
+                },
+              ],
+          ]),
+        ],
+        if (changes.isNotEmpty) ...[
+          pdfSection('Changements · ${changes.length}'),
+          pdfTable(const ['Minute', 'Entre', 'Sort'], [
+            for (final e in changes)
+              ["${e.minute}'", '${number(e.playerId!)} ${name(e.playerId)}'.trim(), '${number(e.assistPlayerId!)} ${name(e.assistPlayerId)}'.trim()],
+          ]),
         ],
         if (absent.isNotEmpty) ...[
           pdfSection('Absents'),
