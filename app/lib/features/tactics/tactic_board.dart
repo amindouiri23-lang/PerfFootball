@@ -483,10 +483,13 @@ class TokenView extends StatelessWidget {
           shape: BoxShape.circle,
           border: Border.all(color: selected ? _runColor : Colors.white, width: selected ? 3 : 2),
         ),
-        child: Stack(clipBehavior: Clip.none, alignment: Alignment.center, children: [
-          Text(text,
-              maxLines: 1,
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: size * (text.length > 2 ? 0.32 : 0.42))),
+        // Le cadre occupe tout le rond : la photo le remplit entièrement.
+        child: Stack(clipBehavior: Clip.none, fit: StackFit.expand, children: [
+          Center(
+            child: Text(text,
+                maxLines: 1,
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: size * (text.length > 2 ? 0.32 : 0.42))),
+          ),
           if (photoPath != null)
             Positioned.fill(
               child: Consumer(builder: (context, ref, _) {
