@@ -126,6 +126,7 @@ class BoardView extends StatefulWidget {
     this.horizontal = false,
     this.showCaptions = true,
     this.arrowMode,
+    this.selected = const {},
     this.onTokenMoved,
     this.onTokenMoveEnd,
     this.onTokenTap,
@@ -145,6 +146,8 @@ class BoardView extends StatefulWidget {
   final bool showCaptions;
   /// 'run' ou 'ball' : un glissé sur le terrain trace une flèche (les pions ne bougent plus).
   final String? arrowMode;
+  /// Pions sélectionnés (déplacés ensemble), entourés en jaune.
+  final Set<String> selected;
   /// Nouvelle position du pion pendant le glissé, en fraction du terrain.
   final void Function(BoardToken token, Offset position)? onTokenMoved;
   final VoidCallback? onTokenMoveEnd;
@@ -276,6 +279,7 @@ class _BoardViewState extends State<BoardView> {
                             text: _text(t),
                             caption: widget.showCaptions ? _caption(t) : null,
                             size: ts,
+                            selected: widget.selected.contains(t.id),
                             angle: t.angle,
                             photoPath: tokenPhoto(t, widget.players, widget.board.display),
                             badge: widget.board.display == 'photo_number' && tokenPhoto(t, widget.players, 'photo_number') != null
@@ -315,6 +319,9 @@ class _TacticEditorScreenState extends ConsumerState<TacticEditorScreen> with Si
   TacticBoard? _board;
   final List<String> _undo = [];
   String? _arrowMode;
+  /// Sélection multiple : toucher un pion le sélectionne, en glisser un déplace tous les sélectionnés.
+  bool _selectMode = false;
+  final Set<String> _selected = {};
   /// Étape modifiée (0 = étape 1).
   late int _step = widget.initialStep;
   /// Zoom du terrain ; « Déplacer » active le pincement et le glissé de la vue (sinon le doigt bouge les pions).
@@ -487,13 +494,30 @@ class _TacticEditorScreenState extends ConsumerState<TacticEditorScreen> with Si
                   _dragging = true;
                   _snapshot();
                 }
-                setState(() => board.setPosition(token, _step, p));
+                setState(() {
+                  if (!_selected.contains(token.id) || _selected.length < 2) {
+                    board.setPosition(token, _step, p);
+                    return;
+                  }
+                  final group = [for (final g in board.tokens) if (_selected.contains(g.id)) g];
+                  final from = [for (final g in group) board.positionAt(g, _step)];
+                  var d = p - board.positionAt(token, _step);
+                  for (final f in from) {
+                    d = Offset(d.dx.clamp(-f.dx, 1 - f.dx), d.dy.clamp(-f.dy, 1 - f.dy));
+                  }
+                  for (var i = 0; i < group.length; i++) {
+                    board.setPosition(group[i], _step, from[i] + d);
+                  }
+                });
               },
               onTokenMoveEnd: () {
                 _dragging = false;
                 _save();
               },
-              onTokenTap: (token) => _editToken(token, players),
+              selected: _selected,
+              onTokenTap: (token) => _selectMode
+                  ? setState(() => _selected.contains(token.id) ? _selected.remove(token.id) : _selected.add(token.id))
+                  : _editToken(token, players),
               onArrowDrawn: (a) => _change(() => board.addArrow(_step, a)),
               onArrowTap: _arrowActions,
               onArrowBent: (a, through) {
@@ -594,14 +618,40 @@ class _TacticEditorScreenState extends ConsumerState<TacticEditorScreen> with Si
                 avatar: const Icon(Icons.trending_up, size: 18),
                 label: const Text('Course'),
                 selected: _arrowMode == 'run',
-                onSelected: (v) => setState(() => _arrowMode = v ? 'run' : null),
+                onSelected: (v) => setState(() {
+                  _arrowMode = v ? 'run' : null;
+                  if (v) _selectMode = false;
+                }),
               ),
               FilterChip(
                 avatar: const Icon(Icons.more_horiz, size: 18),
                 label: const Text('Ballon →'),
                 selected: _arrowMode == 'ball',
-                onSelected: (v) => setState(() => _arrowMode = v ? 'ball' : null),
+                onSelected: (v) => setState(() {
+                  _arrowMode = v ? 'ball' : null;
+                  if (v) _selectMode = false;
+                }),
               ),
+              FilterChip(
+                avatar: const Icon(Icons.select_all, size: 18),
+                label: Text(_selected.isEmpty ? 'Sélection multiple' : 'Sélection (${_selected.length})'),
+                tooltip: 'Touchez les pions à déplacer ensemble, puis glissez l\'un d\'eux',
+                selected: _selectMode,
+                onSelected: (v) => setState(() {
+                  _selectMode = v;
+                  if (v) {
+                    _arrowMode = null;
+                  } else {
+                    _selected.clear();
+                  }
+                }),
+              ),
+              if (_selected.isNotEmpty)
+                ActionChip(
+                  avatar: const Icon(Icons.deselect, size: 18),
+                  label: const Text('Tout désélectionner'),
+                  onPressed: () => setState(_selected.clear),
+                ),
               ActionChip(
                 avatar: const Icon(Icons.flip, size: 18),
                 label: const Text('Symétrie'),

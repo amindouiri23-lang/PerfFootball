@@ -49,6 +49,9 @@ Future<Uint8List> renderBoardPng({
   required String pitch,
   required String Function(BoardToken) text,
   required String? Function(BoardToken) caption,
+  /// Lignes fléchées sous un pion, à la place de la légende : flèche rouge vers le bas (joueur sorti) ou
+  /// verte vers le haut (joueur entré).
+  List<({bool out, String text})> Function(BoardToken)? changes,
   double width = 900,
   /// Diamètre d'un pion, en fraction de la largeur du terrain (68 m) ; plus grand pour une composition.
   double tokenSize = 0.06,
@@ -82,6 +85,11 @@ Future<Uint8List> renderBoardPng({
     if (label.isNotEmpty) {
       _paintText(canvas, label, c, ts * (label.length > 2 ? 0.32 : 0.42), Colors.white, bold: true);
     }
+    final lines = changes?.call(t) ?? const [];
+    if (lines.isNotEmpty) {
+      _paintChanges(canvas, lines, c, r + 2, ts * 0.3, ts * 4, size.height);
+      continue;
+    }
     final cap = caption(t);
     if (cap != null && cap.isNotEmpty) {
       final tp = _layout(cap, ts * 0.3, Colors.white, maxWidth: ts * 4);
@@ -97,6 +105,40 @@ Future<Uint8List> renderBoardPng({
   final image = await recorder.endRecording().toImage(size.width.round(), size.height.round());
   final data = await image.toByteData(format: ui.ImageByteFormat.png);
   return data!.buffer.asUint8List();
+}
+
+/// Cartouche sous le pion de centre [c] (au-dessus s'il sortirait du terrain, haut [bottom]) : une ligne par
+/// joueur, précédée de sa flèche.
+void _paintChanges(Canvas canvas, List<({bool out, String text})> lines, Offset c, double gap, double fontSize, double maxWidth,
+    double bottom) {
+  final arrow = fontSize * 0.9;
+  final tps = [for (final l in lines) _layout(l.text, fontSize, l.out ? Colors.white70 : Colors.white, maxWidth: maxWidth - arrow - 10)];
+  final w = tps.map((tp) => tp.width).reduce(math.max) + arrow + 10;
+  final h = tps.fold(0.0, (sum, tp) => sum + tp.height) + 4;
+  final below = c.dy + gap + h <= bottom;
+  final box = Rect.fromLTWH(c.dx - w / 2, below ? c.dy + gap : c.dy - gap - h, w, h);
+  canvas.drawRRect(RRect.fromRectAndRadius(box, const Radius.circular(4)), Paint()..color = Colors.black.withValues(alpha: 0.65));
+  var y = box.top + 2;
+  for (final (i, tp) in tps.indexed) {
+    final out = lines[i].out;
+    final color = out ? const Color(0xFFFF6B6B) : const Color(0xFF5CE69A);
+    final cx = box.left + 4 + arrow / 2, cy = y + tp.height / 2, half = arrow / 2;
+    // Flèche : tige et pointe, vers le bas pour une sortie, vers le haut pour une entrée.
+    final dir = out ? 1.0 : -1.0;
+    canvas.drawLine(Offset(cx, cy - dir * half), Offset(cx, cy + dir * half * 0.2), Paint()
+      ..color = color
+      ..strokeWidth = arrow * 0.22);
+    canvas.drawPath(
+      Path()
+        ..moveTo(cx - half * 0.7, cy)
+        ..lineTo(cx + half * 0.7, cy)
+        ..lineTo(cx, cy + dir * half)
+        ..close(),
+      Paint()..color = color,
+    );
+    tp.paint(canvas, Offset(box.left + arrow + 6, y));
+    y += tp.height;
+  }
 }
 
 TextPainter _layout(String s, double fontSize, Color color, {bool bold = false, double? maxWidth, String? fontFamily, String? package}) =>

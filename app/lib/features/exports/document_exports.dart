@@ -6,7 +6,7 @@ import 'package:pdf/widgets.dart' as pw;
 
 import '../../core/pdf_kit.dart';
 import '../../data/database.dart';
-import '../matches/lineup_screen.dart' show formations;
+import '../matches/lineup_screen.dart' show formations, slotChanges;
 import '../matches/match_repository.dart';
 import '../sessions/session_prep.dart' show sessionExercisesProvider;
 import '../sessions/session_repository.dart';
@@ -143,6 +143,10 @@ class DocumentExports {
         pitch: 'full',
         text: (t) => switch (players[bySlot[int.parse(t.id)]]) { final Player p => p.shirtNumber?.toString() ?? p.initials, _ => '' },
         caption: (t) => players[bySlot[int.parse(t.id)]]?.lastName ?? slots[int.parse(t.id)].$1,
+        changes: (t) => [
+          for (final c in slotChanges(bySlot[int.parse(t.id)], events))
+            (out: c.out, text: '${players[c.playerId]?.lastName ?? '?'}${c.minute == null ? '' : " ${c.minute}'"}'),
+        ],
         width: 700,
         tokenSize: 0.1,
       );

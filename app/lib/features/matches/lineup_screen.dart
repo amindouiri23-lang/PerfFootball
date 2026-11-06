@@ -229,6 +229,25 @@ class _LineupScreenState extends ConsumerState<LineupScreen> {
   }
 }
 
+/// Changements d'un poste de la composition : le titulaire [starterId] sort, puis chaque joueur entré à
+/// sa place (et ceux entrés ensuite à la place de ce dernier), dans l'ordre du match.
+List<({bool out, String playerId, int? minute})> slotChanges(String? starterId, List<MatchEvent> events) {
+  final subs = events.where((e) => e.type == 'substitution' && e.playerId != null && e.assistPlayerId != null).toList()
+    ..sort((a, b) => a.minute.compareTo(b.minute));
+  final chain = <({bool out, String playerId, int? minute})>[];
+  var current = starterId;
+  for (final e in subs) {
+    if (current == null || e.assistPlayerId != current) continue;
+    if (chain.isEmpty) chain.add((out: true, playerId: current, minute: null));
+    chain.add((out: false, playerId: e.playerId!, minute: e.minute));
+    current = e.playerId;
+  }
+  return chain;
+}
+
+const changeOutColor = Color(0xFFFF6B6B);
+const changeInColor = Color(0xFF5CE69A);
+
 /// Composition préparée, en petit, sur la fiche du match.
 class LineupPreview extends ConsumerWidget {
   const LineupPreview({super.key, required this.match});
@@ -243,6 +262,7 @@ class LineupPreview extends ConsumerWidget {
     final byId = {for (final p in ref.watch(playersProvider(match.teamId)).value ?? const <Player>[]) p.id: p};
     final bySlot = {for (final r in rows) if (r.present && r.role == 'starter' && r.slot != null) r.slot!: r.playerId};
     final subs = [for (final r in rows) if (r.present && r.role == 'sub') byId[r.playerId]?.lastName].whereType<String>().toList();
+    final events = ref.watch(matchEventsProvider(match.id)).value ?? const <MatchEvent>[];
     final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
@@ -264,15 +284,39 @@ class LineupPreview extends ConsumerWidget {
                       left: x * size.width - ts * 2,
                       top: y * size.height - ts / 2,
                       width: ts * 4,
-                      child: Align(
-                        alignment: Alignment.topCenter,
-                        child: TokenView(
-                          kind: bySlot[i] == null ? 'them' : 'us',
-                          text: bySlot[i] == null ? '' : byId[bySlot[i]]?.shirtNumber?.toString() ?? byId[bySlot[i]]?.initials ?? '?',
-                          caption: byId[bySlot[i]]?.lastName ?? label,
-                          size: ts,
-                        ),
-                      ),
+                      child: Builder(builder: (context) {
+                        final changes = slotChanges(bySlot[i], events);
+                        return Column(mainAxisSize: MainAxisSize.min, children: [
+                          TokenView(
+                            kind: bySlot[i] == null ? 'them' : 'us',
+                            text: bySlot[i] == null ? '' : byId[bySlot[i]]?.shirtNumber?.toString() ?? byId[bySlot[i]]?.initials ?? '?',
+                            caption: changes.isEmpty ? byId[bySlot[i]]?.lastName ?? label : null,
+                            size: ts,
+                          ),
+                          // Changement : flèche rouge pour le joueur sorti, verte pour celui entré à sa place.
+                          if (changes.isNotEmpty)
+                            Container(
+                              margin: const EdgeInsets.only(top: 1),
+                              padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+                              decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.65), borderRadius: BorderRadius.circular(3)),
+                              child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+                                for (final c in changes)
+                                  Row(mainAxisSize: MainAxisSize.min, children: [
+                                    Icon(c.out ? Icons.arrow_downward : Icons.arrow_upward,
+                                        size: 10, color: c.out ? changeOutColor : changeInColor),
+                                    Flexible(
+                                      child: Text(
+                                        '${byId[c.playerId]?.lastName ?? '?'}${c.minute == null ? '' : " ${c.minute}'"}',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(color: c.out ? Colors.white70 : Colors.white, fontSize: 9),
+                                      ),
+                                    ),
+                                  ]),
+                              ]),
+                            ),
+                        ]);
+                      }),
                     ),
                 ]);
               }),
