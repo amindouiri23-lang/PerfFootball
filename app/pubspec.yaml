@@ -42,6 +42,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/club_crest.png
+    - assets/images/generic_crest.png
   # Titres « jeu de foot » : Barlow Condensed (licence OFL, assets/fonts/OFL.txt), embarquée pour le hors-ligne.
   fonts:
     - family: BarlowCondensed
