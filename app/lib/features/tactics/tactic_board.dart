@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/photos.dart';
+import '../../core/theme.dart' show genericBrand;
 import 'tactic_equipment.dart';
 
 // Tableau tactique : pions et flèches posés sur un terrain vu de dessus, but attaqué (ou défendu) en haut.
@@ -314,7 +315,8 @@ Offset screenToBoard(Offset p, Size size, bool horizontal) {
 }
 
 /// Couleurs fixes du tableau : un terrain reste vert en thème clair comme en thème sombre.
-const tokenUsColor = Color(0xFFE30613);
+/// Nos joueurs : rouge du club, orange dans l'habillage générique (l'émeraude se perdrait sur la pelouse).
+const tokenUsColor = genericBrand ? Color(0xFFFF8A1F) : Color(0xFFE30613);
 const tokenThemColor = Color(0xFF1E6FD9);
 const _grassA = Color(0xFF2E7D32);
 const _grassB = Color(0xFF2A7430);

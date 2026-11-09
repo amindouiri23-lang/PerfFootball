@@ -6,6 +6,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app.dart';
+import 'core/theme.dart' show crestAsset;
 import 'data/local_store.dart';
 
 // Valeurs passées au build : flutter run --dart-define-from-file=env.json
@@ -44,7 +45,7 @@ class _OtherTabApp extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.all(32),
               child: Column(mainAxisSize: MainAxisSize.min, children: [
-                Image.asset('assets/images/club_crest.png', height: 96),
+                Image.asset(crestAsset, height: 96),
                 const SizedBox(height: 24),
                 const Text('PerfFoot est déjà ouvert dans un autre onglet', textAlign: TextAlign.center, style: TextStyle(fontSize: 20)),
                 const SizedBox(height: 12),

@@ -8,12 +8,13 @@ import 'package:uuid/uuid.dart';
 
 import '../../core/photos.dart';
 import '../../core/router.dart';
+import '../../core/theme.dart' show crestAsset, clubRed;
 import '../../data/database.dart';
 import '../auth/auth_repository.dart';
 import 'slide_layout.dart';
 
 /// Logo du club, en haut à droite de chaque diapositive.
-const clubCrestAsset = 'assets/images/club_crest.png';
+const clubCrestAsset = crestAsset;
 const slideBackground = Color(0xFF0E0F12);
 
 /// Élément sélectionné dans l'éditeur de mise en page : 'text' ou l'index d'une image.
@@ -212,7 +213,7 @@ class SlideTextView extends StatelessWidget {
           padding: EdgeInsets.only(bottom: base * 0.35),
           child: Text.rich(
             TextSpan(children: [
-              if (box.align == 'left') TextSpan(text: '•  ', style: TextStyle(color: const Color(0xFFE30613), fontWeight: FontWeight.bold, fontSize: base)),
+              if (box.align == 'left') TextSpan(text: '•  ', style: TextStyle(color: clubRed, fontWeight: FontWeight.bold, fontSize: base)),
               TextSpan(text: line.trim().replaceFirst(RegExp(r'^[-•*]\s*'), '')),
             ]),
             textAlign: align,

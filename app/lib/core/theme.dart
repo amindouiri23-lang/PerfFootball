@@ -3,14 +3,20 @@ import 'package:flutter/material.dart';
 // Identité Club Africain, esprit jeu de foot (FIFA / Football Manager) : rouge et blanc du club,
 // fond « stade » sombre par défaut, titres en capitales condensées (Barlow Condensed).
 
-/// Rouge du club — couleur d'accent unique.
-const clubRed = Color(0xFFE30613);
-const clubRedBright = Color(0xFFFF2E3B);
+/// Habillage générique, sans l'identité du club (démonstrations) : --dart-define=BRAND=generic.
+const genericBrand = String.fromEnvironment('BRAND') == 'generic';
 
-/// Fonds du thème sombre, du plus profond au plus élevé.
-const pitchBlack = Color(0xFF0E0E13);
-const panel = Color(0xFF1A1A22);
-const panelHigh = Color(0xFF24242E);
+/// Écusson affiché par l'application et ses documents.
+const crestAsset = genericBrand ? 'assets/images/generic_crest.png' : 'assets/images/club_crest.png';
+
+/// Rouge du club — couleur d'accent unique (émeraude dans l'habillage générique).
+const clubRed = genericBrand ? Color(0xFF00C389) : Color(0xFFE30613);
+const clubRedBright = genericBrand ? Color(0xFF3DE0A8) : Color(0xFFFF2E3B);
+
+/// Fonds du thème sombre, du plus profond au plus élevé (bleu nuit dans l'habillage générique).
+const pitchBlack = genericBrand ? Color(0xFF0B1220) : Color(0xFF0E0E13);
+const panel = genericBrand ? Color(0xFF131C2E) : Color(0xFF1A1A22);
+const panelHigh = genericBrand ? Color(0xFF1C2740) : Color(0xFF24242E);
 
 const displayFont = 'BarlowCondensed';
 
@@ -40,8 +46,8 @@ ThemeData buildTheme(Brightness brightness) {
       ? const ColorScheme.dark(
           primary: clubRed,
           onPrimary: Colors.white,
-          primaryContainer: Color(0xFF4A0A10),
-          onPrimaryContainer: Color(0xFFFFD9DB),
+          primaryContainer: genericBrand ? Color(0xFF053D2C) : Color(0xFF4A0A10),
+          onPrimaryContainer: genericBrand ? Color(0xFFC9F7E6) : Color(0xFFFFD9DB),
           secondary: Colors.white,
           onSecondary: pitchBlack,
           secondaryContainer: panelHigh,
@@ -57,8 +63,8 @@ ThemeData buildTheme(Brightness brightness) {
           surface: pitchBlack,
           onSurface: Color(0xFFF4F4F6),
           onSurfaceVariant: Color(0xFF9A9AA6),
-          surfaceContainerLowest: Color(0xFF09090D),
-          surfaceContainerLow: Color(0xFF14141A),
+          surfaceContainerLowest: genericBrand ? Color(0xFF070C16) : Color(0xFF09090D),
+          surfaceContainerLow: genericBrand ? Color(0xFF0F1726) : Color(0xFF14141A),
           surfaceContainer: panel,
           surfaceContainerHigh: panelHigh,
           surfaceContainerHighest: Color(0xFF2C2C37),
